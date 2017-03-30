@@ -1,6 +1,6 @@
 ---
 title: "Congruent Transcriptional Responses"
-author: "Ben Oyserman, Joris va Steenbrugge, Victoria Pascal Andreu"
+author: "Ben Oyserman, Joris van Steenbrugge, Victoria Pascal Andreu"
 date: "2/15/2017"
 output:
   html_document: default
