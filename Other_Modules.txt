@@ -1,0 +1,522 @@
+
+#### Statistics for the Alanine module
+```{r plotting the groups Alanine, echo=FALSE}
+
+# Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
+Alanine_module_NRED <- NRED_Distance_Function(Alanine_module)
+Alanine_module_P <- P_Distance_Function(Alanine_module)
+Alanine_module_P_NRED <- P_NRED_Distance_Function(Alanine_module)
+
+Jaccard_Distance_Alanine <- Jaccard_Distance_Function(Alanine_module)
+
+Alanine_clustering_results_NRED <-cluster_func(Alanine_module_NRED$Zscore,Jaccard_Distance_Alanine)
+Alanine_clustering_results_P_NRED <-cluster_func(Alanine_module_P_NRED$combined,Jaccard_Distance_Alanine)
+
+# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
+par(mfrow=c(1,2),mar=c(4,4,3,1))
+plot(Alanine_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_Alanine, ylab="Average Composite Z-score",xlab="Jaccard Distance")
+plot(Alanine_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_Alanine, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
+
+########### Inter-Cluster Module Comparison ###########
+Alanine_cluster_pvalues<-rep(NA,length(Alanine_clustering_results_P_NRED$cl))
+
+for (i in 1:length(Alanine_clustering_results_P_NRED$cl)) { 
+  ttest_temp<-t.test((Alanine_clustering_results_P_NRED$JPE_distance[which(colnames(Alanine_clustering_results_P_NRED$JPE_distance)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==i)]),which(colnames(Alanine_clustering_results_P_NRED$JPE_distance)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
+  Alanine_cluster_pvalues[i]<-ttest_temp$p.value 
+}
+
+cluster_text<-rep(NA,length(Alanine_clustering_results_P_NRED$cl))
+for (i in 1:length(Alanine_clustering_results_P_NRED$cl)) {
+  cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(Alanine_cluster_pvalues[i],2),scientific=TRUE))
+}
+par(mfrow=c(1,1))
+# This needs to be turned into a function
+plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-4,4),ylim=c(0,1.5))
+colors<-rainbow(length(Alanine_clustering_results_P_NRED$cl))
+legend("topleft",c("background",cluster_text),text.col=c("black",colors))
+for (i in 1:length(table(Alanine_clustering_results_P_NRED$cl$membership))) {
+  points(density(Alanine_clustering_results_P_NRED$JPE_distance[which(colnames(Alanine_clustering_results_P_NRED$JPE_distance)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==i)]),which(colnames(Alanine_clustering_results_P_NRED$JPE_distance)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="Alanine",ylab="Density",xlab="Distance")
+}
+
+
+########### Intra_cluster Comparison ###########
+Alanine_gene_pvalues_clusters<-matrix(NA,length(Alanine_module),length(Alanine_clustering_results_P_NRED$cl))
+Alanine_gene_sd_clusters<-Alanine_gene_pvalues_clusters
+
+for (i in 1:length(Alanine_module)) { 
+  for (j in 1:length(Alanine_clustering_results_P_NRED$cl)) {
+    if(sum(!is.na(Alanine_module_P_NRED$combined[ which(rownames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
+      ttest_temp<-t.test(Alanine_module_P_NRED$combined[ which(rownames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
+      Alanine_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
+      Alanine_gene_sd_clusters[i,j]<-sd(Alanine_module_P_NRED$combined[ which(rownames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
+    }
+  }
+}
+
+cluster_text_matrix<-matrix(NA,length(Alanine_module),length(Alanine_clustering_results_P_NRED$cl))
+for (j in 1:length(Alanine_clustering_results_P_NRED$cl)) {
+  for (i in 1:length(Alanine_module)) {
+    cluster_text_matrix[i,j]<-paste(Alanine_module[i],"p-value=", format(signif(Alanine_gene_pvalues_clusters[i,j],2),scientific=TRUE))
+  }
+}
+
+par(mfrow=c(length(Alanine_clustering_results_P_NRED$cl),1))
+for(i in 1:length(Alanine_clustering_results_P_NRED$cl)) {
+  array_fig(Alanine_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1),I_KOs_Background$random_pairwise_gene_correlation,Alanine_clustering_results_P_NRED$cl)
+}
+
+########### Inter_cluster Comparison ##########
+Alanine_gene_pvalues<-rep(NA,length(Alanine_module))
+Alanine_gene_sd<-rep(NA,length(Alanine_module))
+
+for (i in 1:length(Alanine_module)) { 
+  if (sum(is.na(Alanine_module_P_NRED$combined[,,i])==0)<3) {
+    Alanine_gene_pvalues[i]<-NA
+  } else {
+    ttest_temp<-t.test((Alanine_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
+    Alanine_gene_pvalues[i]<-ttest_temp$p.value 
+    Alanine_gene_sd[i]<-sd(Alanine_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
+  }
+}
+# Alanine_module_P_NRED$combined[ which(rownames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==1)]),which(colnames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==1)]),i]
+
+
+
+par(mfrow=c(length(which(!is.na(Alanine_gene_pvalues))),length(table(Alanine_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
+
+
+for (i in which(!is.na(Alanine_gene_pvalues))) {
+  hist(Alanine_module_P_NRED$combined[,,i],main=Alanine_module[i],col="lightblue",xlim=c(-4,4))
+  par(new = T)
+  plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
+  mtext(paste("p-value = ",signif(Alanine_gene_pvalues[i],2)),side=3,col="red",cex=.75)
+  
+  for (j in 1:length(table(Alanine_clustering_results_P_NRED$cl$membership))) {
+    if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%Alanine_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
+      
+      # matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(Alanine_module_P_NRED$positionsA[ which(rownames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
+      # par(new = T)
+      boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(Alanine_module_P_NRED$positionsA[ which(rownames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Alanine_module_P_NRED$positionsA)%in%Alanine_clustering_results_P_NRED$cl$names[which(Alanine_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
+      
+    }
+  }
+}
+```
+
+
+#### Statistics for the Taurine_and_hypotaurine module
+```{r plotting the groups Taurine and hypotaurine, echo=FALSE}
+
+# Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
+Taurine_and_hypotaurine_module_NRED <- NRED_Distance_Function(Taurine_and_hypotaurine_module)
+Taurine_and_hypotaurine_module_P <- P_Distance_Function(Taurine_and_hypotaurine_module)
+Taurine_and_hypotaurine_module_P_NRED <- P_NRED_Distance_Function(Taurine_and_hypotaurine_module)
+
+Jaccard_Distance_Taurine_and_hypotaurine <- Jaccard_Distance_Function(Taurine_and_hypotaurine_module)
+
+Taurine_and_hypotaurine_clustering_results_NRED <-cluster_func(Taurine_and_hypotaurine_module_NRED$Zscore,Jaccard_Distance_Taurine_and_hypotaurine)
+Taurine_and_hypotaurine_clustering_results_P_NRED <-cluster_func(Taurine_and_hypotaurine_module_P_NRED$combined,Jaccard_Distance_Taurine_and_hypotaurine)
+
+# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
+par(mfrow=c(1,2),mar=c(4,4,3,1))
+plot(Taurine_and_hypotaurine_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_Taurine_and_hypotaurine, ylab="Average Composite Z-score",xlab="Jaccard Distance")
+plot(Taurine_and_hypotaurine_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_Taurine_and_hypotaurine, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
+
+########### Inter-Cluster Module Comparison ###########
+Taurine_and_hypotaurine_cluster_pvalues<-rep(NA,length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl))
+
+for (i in 1:length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl)) { 
+  ttest_temp<-t.test((Taurine_and_hypotaurine_clustering_results_P_NRED$JPE_distance[which(colnames(Taurine_and_hypotaurine_clustering_results_P_NRED$JPE_distance)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==i)]),which(colnames(Taurine_and_hypotaurine_clustering_results_P_NRED$JPE_distance)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
+  Taurine_and_hypotaurine_cluster_pvalues[i]<-ttest_temp$p.value 
+}
+
+cluster_text<-rep(NA,length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl))
+for (i in 1:length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl)) {
+  cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(Taurine_and_hypotaurine_cluster_pvalues[i],2),scientific=TRUE))
+}
+par(mfrow=c(1,1))
+# This needs to be turned into a function
+plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-4,4),ylim=c(0,1.5))
+colors<-rainbow(length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl))
+legend("topleft",c("background",cluster_text),text.col=c("black",colors))
+for (i in 1:length(table(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership))) {
+  points(density(Taurine_and_hypotaurine_clustering_results_P_NRED$JPE_distance[which(colnames(Taurine_and_hypotaurine_clustering_results_P_NRED$JPE_distance)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==i)]),which(colnames(Taurine_and_hypotaurine_clustering_results_P_NRED$JPE_distance)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="Taurine_and_hypotaurine",ylab="Density",xlab="Distance")
+}
+
+
+########### Intra_cluster Comparison ###########
+Taurine_and_hypotaurine_gene_pvalues_clusters<-matrix(NA,length(Taurine_and_hypotaurine_module),length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl))
+Taurine_and_hypotaurine_gene_sd_clusters<-Taurine_and_hypotaurine_gene_pvalues_clusters
+
+for (i in 1:length(Taurine_and_hypotaurine_module)) { 
+  for (j in 1:length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl)) {
+    if(sum(!is.na(Taurine_and_hypotaurine_module_P_NRED$combined[ which(rownames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
+      ttest_temp<-t.test(Taurine_and_hypotaurine_module_P_NRED$combined[ which(rownames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
+      Taurine_and_hypotaurine_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
+      Taurine_and_hypotaurine_gene_sd_clusters[i,j]<-sd(Taurine_and_hypotaurine_module_P_NRED$combined[ which(rownames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
+    }
+  }
+}
+
+cluster_text_matrix<-matrix(NA,length(Taurine_and_hypotaurine_module),length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl))
+for (j in 1:length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl)) {
+  for (i in 1:length(Taurine_and_hypotaurine_module)) {
+    cluster_text_matrix[i,j]<-paste(Taurine_and_hypotaurine_module[i],"p-value=", format(signif(Taurine_and_hypotaurine_gene_pvalues_clusters[i,j],2),scientific=TRUE))
+  }
+}
+
+par(mfrow=c(length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl),1))
+for(i in 1:length(Taurine_and_hypotaurine_clustering_results_P_NRED$cl)) {
+  array_fig(Taurine_and_hypotaurine_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1.5),I_KOs_Background$random_pairwise_gene_correlation,Taurine_and_hypotaurine_clustering_results_P_NRED$cl)
+}
+
+########### Inter_cluster Comparison ##########
+Taurine_and_hypotaurine_gene_pvalues<-rep(NA,length(Taurine_and_hypotaurine_module))
+Taurine_and_hypotaurine_gene_sd<-rep(NA,length(Taurine_and_hypotaurine_module))
+
+for (i in 1:length(Taurine_and_hypotaurine_module)) { 
+  if (sum(is.na(Taurine_and_hypotaurine_module_P_NRED$combined[,,i])==0)<3) {
+    Taurine_and_hypotaurine_gene_pvalues[i]<-NA
+  } else {
+    ttest_temp<-t.test((Taurine_and_hypotaurine_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
+    Taurine_and_hypotaurine_gene_pvalues[i]<-ttest_temp$p.value 
+    Taurine_and_hypotaurine_gene_sd[i]<-sd(Taurine_and_hypotaurine_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
+  }
+}
+# Taurine_and_hypotaurine_module_P_NRED$combined[ which(rownames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==1)]),which(colnames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==1)]),i]
+
+
+
+par(mfrow=c(length(which(!is.na(Taurine_and_hypotaurine_gene_pvalues))),length(table(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
+
+
+for (i in which(!is.na(Taurine_and_hypotaurine_gene_pvalues))) {
+  hist(Taurine_and_hypotaurine_module_P_NRED$combined[,,i],main=Taurine_and_hypotaurine_module[i],col="lightblue",xlim=c(-4,4))
+  par(new = T)
+  plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
+  mtext(paste("p-value = ",signif(Taurine_and_hypotaurine_gene_pvalues[i],2)),side=3,col="red",cex=.75)
+  
+  for (j in 1:length(table(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership))) {
+    if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%Taurine_and_hypotaurine_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
+      
+      # matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(Taurine_and_hypotaurine_module_P_NRED$positionsA[ which(rownames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
+      # par(new = T)
+      boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(Taurine_and_hypotaurine_module_P_NRED$positionsA[ which(rownames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Taurine_and_hypotaurine_module_P_NRED$positionsA)%in%Taurine_and_hypotaurine_clustering_results_P_NRED$cl$names[which(Taurine_and_hypotaurine_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
+      
+    }
+  }
+}
+```
+
+#### Statistics for the sulfate_transport module
+```{r plotting the groups sulfate transport, echo=FALSE}
+
+# Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
+# sulfate_transport_module_NRED <- NRED_Distance_Function(sulfate_transport_module)
+# sulfate_transport_module_P <- P_Distance_Function(sulfate_transport_module)
+sulfate_transport_module_P_NRED <- P_NRED_Distance_Function(sulfate_transport_module)
+
+Jaccard_Distance_sulfate_transport <- Jaccard_Distance_Function(sulfate_transport_module)
+
+# sulfate_transport_clustering_results_NRED <-cluster_func(sulfate_transport_module_NRED$Zscore,Jaccard_Distance_sulfate_transport)
+sulfate_transport_clustering_results_P_NRED <-cluster_func(sulfate_transport_module_P_NRED$combined,Jaccard_Distance_sulfate_transport)
+
+# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
+par(mfrow=c(1,2),mar=c(4,4,3,1))
+plot(sulfate_transport_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_sulfate_transport, ylab="Average Composite Z-score",xlab="Jaccard Distance")
+plot(sulfate_transport_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_sulfate_transport, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
+
+########### Inter-Cluster Module Comparison ###########
+sulfate_transport_cluster_pvalues<-rep(NA,length(sulfate_transport_clustering_results_P_NRED$cl))
+
+for (i in 1:length(sulfate_transport_clustering_results_P_NRED$cl)) { 
+  ttest_temp<-t.test((sulfate_transport_clustering_results_P_NRED$JPE_distance[which(colnames(sulfate_transport_clustering_results_P_NRED$JPE_distance)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==i)]),which(colnames(sulfate_transport_clustering_results_P_NRED$JPE_distance)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
+  sulfate_transport_cluster_pvalues[i]<-ttest_temp$p.value 
+}
+
+cluster_text<-rep(NA,length(sulfate_transport_clustering_results_P_NRED$cl))
+for (i in 1:length(sulfate_transport_clustering_results_P_NRED$cl)) {
+  cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(sulfate_transport_cluster_pvalues[i],2),scientific=TRUE))
+}
+par(mfrow=c(1,1))
+# This needs to be turned into a function
+plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-4,4),ylim=c(0,1.5))
+colors<-rainbow(length(sulfate_transport_clustering_results_P_NRED$cl))
+legend("topleft",c("background",cluster_text),text.col=c("black",colors))
+for (i in 1:length(table(sulfate_transport_clustering_results_P_NRED$cl$membership))) {
+  points(density(sulfate_transport_clustering_results_P_NRED$JPE_distance[which(colnames(sulfate_transport_clustering_results_P_NRED$JPE_distance)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==i)]),which(colnames(sulfate_transport_clustering_results_P_NRED$JPE_distance)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="sulfate_transport",ylab="Density",xlab="Distance")
+}
+
+
+########### Intra_cluster Comparison ###########
+sulfate_transport_gene_pvalues_clusters<-matrix(NA,length(sulfate_transport_module),length(sulfate_transport_clustering_results_P_NRED$cl))
+sulfate_transport_gene_sd_clusters<-sulfate_transport_gene_pvalues_clusters
+
+for (i in 1:length(sulfate_transport_module)) { 
+  for (j in 1:length(sulfate_transport_clustering_results_P_NRED$cl)) {
+    if(sum(!is.na(sulfate_transport_module_P_NRED$combined[ which(rownames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
+      ttest_temp<-t.test(sulfate_transport_module_P_NRED$combined[ which(rownames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
+      sulfate_transport_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
+      sulfate_transport_gene_sd_clusters[i,j]<-sd(sulfate_transport_module_P_NRED$combined[ which(rownames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
+    }
+  }
+}
+
+cluster_text_matrix<-matrix(NA,length(sulfate_transport_module),length(sulfate_transport_clustering_results_P_NRED$cl))
+for (j in 1:length(sulfate_transport_clustering_results_P_NRED$cl)) {
+  for (i in 1:length(sulfate_transport_module)) {
+    cluster_text_matrix[i,j]<-paste(sulfate_transport_module[i],"p-value=", format(signif(sulfate_transport_gene_pvalues_clusters[i,j],2),scientific=TRUE))
+  }
+}
+
+par(mfrow=c(length(sulfate_transport_clustering_results_P_NRED$cl),1))
+for(i in 1:length(sulfate_transport_clustering_results_P_NRED$cl)) {
+  array_fig(sulfate_transport_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1.5),I_KOs_Background$random_pairwise_gene_correlation,sulfate_transport_clustering_results_P_NRED$cl)
+}
+
+########### Inter_cluster Comparison ##########
+sulfate_transport_gene_pvalues<-rep(NA,length(sulfate_transport_module))
+sulfate_transport_gene_sd<-rep(NA,length(sulfate_transport_module))
+
+for (i in 1:length(sulfate_transport_module)) { 
+  if (sum(is.na(sulfate_transport_module_P_NRED$combined[,,i])==0)<3) {
+    sulfate_transport_gene_pvalues[i]<-NA
+  } else {
+    ttest_temp<-t.test((sulfate_transport_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
+    sulfate_transport_gene_pvalues[i]<-ttest_temp$p.value 
+    sulfate_transport_gene_sd[i]<-sd(sulfate_transport_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
+  }
+}
+# sulfate_transport_module_P_NRED$combined[ which(rownames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==1)]),which(colnames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==1)]),i]
+
+
+
+par(mfrow=c(length(which(!is.na(sulfate_transport_gene_pvalues))),length(table(sulfate_transport_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
+
+
+for (i in which(!is.na(sulfate_transport_gene_pvalues))) {
+  hist(sulfate_transport_module_P_NRED$combined[,,i],main=sulfate_transport_module[i],col="lightblue",xlim=c(-4,4))
+  par(new = T)
+  plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
+  mtext(paste("p-value = ",signif(sulfate_transport_gene_pvalues[i],2)),side=3,col="red",cex=.75)
+  
+  for (j in 1:length(table(sulfate_transport_clustering_results_P_NRED$cl$membership))) {
+    if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%sulfate_transport_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
+      
+      # matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(sulfate_transport_module_P_NRED$positionsA[ which(rownames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
+      # par(new = T)
+      boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(sulfate_transport_module_P_NRED$positionsA[ which(rownames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(sulfate_transport_module_P_NRED$positionsA)%in%sulfate_transport_clustering_results_P_NRED$cl$names[which(sulfate_transport_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
+      
+    }
+  }
+}
+```
+
+#### Statistics for the tungstate_molybdate_transport module
+```{r plotting the groups tungstate and molybdate, echo=FALSE}
+
+# Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
+# tungstate_molybdate_transport_module_NRED <- NRED_Distance_Function(tungstate_molybdate_transport_module)
+# tungstate_molybdate_transport_module_P <- P_Distance_Function(tungstate_molybdate_transport_module)
+tungstate_molybdate_transport_module_P_NRED <- P_NRED_Distance_Function(tungstate_molybdate_transport_module)
+
+Jaccard_Distance_tungstate_molybdate_transport <- Jaccard_Distance_Function(tungstate_molybdate_transport_module)
+
+# tungstate_molybdate_transport_clustering_results_NRED <-cluster_func(tungstate_molybdate_transport_module_NRED$Zscore,Jaccard_Distance_tungstate_molybdate_transport)
+tungstate_molybdate_transport_clustering_results_P_NRED <-cluster_func(tungstate_molybdate_transport_module_P_NRED$combined,Jaccard_Distance_tungstate_molybdate_transport)
+
+# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
+par(mfrow=c(1,2),mar=c(4,4,3,1))
+plot(tungstate_molybdate_transport_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_tungstate_molybdate_transport, ylab="Average Composite Z-score",xlab="Jaccard Distance")
+plot(tungstate_molybdate_transport_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_tungstate_molybdate_transport, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
+
+########### Inter-Cluster Module Comparison ###########
+tungstate_molybdate_transport_cluster_pvalues<-rep(NA,length(tungstate_molybdate_transport_clustering_results_P_NRED$cl))
+
+for (i in 1:length(tungstate_molybdate_transport_clustering_results_P_NRED$cl)) { 
+  ttest_temp<-t.test((tungstate_molybdate_transport_clustering_results_P_NRED$JPE_distance[which(colnames(tungstate_molybdate_transport_clustering_results_P_NRED$JPE_distance)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==i)]),which(colnames(tungstate_molybdate_transport_clustering_results_P_NRED$JPE_distance)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
+  tungstate_molybdate_transport_cluster_pvalues[i]<-ttest_temp$p.value 
+}
+
+cluster_text<-rep(NA,length(tungstate_molybdate_transport_clustering_results_P_NRED$cl))
+for (i in 1:length(tungstate_molybdate_transport_clustering_results_P_NRED$cl)) {
+  cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(tungstate_molybdate_transport_cluster_pvalues[i],2),scientific=TRUE))
+}
+par(mfrow=c(1,1))
+# This needs to be turned into a function
+plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-4,4),ylim=c(0,1.5))
+colors<-rainbow(length(tungstate_molybdate_transport_clustering_results_P_NRED$cl))
+legend("topleft",c("background",cluster_text),text.col=c("black",colors))
+for (i in 1:length(table(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership))) {
+  points(density(tungstate_molybdate_transport_clustering_results_P_NRED$JPE_distance[which(colnames(tungstate_molybdate_transport_clustering_results_P_NRED$JPE_distance)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==i)]),which(colnames(tungstate_molybdate_transport_clustering_results_P_NRED$JPE_distance)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="tungstate_molybdate_transport",ylab="Density",xlab="Distance")
+}
+
+
+########### Intra_cluster Comparison ###########
+tungstate_molybdate_transport_gene_pvalues_clusters<-matrix(NA,length(tungstate_molybdate_transport_module),length(tungstate_molybdate_transport_clustering_results_P_NRED$cl))
+tungstate_molybdate_transport_gene_sd_clusters<-tungstate_molybdate_transport_gene_pvalues_clusters
+
+for (i in 1:length(tungstate_molybdate_transport_module)) { 
+  for (j in 1:length(tungstate_molybdate_transport_clustering_results_P_NRED$cl)) {
+    if(sum(!is.na(tungstate_molybdate_transport_module_P_NRED$combined[ which(rownames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
+      ttest_temp<-t.test(tungstate_molybdate_transport_module_P_NRED$combined[ which(rownames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
+      tungstate_molybdate_transport_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
+      tungstate_molybdate_transport_gene_sd_clusters[i,j]<-sd(tungstate_molybdate_transport_module_P_NRED$combined[ which(rownames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
+    }
+  }
+}
+
+cluster_text_matrix<-matrix(NA,length(tungstate_molybdate_transport_module),length(tungstate_molybdate_transport_clustering_results_P_NRED$cl))
+for (j in 1:length(tungstate_molybdate_transport_clustering_results_P_NRED$cl)) {
+  for (i in 1:length(tungstate_molybdate_transport_module)) {
+    cluster_text_matrix[i,j]<-paste(tungstate_molybdate_transport_module[i],"p-value=", format(signif(tungstate_molybdate_transport_gene_pvalues_clusters[i,j],2),scientific=TRUE))
+  }
+}
+
+par(mfrow=c(length(tungstate_molybdate_transport_clustering_results_P_NRED$cl),1))
+for(i in 1:length(tungstate_molybdate_transport_clustering_results_P_NRED$cl)) {
+  array_fig(tungstate_molybdate_transport_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1.5),I_KOs_Background$random_pairwise_gene_correlation,tungstate_molybdate_transport_clustering_results_P_NRED$cl)
+}
+
+########### Inter_cluster Comparison ##########
+tungstate_molybdate_transport_gene_pvalues<-rep(NA,length(tungstate_molybdate_transport_module))
+tungstate_molybdate_transport_gene_sd<-rep(NA,length(tungstate_molybdate_transport_module))
+
+for (i in 1:length(tungstate_molybdate_transport_module)) { 
+  if (sum(is.na(tungstate_molybdate_transport_module_P_NRED$combined[,,i])==0)<3) {
+    tungstate_molybdate_transport_gene_pvalues[i]<-NA
+  } else {
+    ttest_temp<-t.test((tungstate_molybdate_transport_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
+    tungstate_molybdate_transport_gene_pvalues[i]<-ttest_temp$p.value 
+    tungstate_molybdate_transport_gene_sd[i]<-sd(tungstate_molybdate_transport_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
+  }
+}
+# tungstate_molybdate_transport_module_P_NRED$combined[ which(rownames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==1)]),which(colnames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==1)]),i]
+
+
+
+par(mfrow=c(length(which(!is.na(tungstate_molybdate_transport_gene_pvalues))),length(table(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
+
+
+for (i in which(!is.na(tungstate_molybdate_transport_gene_pvalues))) {
+  hist(tungstate_molybdate_transport_module_P_NRED$combined[,,i],main=tungstate_molybdate_transport_module[i],col="lightblue",xlim=c(-4,4))
+  par(new = T)
+  plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
+  mtext(paste("p-value = ",signif(tungstate_molybdate_transport_gene_pvalues[i],2)),side=3,col="red",cex=.75)
+  
+  for (j in 1:length(table(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership))) {
+    if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%tungstate_molybdate_transport_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
+      
+      # matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(tungstate_molybdate_transport_module_P_NRED$positionsA[ which(rownames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
+      # par(new = T)
+      boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(tungstate_molybdate_transport_module_P_NRED$positionsA[ which(rownames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(tungstate_molybdate_transport_module_P_NRED$positionsA)%in%tungstate_molybdate_transport_clustering_results_P_NRED$cl$names[which(tungstate_molybdate_transport_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
+      
+    }
+  }
+}
+```
+
+
+#### Statistics for the glutamate_aspartate_transport module
+```{r plotting the groups glutamate aspartate transport, echo=FALSE}
+
+# Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
+# glutamate_aspartate_transport_module_NRED <- NRED_Distance_Function(glutamate_aspartate_transport_module)
+# glutamate_aspartate_transport_module_P <- P_Distance_Function(glutamate_aspartate_transport_module)
+glutamate_aspartate_transport_module_P_NRED <- P_NRED_Distance_Function(glutamate_aspartate_transport_module)
+
+Jaccard_Distance_glutamate_aspartate_transport <- Jaccard_Distance_Function(glutamate_aspartate_transport_module)
+
+# glutamate_aspartate_transport_clustering_results_NRED <-cluster_func(glutamate_aspartate_transport_module_NRED$Zscore,Jaccard_Distance_glutamate_aspartate_transport)
+glutamate_aspartate_transport_clustering_results_P_NRED <-cluster_func(glutamate_aspartate_transport_module_P_NRED$combined,Jaccard_Distance_glutamate_aspartate_transport)
+
+# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
+par(mfrow=c(1,2),mar=c(4,4,3,1))
+plot(glutamate_aspartate_transport_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_glutamate_aspartate_transport, ylab="Average Composite Z-score",xlab="Jaccard Distance")
+plot(glutamate_aspartate_transport_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_glutamate_aspartate_transport, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
+
+########### Inter-Cluster Module Comparison ###########
+glutamate_aspartate_transport_cluster_pvalues<-rep(NA,length(glutamate_aspartate_transport_clustering_results_P_NRED$cl))
+
+for (i in 1:length(glutamate_aspartate_transport_clustering_results_P_NRED$cl)) { 
+  ttest_temp<-t.test((glutamate_aspartate_transport_clustering_results_P_NRED$JPE_distance[which(colnames(glutamate_aspartate_transport_clustering_results_P_NRED$JPE_distance)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==i)]),which(colnames(glutamate_aspartate_transport_clustering_results_P_NRED$JPE_distance)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
+  glutamate_aspartate_transport_cluster_pvalues[i]<-ttest_temp$p.value 
+}
+
+cluster_text<-rep(NA,length(glutamate_aspartate_transport_clustering_results_P_NRED$cl))
+for (i in 1:length(glutamate_aspartate_transport_clustering_results_P_NRED$cl)) {
+  cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(glutamate_aspartate_transport_cluster_pvalues[i],2),scientific=TRUE))
+}
+par(mfrow=c(1,1))
+# This needs to be turned into a function
+plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-4,4),ylim=c(0,1.5))
+colors<-rainbow(length(glutamate_aspartate_transport_clustering_results_P_NRED$cl))
+legend("topleft",c("background",cluster_text),text.col=c("black",colors))
+for (i in 1:length(table(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership))) {
+  points(density(glutamate_aspartate_transport_clustering_results_P_NRED$JPE_distance[which(colnames(glutamate_aspartate_transport_clustering_results_P_NRED$JPE_distance)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==i)]),which(colnames(glutamate_aspartate_transport_clustering_results_P_NRED$JPE_distance)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="glutamate_aspartate_transport",ylab="Density",xlab="Distance")
+}
+
+
+########### Intra_cluster Comparison ###########
+glutamate_aspartate_transport_gene_pvalues_clusters<-matrix(NA,length(glutamate_aspartate_transport_module),length(glutamate_aspartate_transport_clustering_results_P_NRED$cl))
+glutamate_aspartate_transport_gene_sd_clusters<-glutamate_aspartate_transport_gene_pvalues_clusters
+
+for (i in 1:length(glutamate_aspartate_transport_module)) { 
+  for (j in 1:length(glutamate_aspartate_transport_clustering_results_P_NRED$cl)) {
+    if(sum(!is.na(glutamate_aspartate_transport_module_P_NRED$combined[ which(rownames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
+      ttest_temp<-t.test(glutamate_aspartate_transport_module_P_NRED$combined[ which(rownames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
+      glutamate_aspartate_transport_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
+      glutamate_aspartate_transport_gene_sd_clusters[i,j]<-sd(glutamate_aspartate_transport_module_P_NRED$combined[ which(rownames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
+    }
+  }
+}
+
+cluster_text_matrix<-matrix(NA,length(glutamate_aspartate_transport_module),length(glutamate_aspartate_transport_clustering_results_P_NRED$cl))
+for (j in 1:length(glutamate_aspartate_transport_clustering_results_P_NRED$cl)) {
+  for (i in 1:length(glutamate_aspartate_transport_module)) {
+    cluster_text_matrix[i,j]<-paste(glutamate_aspartate_transport_module[i],"p-value=", format(signif(glutamate_aspartate_transport_gene_pvalues_clusters[i,j],2),scientific=TRUE))
+  }
+}
+
+par(mfrow=c(length(glutamate_aspartate_transport_clustering_results_P_NRED$cl),1))
+for(i in 1:length(glutamate_aspartate_transport_clustering_results_P_NRED$cl)) {
+  array_fig(glutamate_aspartate_transport_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1.5),I_KOs_Background$random_pairwise_gene_correlation,glutamate_aspartate_transport_clustering_results_P_NRED$cl)
+}
+
+########### Inter_cluster Comparison ##########
+glutamate_aspartate_transport_gene_pvalues<-rep(NA,length(glutamate_aspartate_transport_module))
+glutamate_aspartate_transport_gene_sd<-rep(NA,length(glutamate_aspartate_transport_module))
+
+for (i in 1:length(glutamate_aspartate_transport_module)) { 
+  if (sum(is.na(glutamate_aspartate_transport_module_P_NRED$combined[,,i])==0)<3) {
+    glutamate_aspartate_transport_gene_pvalues[i]<-NA
+  } else {
+    ttest_temp<-t.test((glutamate_aspartate_transport_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
+    glutamate_aspartate_transport_gene_pvalues[i]<-ttest_temp$p.value 
+    glutamate_aspartate_transport_gene_sd[i]<-sd(glutamate_aspartate_transport_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
+  }
+}
+# glutamate_aspartate_transport_module_P_NRED$combined[ which(rownames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==1)]),which(colnames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==1)]),i]
+
+
+
+par(mfrow=c(length(which(!is.na(glutamate_aspartate_transport_gene_pvalues))),length(table(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
+
+
+for (i in which(!is.na(glutamate_aspartate_transport_gene_pvalues))) {
+  hist(glutamate_aspartate_transport_module_P_NRED$combined[,,i],main=glutamate_aspartate_transport_module[i],col="lightblue",xlim=c(-4,4))
+  par(new = T)
+  plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
+  mtext(paste("p-value = ",signif(glutamate_aspartate_transport_gene_pvalues[i],2)),side=3,col="red",cex=.75)
+  
+  for (j in 1:length(table(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership))) {
+    if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%glutamate_aspartate_transport_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
+      
+      # matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(glutamate_aspartate_transport_module_P_NRED$positionsA[ which(rownames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
+      # par(new = T)
+      boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(glutamate_aspartate_transport_module_P_NRED$positionsA[ which(rownames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),which(colnames(glutamate_aspartate_transport_module_P_NRED$positionsA)%in%glutamate_aspartate_transport_clustering_results_P_NRED$cl$names[which(glutamate_aspartate_transport_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
+      
+    }
+  }
+}
+```
