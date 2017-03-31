@@ -25,9 +25,9 @@ devtools::install_github("oyserman/ctr")
 
 The following packages are required and will be automatically installed when using devtools.
 
-- plyr,
-- reshape,
-- igraph,
-- knitr,
-- hexbin,
+- plyr
+- reshape
+- igraph
+- knitr
+- hexbin
 - RColorBrewer
