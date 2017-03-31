@@ -90,6 +90,7 @@ library("igraph")
 library('knitr')
 library("hexbin")
 library("RColorBrewer")
+library("ctr")
 ```
 
 Next, the necessary files are uploaded including
@@ -183,27 +184,8 @@ kable(RNAseq_Annotated_Matrix[1:5,], caption = "Raw Data")
 
 # Section B) Defining functions
 
-```{r, echo =FALSE}
-# not sure why I need to source these to get knitr to work... i think i broke something because it used to knit fine without these lines...
+This section kind of dissapeared without the need to source 
 
-source("/Users/benoyserman/Desktop/ctr/R/array_fig.R")
-source("/Users/benoyserman/Desktop/ctr/R/ave_Z_score_Func.R")
-source("/Users/benoyserman/Desktop/ctr/R/Background_Distribution_Modules.R")
-source("/Users/benoyserman/Desktop/ctr/R/Calc_Jaccard.R")
-source("/Users/benoyserman/Desktop/ctr/R/Calc_Norm_Euc.R")
-source("/Users/benoyserman/Desktop/ctr/R/cluster_func.R")
-source("/Users/benoyserman/Desktop/ctr/R/Cor_Matrix.R")
-source("/Users/benoyserman/Desktop/ctr/R/Create_Rank_Columns.R")
-source("/Users/benoyserman/Desktop/ctr/R/Generate_Random_Module.R")
-source("/Users/benoyserman/Desktop/ctr/R/Individual_KOs_Background.R")
-source("/Users/benoyserman/Desktop/ctr/R/Jaccard_Distance_Function.R")
-source("/Users/benoyserman/Desktop/ctr/R/Normalize.R")
-source("/Users/benoyserman/Desktop/ctr/R/NRED_Distance_Function.R")
-source("/Users/benoyserman/Desktop/ctr/R/P_Distance_Function.R")
-source("/Users/benoyserman/Desktop/ctr/R/P_NRED_Distance_Function.R")
-source("/Users/benoyserman/Desktop/ctr/R/Presence_Absence_Matrix.R")
-source("/Users/benoyserman/Desktop/ctr/R/which_rows_with_no_sd.R")
-```
 
 # Section C) Normalize and calculate background distributions for individual KOs and modules of 'N' KOs
 
@@ -227,19 +209,6 @@ kable(RNAseq_Annotated_Matrix[1:5,], caption = "Normalized Data")
 ```{r Create Abundance Columns, echo=TRUE, results = 'asis'}
 RNAseq_Annotated_Matrix<-Create_Rank_Columns(RNAseq_Annotated_Matrix)
 kable(RNAseq_Annotated_Matrix[1:5,], caption = "Data with Rank Column added")
-```
-
-### Define some features of the matrix
-
-SS is the column which indicates the start of samples, SE is the sample end. Same for the ranks (RS and RE).
-
-```{r}
-Bin_Column<-which(colnames(RNAseq_Annotated_Matrix)=="Bin")
-SS<-2
-SE<-length(sample_names)+1
-RS<-Bin_Column+1
-RE<-Bin_Column+length(sample_names)
-
 ```
 
 ### How many rows have a SD of zero?
