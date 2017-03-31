@@ -72,7 +72,7 @@ The number of calculations is equal to #genomes^2^*#KOs
 
 ### E) Calculating statistics for each module
 
-The distribution of pairwise distances within each cluster may be compared to a background distribution to calculate a p-value. A small p-value indicates that a strong intra-cluster CTR.
+The distribution of pairwise distances within each cluster may be compared to a background distribution to calculate a p-value. A small p-value indicates a strong intra-cluster CTR.
 
 In a similar manner, the KOs forming each module (each KO), may be organized based on the distribution of pairwise distances.
 
