@@ -4,6 +4,7 @@
 #' \deqn{J(A,B) = {{|A \cap B|}\over{|A \cup B|}} = {{|A \cap B|}\over{|A| + |B| - |A \cap B|}}}
 #'
 #' @param vector1,vector2  Two vectors from which the Jaccard disance is to be calculated
+#' @export
 #'
 #' @return The Jaccard Distance between two two vectors.
 #' @examples Jaccard<-Calc_Jaccard(vector1,vector2)

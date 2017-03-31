@@ -1,10 +1,11 @@
 #' Calculates a correlation matrix between two vectors of rows
 #'
 #' This function calculates a pairwise correlation matrix.
-#' 
+#'
 #' @param vector1,vevctor2 The two lists rows in which a particular KO is identified
 #' @param RNAseq_Annotation_Matrix_no_sd_of_zero The annotated matrix of RNAseq data with rows that
 #' have a standard deviation of zero removed.
+#' @export
 #' @return a pairwise correlation matrix,
 #' @examples Cor_Matrix(KO_position_of_A,KO_position_of_B,RNAseq_Annotation_Matrix_no_sd_of_zero)
 

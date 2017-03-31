@@ -12,7 +12,7 @@ cluster_func(Zscore_Matrix, Jaccard_Distance)
 \item{Jaccard_Distance}{An array of all the pairwise Jaccard Distances for a module}
 }
 \value{
-a list containing the average Z score matrix (ave_Z_score_matrix), 
+a list containing the average Z score matrix (ave_Z_score_matrix),
 the normalized distances after being noralized by Jaccard Distances (JPE_distance),
 the JPE distances formatted for a network representation (e.g. cytoscpe),
 and the cluster assignments (cl).

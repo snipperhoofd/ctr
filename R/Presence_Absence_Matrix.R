@@ -7,7 +7,7 @@
 #'
 #' @param RNAseq_Annotated_Matrix The original count matrix (See X for format details).
 #' @param N, The minimum number of times a KO term must be present to be included in the Matrix
-#'
+#' @export
 #' @return An X*Y matrix where X = # bins, and Y = # of annotated features.
 #' @examples Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5)
 

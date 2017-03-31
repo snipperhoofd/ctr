@@ -8,7 +8,7 @@
 #' containing the number of reads that had no feature,
 #' where ambiguously mapped, or not aligned in their  (obtained from the mapping output).
 #' @param gene_lengths A matrix with the length of each gene (genes must be in same order as input RNAseq_Annotated_Matrix)
-#'
+#' @export
 #' @return The normalized read counts  of \code{Sample 1} ... \code{Sample N}.
 #' @examples RNAseq_Normalize(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_aligned)
 #' @note \preformatted{To remove rows that have a 0 for its read counts:}

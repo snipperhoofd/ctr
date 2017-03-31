@@ -4,7 +4,7 @@
 #' This is necessary because Pearon Correlations cannot be calcualted in these cases.
 #'
 #' @param RNAseq_Annotated_Matrix The original count matrix (See X for format details).
-#'
+#' @export
 #' @return The matrix with rows that have a standard deviation of 0 removed
 #' @examples RNAseq_Annotated_Matrix<-Create_Rank_Columns(RNAseq_Annotated_Matrix)
 

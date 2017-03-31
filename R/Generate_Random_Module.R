@@ -4,7 +4,7 @@
 #'
 #' @param All_KOs  A vector of all annotated features
 #' @param N The number of elements to be included in the randomly generated module
-#'
+#' @export
 #' @return a vector containing N random annoated features (without replacement).
 #' @examples Generate_Random_Module(All_KOs,6)
 

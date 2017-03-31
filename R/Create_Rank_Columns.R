@@ -4,7 +4,7 @@
 #' The ranks must be normalized so that they may be compared between genomes of different size.
 #'
 #' @param RNAseq_Annotated_Matrix The original count matrix (See X for format details).
-#'
+#' @export
 #' @return The normalized ranks of \code{Sample 1} ... \code{Sample N}.
 #' @examples RNAseq_Annotated_Matrix<-Create_Rank_Columns(RNAseq_Annotated_Matrix)
 

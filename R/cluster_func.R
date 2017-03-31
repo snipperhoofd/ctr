@@ -2,11 +2,11 @@
 #'
 #' This function uses the average composite Z-score normalized by the Jaccard distances to cluster
 #' genome bins to identify clusters with congruent transcriptional responses.
-#' 
+#'
 #' @param Zscore_Matrix An array of all the pairwise Z-scores for a module
 #' @param Jaccard_Distance An array of all the pairwise Jaccard Distances for a module
-
-#' @return a list containing the average Z score matrix (ave_Z_score_matrix), 
+#' @export
+#' @return a list containing the average Z score matrix (ave_Z_score_matrix),
 #' the normalized distances after being noralized by Jaccard Distances (JPE_distance),
 #' the JPE distances formatted for a network representation (e.g. cytoscpe),
 #' and the cluster assignments (cl).
@@ -24,9 +24,9 @@ cluster_func<-function(Zscore_Matrix,Jaccard_Distance) {
   edge_frame_reduced[,3]<-(-edge_frame_reduced[,3])
   graph<-graph_from_data_frame(edge_frame_reduced,directed=FALSE)
   cl<-cluster_louvain(graph,weights=E(graph)$Score)
-  
+
   newList <- list("ave_Z_score_matrix" = ave_Z_score_matrix,"JPE_distance"=JPE_distance,"JPE_distance_Table"=JPE_distance_Table,"cl"=cl)
-  
+
   return(newList)
-  
+
 }

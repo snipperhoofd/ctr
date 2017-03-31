@@ -1,16 +1,16 @@
 #' Make figures from arrays
 #'
 #' This function creates standardized figures to visualize differences between clusters
-#' 
+#'
 #' @param array An array of all the pairwise Z-scores for a module
 #' @param module the name of the KOs
 #' @param xlimits a vector with the limits of the X axis
 #' @param ylimits a vector with the limits of the Y axis
 #' @param background The background distribution for individual KOs
 #' @param cluster_results the results from the clustering algorithm
-
+#' @export
 #' @return a multi-panel figure. The first column is the distributions, each subsequent column is the cluster. Rows represent each individual KO
-#' 
+#'
 #' @examples for(i in 1:length(PHA_clustering_results_P_NRED$cl)) {
 #' array_fig(PHA_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1),I_KOs_Background$random_pairwise_gene_correlation,PHA_clustering_results_P_NRED$cl)
 #' }

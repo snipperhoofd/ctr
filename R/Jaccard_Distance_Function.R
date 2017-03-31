@@ -3,7 +3,7 @@
 #' This function calculates the Jaccard Distances between all bins for a given module
 #'
 #' @param Module
-#'
+#' @export
 #' @return A matrix of pairwise Jaccard distnces
 #' @examples 	Jaccard_Distance_Function(PHA_Module)
 

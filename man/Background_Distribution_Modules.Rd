@@ -18,7 +18,7 @@ a list of vectors containing XXX & YYY
 This function generates a background distibution based on randomly generated modules of size 'N'.
 For each element of the module, pairwise Pearson Correlation (PC), and the Normalized Rank
 Euclidean Distance (NRED) are calculated between all genomes. When two genomes contain multiple
-elements for comparison, this is handled either by takng a random pairwise comparison, 
+elements for comparison, this is handled either by takng a random pairwise comparison,
 or by taking the score with the maximum similarity. A background distribution using each method
 is provided for comparison. (Currently it only provides the score that minimizes the distances)
 }

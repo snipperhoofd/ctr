@@ -1,19 +1,19 @@
 #' Calculates pairwise NRED for a module
 #'
 #' This function calculates all pairwise NRED for a given module. When two genomes contain multiple
-#' elements for comparison, this is handled either by takng a random pairwise comparison, 
+#' elements for comparison, this is handled either by takng a random pairwise comparison,
 #' or by taking the score with the maximum similarity. A background distribution using each method
 #' is provided for comparison. (Currently it only provides the score that minimizes the distances)
-#' 
-#' @param Subset_KOs A list of KOs that form a module
 #'
-#' @return a list of vectors containing pairwise NRED scores (nred), their Z-scores (Zscore), 
-#' and the position in the matrix for the highest scoring pair between genomes A and B 
+#' @param Subset_KOs A list of KOs that form a module
+#' @export
+#' @return a list of vectors containing pairwise NRED scores (nred), their Z-scores (Zscore),
+#' and the position in the matrix for the highest scoring pair between genomes A and B
 #' (positionA & positionB respectively)
 #' @examples PHA_module_NRED <- NRED_Distance_Function(PHA_module)
 
 NRED_Distance_Function <- function(Subset_KOs) {
-  
+
   # Define two congruent arrays to be filled during the second step. Name the columns and rows based on the genome bins
   dim_matrix<-length(table(RNAseq_Annotated_Matrix$Bin))
   Pairwise_NRED<-array(NA,c(dim_matrix,dim_matrix,length(Subset_KOs)))
@@ -21,13 +21,13 @@ NRED_Distance_Function <- function(Subset_KOs) {
   rownames(Pairwise_NRED)<-colnames(Pairwise_NRED)
   Pairwise_PositionsA<-Pairwise_NRED
   Pairwise_PositionsB<-Pairwise_NRED
-  
+
   ######### This is the maximum pairwise NRED between genome bins for all KOs, converted to Z score, and keeping the pair with the highest sum z-score
-  
-  for (x in 1:(dim(Pairwise_NRED)[1]-1)) { 
+
+  for (x in 1:(dim(Pairwise_NRED)[1]-1)) {
     for (y in (x+1):dim(Pairwise_NRED)[2]) {
       for (z in 1:dim(Pairwise_NRED)[3]) { #iterate over array
-        
+
         # Identify the rows in the original matrix corresponding to each genome
         position_of_genome_A = which(RNAseq_Annotated_Matrix$Bin==rownames(Pairwise_NRED)[x])
         position_of_genome_B = which(RNAseq_Annotated_Matrix$Bin==rownames(Pairwise_NRED)[y])
@@ -52,8 +52,8 @@ NRED_Distance_Function <- function(Subset_KOs) {
               }
             }
           }
-          # Convert to Z scores							
-          
+          # Convert to Z scores
+
           if (length(max_pairwise)>0) {
             Pairwise_NRED[x,y,z]<-min(max_pairwise)
             rownames(max_pairwise)<-position_of_kegg_enzyme_A
@@ -65,10 +65,10 @@ NRED_Distance_Function <- function(Subset_KOs) {
       }
     }
   }
-  
+
   Zscore_pairwise_gene_euclidean<-((Pairwise_NRED-mu_euclidean)/sd_euclidean)
-  
+
   newList <- list("nred" = Zscore_pairwise_gene_euclidean,"Zscore"=Zscore_pairwise_gene_euclidean,"positionsA"=Pairwise_PositionsA,"positionsB"=Pairwise_PositionsB)
-  
+
   return(newList)
 }

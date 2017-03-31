@@ -6,9 +6,6 @@
 \usage{
 Jaccard_Distance_Function(Module)
 }
-\arguments{
-\item{Module}{}
-}
 \value{
 A matrix of pairwise Jaccard distnces
 }

@@ -3,18 +3,18 @@
 #' This function generates a background distibution based on randomly generated modules of size 'N'.
 #' For each element of the module, pairwise Pearson Correlation (PC), and the Normalized Rank
 #' Euclidean Distance (NRED) are calculated between all genomes. When two genomes contain multiple
-#' elements for comparison, this is handled either by takng a random pairwise comparison, 
+#' elements for comparison, this is handled either by takng a random pairwise comparison,
 #' or by taking the score with the maximum similarity. A background distribution using each method
 #' is provided for comparison. (Currently it only provides the score that minimizes the distances)
-#' 
+#'
 #' @param N The number of elements to be included in the randomly generated module
 #' @param Z The number of iterations used to calculatea background distribution
-#'
+#' @export
 #' @return a list of vectors containing XXX & YYY
 #' @examples Random_Background_Module_Distances_6<-Background_Distribution_Modules(6,1000)
 
 Background_Distribution_Modules <- function(N,Z) {
-  
+
   Random_Jaccard_Distances<-rep(NA,Z)
   Random_Composite_Distances<-rep(NA,Z)
   Random_Pearson_Distances<-rep(NA,N)
@@ -22,18 +22,18 @@ Background_Distribution_Modules <- function(N,Z) {
   Random_Zscore_Pearson_Distances<-rep(NA,N)
   Random_Zscore_Euclidean_Distances<-rep(NA,N)
   dim_matrix<-length(table(RNAseq_Annotated_Matrix$Bin))
-  
+
   for (i in 1:Z) {
     two_random_genomes<-sample(length(high_quality_bins),2)
     Random_Module<-Generate_Random_Module(All_KOs,N)
-    
+
     # Calculate Jaccard Distance
     genome1<-which(rownames(Pairwise_Bin_Array_Presence)==high_quality_bins[two_random_genomes[1]])
     genome2<-which(rownames(Pairwise_Bin_Array_Presence)==high_quality_bins[two_random_genomes[2]])
     Random_Jaccard_Distances[i]<-Calc_Jaccard(Pairwise_Bin_Array_Presence[genome1, which(All_KOs%in%Random_Module)],Pairwise_Bin_Array_Presence[genome2, which(All_KOs%in%Random_Module)])
-    
+
     # Next calculate Pearson and NRED
-    for (j in 1:length(Random_Module)) {          
+    for (j in 1:length(Random_Module)) {
       # Identify the rows in the original matrix corresponding to each genome
       position_of_genome_A = which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[two_random_genomes[1]])
       position_of_genome_B = which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[two_random_genomes[2]])
@@ -61,10 +61,10 @@ Background_Distribution_Modules <- function(N,Z) {
             }
           }
         }
-        # Convert to Z scores							
+        # Convert to Z scores
         Zscore_pairwise_gene_correlation<-((max_pairwise_gene_correlation-mu_pearson)/sd_pearson) # need to inverse PCC
         Zscore_pairwise_gene_euclidean<-((max_pairwise_gene_euclidean-mu_euclidean)/sd_euclidean)
-        best_scoring_pair<-which.min((1-Zscore_pairwise_gene_correlation)+(Zscore_pairwise_gene_euclidean))							
+        best_scoring_pair<-which.min((1-Zscore_pairwise_gene_correlation)+(Zscore_pairwise_gene_euclidean))
         if (length(best_scoring_pair)>0) {
           Random_Pearson_Distances<-max_pairwise_gene_correlation[best_scoring_pair]
           Random_Euclidean_Distances<-max_pairwise_gene_euclidean[best_scoring_pair]
@@ -79,7 +79,7 @@ Background_Distribution_Modules <- function(N,Z) {
       }
       Random_Zscore_Pearson_Distances[j]<-((Random_Pearson_Distances-mu_pearson)/sd_pearson) # need to inverse PCC
       Random_Zscore_Euclidean_Distances[j]<-((Random_Euclidean_Distances-mu_euclidean)/sd_euclidean)
-      
+
     }
     Random_Composite_Distances[i]<-mean((-Random_Zscore_Pearson_Distances)+Random_Zscore_Euclidean_Distances,na.rm=TRUE)[1]
     Random_Background_Module_Distances<-Random_Composite_Distances*(1-Random_Jaccard_Distances)

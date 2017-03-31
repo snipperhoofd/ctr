@@ -10,13 +10,13 @@ P_Distance_Function(Subset_KOs)
 \item{Subset_KOs}{A list of KOs that form a module}
 }
 \value{
-a list of vectors containing pairwise PC scores (pearsons), their Z-scores (Zscore), 
-and the position in the matrix for the highest scoring pair between genomes A and B 
+a list of vectors containing pairwise PC scores (pearsons), their Z-scores (Zscore),
+and the position in the matrix for the highest scoring pair between genomes A and B
 (positionA & positionB respectively)
 }
 \description{
 This function calculates all pairwise PC for a given module. When two genomes contain multiple
-elements for comparison, this is handled either by takng a random pairwise comparison, 
+elements for comparison, this is handled either by takng a random pairwise comparison,
 or by taking the score with the maximum similarity. A background distribution using each method
 is provided for comparison. (Currently it only provides the score that minimizes the distances)
 }

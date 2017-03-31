@@ -13,6 +13,7 @@
 #'
 #' @param RNAseq_Annotation_Matrix_no_sd_of_zero, the original matrix with rows that have a standard deviation of zero removed.
 #' @param N the number of iterations (at least 10000 is suggested)
+#' @export
 #' @return A list containting eight vectors of N distances: pearson and euclidean distances for
 #' random, multiple comparison corrected random, random KO, highest scoring pair KO.
 #' @examples 	Jaccard_Distance_Function(PHA_Module)
