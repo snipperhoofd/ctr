@@ -20,6 +20,11 @@
 # first remove rows with standard deviations of 0
 
 Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero,N){
+  Bin_Column<-which(colnames(RNAseq_Annotated_Matrix) == "Bin")
+  SS<-2 # start column for samples
+  SE<-length(sample_names) + 1 # end column of samples
+  RS<-Bin_Column + 1 # start column for ranks
+  RE<-Bin_Column + length(sample_names) # end column for ranks
 
   # build empty vectors for each Pearson Correlation and NRED
   random_pairwise_gene_correlation<-rep(NA,N)
