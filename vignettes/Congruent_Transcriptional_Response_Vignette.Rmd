@@ -70,7 +70,7 @@ CS_{AB}
 
 The number of calculations is equal to #genomes^2^*#KOs  
 
-### E) Calculating statsitics for each module
+### E) Calculating statistics for each module
 
 The distribution of pairwise distances within each cluster may be compared to a background distribution to calculate a p-value. A small p-value indicates that a strong intra-cluster CTR.
 
