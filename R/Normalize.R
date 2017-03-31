@@ -17,11 +17,8 @@
 
 RNAseq_Normalize <- function(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_aligned){
 
-  #Bin_Column<-which(colnames(RNAseq_Annotated_Matrix) == "Bin")
   SS<-2 # start column for samples
   SE<-length(sample_names) + 1 # end column of samples
-  #RS<-Bin_Column + 1 # start column for ranks
-  #RE<-Bin_Column + length(sample_names) # end column for ranks
 
   # Calculate the number of reads mapped to each bin in each sample (This may be a separate function)
     sum_reads_per_genome_matrix<-matrix(NA,nrow=length(high_quality_bins),ncol=length(sample_names))

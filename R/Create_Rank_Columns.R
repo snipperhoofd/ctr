@@ -12,10 +12,6 @@
 Create_Rank_Columns <- function(RNAseq_Annotated_Matrix){
 
   Bin_Column<-which(colnames(RNAseq_Annotated_Matrix)=="Bin")
-  #SS<-2
-  #SE<-length(sample_names)+1
-  #RS<-Bin_Column+1
-  #RE<-Bin_Column+length(sample_names)
   for (i in 1:length(sample_names)) {
     Rank_column_name<-paste("rank",i,sep="")
     RNAseq_Annotated_Matrix[,Bin_Column+i]<-c(NA)
