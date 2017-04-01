@@ -21,19 +21,21 @@ RNAseq_Normalize <- function(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_al
   SE<-length(sample_names) + 1 # end column of samples
 
   # Calculate the number of reads mapped to each bin in each sample (This may be a separate function)
-    sum_reads_per_genome_matrix<-matrix(NA,nrow=length(high_quality_bins),ncol=length(sample_names))
+  sum_reads_per_genome_matrix<-matrix(NA,nrow=length(high_quality_bins),ncol=length(sample_names))
   for (i in 1:length(high_quality_bins)) {
     for (j in 2:(length(sample_names)+1)) {
-      sum_reads_per_genome_matrix[i,j-1]<-sum(RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==names(table(RNAseq_Annotated_Matrix$Bin))[i]),j])
+      sum_reads_per_genome_matrix[i,j-1]<-sum(RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),j])
     }
   }
-
-  # calculate max per bin
+ 
+  # calculate max per bin.
+  # Devide each column (sample) per row in normalized_sum_reads_per_genome_matrix (each bin) by the max count per bin
   normalized_sum_reads_per_genome_matrix<-sum_reads_per_genome_matrix/apply(sum_reads_per_genome_matrix,1,max)
 
+  
   # normalize reads by max mapped to a genome
   for (i in 1:length(high_quality_bins)) {
-    RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==names(table(RNAseq_Annotated_Matrix$Bin))[i]),SS:SE]<-RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==names(table(RNAseq_Annotated_Matrix$Bin))[i]),SS:SE]/normalized_sum_reads_per_genome_matrix[i,]
+    RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),SS:SE]<-RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),SS:SE]/normalized_sum_reads_per_genome_matrix[i,]
   }
 
   # normalized by total of non-rRNA reads per sample mapped
@@ -51,7 +53,8 @@ RNAseq_Normalize <- function(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_al
   for (i in 2:(length(sample_names)+1)) {
     RNAseq_Annotated_Matrix[,i][is.infinite(RNAseq_Annotated_Matrix[,i])] <- 0
   }
-
   return(RNAseq_Annotated_Matrix)
 }
+
+
 
