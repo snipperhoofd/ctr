@@ -4,13 +4,17 @@
 \alias{RNAseq_Normalize}
 \title{Normalized RNAseq raw read counts}
 \usage{
-RNAseq_Normalize(RNAseq_Annotated_Matrix, no_feature, ambiguous, not_aligned)
+RNAseq_Normalize(RNAseq_Annotated_Matrix, no_featureRNAseq_Annotated_Matrix,
+  ambiguous, not_aligned, method = "default")
 }
 \arguments{
 \item{RNAseq_Annotated_Matrix}{The original count matrix (See X for format details).}
 
+\item{method}{A string containing the method to use, either one of: ["default", "TMM", "RLE"].  In addition to the described default method, TMM and RLE from bioconductors edgeR
+package are implemented as well}
+
 \item{no_feature, ambiguous, not_aligned}{A set of vectors equal to the number of samples,
-containing the number of reads that had no feature,
+containing the number of reads that had no RNAseq_NormalizeEfeature,
 where ambiguously mapped, or not aligned in their  (obtained from the mapping output).}
 
 \item{gene_lengths}{A matrix with the length of each gene (genes must be in same order as input RNAseq_Annotated_Matrix)}
@@ -28,5 +32,5 @@ reads mapped per genome, gene length, log2 RPKM
 \preformatted{Where SS and SE are the start and end columns of the samples (raw counts).}
 }
 \examples{
-RNAseq_Normalize(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_aligned)
+RNAseq_Normalize(RNAseq_Annotated_Matrix, no_feature,ambiguous, not_aligned)
 }

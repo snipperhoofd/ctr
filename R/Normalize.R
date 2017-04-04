@@ -8,7 +8,7 @@
 #' containing the number of reads that had no RNAseq_NormalizeEfeature,
 #' where ambiguously mapped, or not aligned in their  (obtained from the mapping output).
 #' @param gene_lengths A matrix with the length of each gene (genes must be in same order as input RNAseq_Annotated_Matrix)
-#' @param method c("default", "TMM", "RLE"). A string containing the method to use. In addition to the described method, TMM and RLE from bioconductors edgeR
+#' @param method A string containing the method to use, either one of: ["default", "TMM", "RLE"].  In addition to the described default method, TMM and RLE from bioconductors edgeR
 #' package are implemented as well
 #' @export
 #' @return The normalized read counts  of \code{Sample 1} ... \code{Sample N}.
@@ -36,12 +36,12 @@ defaultRNA_Normalize <- function(SS, SE, RNAseq_Annotated_Matrix,no_featureRNAse
       sum_reads_per_genome_matrix[i,j-1]<-sum(RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),j])
     }
   }
- 
+
   # calculate max per bin.
   # Devide each column (sample) per row in normalized_sum_reads_per_genome_matrix (each bin) by the max count per bin
   normalized_sum_reads_per_genome_matrix<-sum_reads_per_genome_matrix/apply(sum_reads_per_genome_matrix,1,max)
 
-  
+
   # normalize reads by max mapped to a genome
   for (i in 1:length(high_quality_bins)) {
     RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),SS:SE]<-RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),SS:SE]/normalized_sum_reads_per_genome_matrix[i,]
