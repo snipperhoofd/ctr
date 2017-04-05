@@ -5,7 +5,7 @@
 #'
 #' @param RNAseq_Annotated_Matrix The original count matrix (See X for format details).
 #' @param no_feature,ambiguous,not_aligned  A set of vectors equal to the number of samples,
-#' containing the number of reads that had no RNAseq_NormalizeEfeature,
+#' containing the number of reads that had no feature,
 #' where ambiguously mapped, or not aligned in their  (obtained from the mapping output).
 #' @param gene_lengths A matrix with the length of each gene (genes must be in same order as input RNAseq_Annotated_Matrix)
 #' @param method A string containing the method to use, either one of: ["default", "TMM", "RLE"].  In addition to the described default method, TMM and RLE from bioconductors edgeR
@@ -16,7 +16,8 @@
 #' @note \preformatted{To remove rows that have a 0 for its read counts:}
 #' \code{RNAseq_Annotated_Matrix[apply(RNAseq_Annotated_Matrix[, SS:SE], 1, function(x) !any(x == 0)), ]}
 #' \preformatted{Where SS and SE are the start and end columns of the samples (raw counts).}
-RNAseq_Normalize <- function(RNAseq_Annotated_Matrix,no_featureRNAseq_Annotated_Matrix, ambiguous,not_aligned, method = "default"){
+RNAseq_Normalize <- function(RNAseq_Annotated_Matrix, no_feature, ambiguous, 
+			     not_aligned, method = "default"){
 
   SS<-2 # start column for samples
   SE<-length(sample_names) + 1 # end column of samples
