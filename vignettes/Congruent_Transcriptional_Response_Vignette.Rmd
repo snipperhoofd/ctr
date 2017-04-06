@@ -60,7 +60,7 @@ Function  | Name              | Description
 
 ### D) Calculate Distances 
 
-  - All pairwise Pearson Correlations (PC), Normalized Rank Euclidean Distances (NRED) for each KO<sub>n</sub> in each module, across all bins (N*#genomes^2)
+  - All pairwise Pearson Correlations (PC), Normalized Rank Euclidean Distances (NRED) for each KO<sub>n</sub> in each module, across all bins ($N*\# genomes^2$)
   - Jaccard Distances between Genome A and B ($J_{AB}$)
   - Calculate composite score (CS)  
 $$\begin{align*}
@@ -68,7 +68,7 @@ CS_{AB}
 &=Average(KO_{1},\cdots,KO_{n})/J_{AB}
 \end{align*}$$
 
-The number of calculations is equal to #genomes^2^*#KOs  
+The number of calculations is equal to $\# genomes^{2* \# KOs}$  
 
 ### E) Calculating statistics for each module
 
