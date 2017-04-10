@@ -4,20 +4,20 @@
 \alias{RNAseq_Normalize}
 \title{Normalized RNAseq raw read counts}
 \usage{
-RNAseq_Normalize(RNAseq_Annotated_Matrix, no_featureRNAseq_Annotated_Matrix,
-  ambiguous, not_aligned, method = "default")
+RNAseq_Normalize(RNAseq_Annotated_Matrix, matrix_features, method = "default")
 }
 \arguments{
 \item{RNAseq_Annotated_Matrix}{The original count matrix (See X for format details).}
 
+\item{matrix_features}{General_features object that contains various metrics about the RNAseq data in the matrix.
+                         the values SS, SE and sample_names are used, together with  no_feature, ambiguous and not_aligned. A set of vectors equal to the number of samples,
+containing the number of reads that had no feature,
+where ambiguously mapped, or not aligned in their  (obtained from the mapping output).}
+
 \item{method}{A string containing the method to use, either one of: ["default", "TMM", "RLE"].  In addition to the described default method, TMM and RLE from bioconductors edgeR
 package are implemented as well}
 
-\item{no_feature, ambiguous, not_aligned}{A set of vectors equal to the number of samples,
-containing the number of reads that had no RNAseq_NormalizeEfeature,
-where ambiguously mapped, or not aligned in their  (obtained from the mapping output).}
-
-\item{gene_lengths}{A matrix with the length of each gene (genes must be in same order as input RNAseq_Annotated_Matrix)}
+\item{gene_lengths}{<NOT IMPLEMENTED> A matrix with the length of each gene (genes must be in same order as input RNAseq_Annotated_Matrix)}
 }
 \value{
 The normalized read counts  of \code{Sample 1} ... \code{Sample N}.

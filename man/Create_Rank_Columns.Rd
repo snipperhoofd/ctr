@@ -4,7 +4,7 @@
 \alias{Create_Rank_Columns}
 \title{Calculate Normalized Ranks (e.g. rank / total genes)}
 \usage{
-Create_Rank_Columns(RNAseq_Annotated_Matrix)
+Create_Rank_Columns(RNAseq_Annotated_Matrix, matrix_features)
 }
 \arguments{
 \item{RNAseq_Annotated_Matrix}{The original count matrix (See X for format details).}
