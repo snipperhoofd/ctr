@@ -22,14 +22,14 @@ RNAseq_Normalize <- function(RNAseq_Annotated_Matrix, no_feature, ambiguous,
   SS<-2 # start column for samples
   SE<-length(sample_names) + 1 # end column of samples
   if(method == "default"){
-    return(defaultRNA_Normalize(SS, SE, RNAseq_Annotated_Matrix, no_featureRNAseq_Annotated_Matrix, ambiguous,not_aligned))
+    return(defaultRNA_Normalize(SS, SE, RNAseq_Annotated_Matrix, no_feature, ambiguous,not_aligned))
     }
   else if(method == "TMM" || method == "RLE"){
     return(edgeRmethods(SS, SE, method, RNAseq_Annotated_Matrix))
     }
 }
 
-defaultRNA_Normalize <- function(SS, SE, RNAseq_Annotated_Matrix,no_featureRNAseq_Annotated_Matrix, ambiguous,not_aligned){
+defaultRNA_Normalize <- function(SS, SE, RNAseq_Annotated_Matrix,no_feature, ambiguous,not_aligned){
   # Calculate the number of reads mapped to each bin in each sample (This may be a separate function)
   sum_reads_per_genome_matrix<-matrix(NA,nrow=length(high_quality_bins),ncol=length(sample_names))
   for (i in 1:length(high_quality_bins)) {
