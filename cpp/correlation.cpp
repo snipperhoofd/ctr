@@ -6,6 +6,46 @@
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
 
+
+/**
+ * Calculates the Pearson Correlation between two vectors
+ *
+ * @param vector1 vector containing doubles
+ * @param vector2 vector containing doubles
+ * @param size Integer representing the size of both vectors (equal size)
+ *
+ * @author Joris van Steenbrugge
+ * @version 1.0 10 april 2017
+ */
+double CalcNormPearson(double * vector1, double * vector2, int size);
+
+
+/**
+ * Calculates the Normalized Euclidean distance of two vectors.
+ *
+ * @param vector1 vector containing doubles
+ * @param vector2 vector containing doubles
+ * @param size Integer representing the size of both vectors (equal size)
+ * @return the normalised euclidean distance
+ *
+ * @author Joris van Steenbrugge
+ * @version 1.0 10 april 2017
+ */
+double CalcNormEuclidean(double * vector1, double * vector2, int size);
+
+/**
+ * Determines if two samples share the same KO term
+ *
+ * @param K01 char array containing the first KO term
+ * @param K02 char array containing the second KO term
+ * @return A char array containg
+ *
+ * @author Joris van Steenbrugge
+ * @version 1.0 10 april 2017
+ */
+char* SharedKO(char * KO1, char * KO2);
+
+
 class StdDeviation{
 
 private:
@@ -131,20 +171,13 @@ class Calculator{
 
 
 
-  /**
-   * Calculates the Normalized Euclidean distance of two vectors.
-   *
-   * @param vector1 vector containing doubles
-   * @param vector2 vector containing doubles
-   * @param size Integer representing the size of both vectors (equal size)
-   *
-   * @author Joris van Steenbrugge
-   * @version 1.0 10 april 2017
-   */
-double CalcNormEuclidean(double * vector1, double * vector2, int size);
 
-
-
+double CalcNormPearson(double * vector1, double * vector2, int size)
+{
+  Calculator calc;
+  calc.SetValues(vector1, vector2, size);
+  return calc.Calculate_Correlation();
+}
 
 double CalcNormEuclidean(double * vector1, double * vector2, int size)
 {
@@ -157,7 +190,7 @@ double CalcNormEuclidean(double * vector1, double * vector2, int size)
 }
 
 /*todo:
- *
+ * I was trying to make a shared KO function but it might be over complicating
  * KO_pairwise_gene_pearson
  * KO_pairwise_gene_euclidean
  * H_KO_pairwise_gene_pearson
@@ -167,9 +200,12 @@ double CalcNormEuclidean(double * vector1, double * vector2, int size)
  */
 
 // [[Rcpp::export]]
-List Individual_KO_background(NumericMatrix RNAseqExpressionCounts, NumericMatrix RNAseqExpressionRanks, int N)
+List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
+                              NumericMatrix RNAseqExpressionRanks,
+                              StringVector KOTerms,
+                              int N)
 {
-    Calculator calc;
+
     NumericVector RandomPairwiseGenePearson(N);
     NumericVector RandomPairwiseGeneEuclidean(N);
 
@@ -184,16 +220,21 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts, NumericMatri
         double x[genomeA.size()];
         double y[genomeB.size()];
 
+        //Transform NumericVector to an array of doubles
         for(int i = 0; i < genomeA.size();i++){
             x[i] = genomeA[i];
             y[i] = genomeB[i];
         }
 
-        calc.SetValues(x, y, genomeA.size());
 
-        RandomPairwiseGenePearson[i] = calc.Calculate_Correlation();
+
+        RandomPairwiseGenePearson[i] = CalcNormPearson(x,y, genomeA.size());
         RandomPairwiseGeneEuclidean[i] = CalcNormEuclidean(x, y, genomeA.size());
 
+        //Check if random KO terms are equal
+        if(KOTerms[indexA] == KOTerms[indexA]){
+          printf("TRUE")
+        }
     }
 
    return List::create(

@@ -124,7 +124,7 @@ sample_KO <- function(RNAseq_Annotation_matrix_no_sd_of_zero, position_of_genome
 
 Individual_KO_background_C_implementation <- function(RNAseq_Annotated_Matrix_no_sd_of_zero, matrix_features, N){
 
-  sourceCpp("/home/joris/tools/thesisscripts/correlation.cpp")
+  sourceCpp("cpp/correlation.cpp")
 
   RNAseqExpresssionCounts <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@SS:matrix_features@SE])
   RNAseqExpressionRanks <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@RS:matrix_features@RE])
