@@ -99,9 +99,9 @@ Next, the necessary files are uploaded including
   - 2) The matrix with transcrtipt abundance and annotations. The format of this matrix is tab delimited: Locus Tag, raw counts, the KO annotation and the Bin.
 
 ```{r uploading the matrix}
-KO_pathways_table<-read.table("~/Documents/Research/KO/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
-
-RNAseq_Annotated_Matrix<-read.table("~/Documents/Research/Ecology_of_BGC/EBPR_RNAseq_Annotation_Matrix",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE)
+# First set working directory setwd("/path/to/directory/ctr")
+KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
+RNAseq_Annotated_Matrix<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE)
 ```
 
 Modules are defined based on their KEGG Orthology (KO) annotations
@@ -182,11 +182,6 @@ high_quality_bins<-names(table(RNAseq_Annotated_Matrix$Bin))
 kable(RNAseq_Annotated_Matrix[1:5,], caption = "Raw Data")
 ```
 
-# Section B) Defining functions
-
-This section kind of dissapeared without the need to source 
-
-
 # Section C) Normalize and calculate background distributions for individual KOs and modules of 'N' KOs
 
 Data will be normalized by the depth of sequencing and the number of reads mapped per genome. It will then be converted to $log_{2}$ scale
@@ -196,11 +191,18 @@ Data will be normalized by the depth of sequencing and the number of reads mappe
 no_feature<- c(9159700,4459877,9826273,8171512,9542765,10522313)
 ambiguous<- c(3940698,2023389,4675033,3308789,6446272,5966543)
 not_aligned<- c(0,19317660,0,0,0,0)
+unmapped_reads<-no_feature+ ambiguous+ not_aligned
+library_size<-c(234232896,183166236,228746720,198024002,231567992,259156166)
 ```
 
 ### Normalize
 ```{r Normalize the raw data, echo=TRUE, results = 'asis'}
-RNAseq_Annotated_Matrix<-RNAseq_Normalize(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_aligned)
+RNAseq_Annotated_Matrix_TMM<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="RLE")
+RNAseq_Annotated_Matrix_RLE<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="TMM")
+RNAseq_Annotated_Matrix_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_aligned)
+RNAseq_Annotated_Matrix_default_by_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_default)
+RNAseq_Annotated_Matrix_RLE_by_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_RLE)
+
 kable(RNAseq_Annotated_Matrix[1:5,], caption = "Normalized Data")
 ```
 
