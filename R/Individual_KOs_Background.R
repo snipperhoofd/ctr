@@ -112,6 +112,8 @@ sample_KO <- function(RNAseq_Annotation_matrix_no_sd_of_zero, position_of_genome
   KO_position_of_A<- intersect(which(RNAseq_Annotation_Matrix_no_sd_of_zero$KO == random_KO), position_of_genome_A)
   KO_position_of_B<- intersect(which(RNAseq_Annotation_Matrix_no_sd_of_zero$KO == random_KO), position_of_genome_B)
 
+  print(KO_position_of_A)
+
   sample_KO_position_of_A<- KO_position_of_A[sample(length(KO_position_of_A), 1)]
   sample_KO_position_of_B<- KO_position_of_B[sample(length(KO_position_of_B), 1)]
   return(list("sample_KO_position_of_A" = sample_KO_position_of_A,
@@ -124,9 +126,17 @@ sample_KO <- function(RNAseq_Annotation_matrix_no_sd_of_zero, position_of_genome
 
 Individual_KO_background_C_implementation <- function(RNAseq_Annotated_Matrix_no_sd_of_zero, matrix_features, N){
   #C++ implementation of the functions
-  sourceCpp("src/correlation.cpp")
+  #sourceCpp("src/correlation.cpp")
 
   RNAseqExpresssionCounts <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@SS:matrix_features@SE])
   RNAseqExpressionRanks <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@RS:matrix_features@RE])
-  Individual_KO_background(RNAseqExpresssionCounts, RNAseqExpressionRanks, N)
+  KOterms<- RNAseq_Annotated_Matrix_no_sd_of_zero[, 8]
+  All_Bins <- RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@Bin_Column]
+
+  Individual_KO_background(RNAseqExpresssionCounts,
+                           RNAseqExpressionRanks,
+                           KOterms,
+                           All_Bins,
+                           matrix_features@high_quality_bins,
+                           N)
 }
