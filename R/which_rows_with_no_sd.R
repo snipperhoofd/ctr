@@ -21,7 +21,13 @@ which_rows_with_no_sd <- function(RNAseq_Annotated_Matrix, matrix_features){
 }
 
 which_rows_with_no_sd2 <- function(RNAseq_Annotated_Matrix, matrix_features){
-  stdevs <- apply(RNAseq_Annotated_Matrix, 1, function(x) sd(x[matrix_features@SS:matrix_features@SE]))
-  RNAseq_Annotated_Matrix$sd <- stdevs
-  return(RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$sd != 0)])
+  #sourceCpp("src/which_rows_with_no_sd.cpp")
+  mat <- as.matrix(RNAseq_Annotated_Matrix)
+
+  #filtered_matrix still contains empty row
+  filtered_matrix <- which_rows_with_no_sd_cpp(mat, (matrix_features@SS-1):(matrix_features@SE - 1))
+
+  #return matrix without empty rows
+  return(a[!apply(a, 1, function(x) all(x=="")),])
+
 }
