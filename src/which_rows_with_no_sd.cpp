@@ -17,7 +17,8 @@ double CalculateMean(double * values, int size)
     return (sum / size);
 }
 
-double CalculateVariance(double * values, double mean, int size){
+double CalculateVariance(double * values, double mean, int size)
+{
     double temp = 0;
 
     for(int i = 0; i < size; i++)
@@ -34,13 +35,10 @@ double Calculate_StandardDeviation(double * values, int size)
 }
 
 // [[Rcpp::export]]
-StringMatrix which_rows_with_no_sd_cpp(StringMatrix x, NumericVector sampleCols)
+StringMatrix which_rows_with_no_sd_cpp(CharacterMatrix x, NumericVector sampleCols)
 {
     int colSize = sampleCols.size();
-    StringMatrix out(x.nrow(), x.ncol());
-
-
-
+    CharacterMatrix out(x.nrow(), (x.ncol()+1));
 
     for(int i = 0; i < x.nrow(); i++)
     {
@@ -48,17 +46,19 @@ StringMatrix which_rows_with_no_sd_cpp(StringMatrix x, NumericVector sampleCols)
         //Extract an array containing the sample expression values
         for(int j = 0; j < colSize; j++)
         {
-            std::string a = as<std::string>(x(i,sampleCols[j]));
+            std::string a = as<std::string>(x(i, sampleCols[j]));
             double expression = atof(a.c_str());
             expressions[j] = expression;
         }
 
-        int stdev = Calculate_StandardDeviation(expressions, colSize) + 0.5;
-        if( stdev != 0)
+        double stdev = Calculate_StandardDeviation(expressions, colSize);
+        for(int j = 0; j < x.ncol(); j++)
         {
-          out(i, _) = x(i, _);
+            out(i, j) = x(i, j );
         }
+        out(i, x.ncol()) = stdev;
 
     }
+
     return out;
 }

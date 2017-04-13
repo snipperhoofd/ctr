@@ -22,12 +22,12 @@ which_rows_with_no_sd <- function(RNAseq_Annotated_Matrix, matrix_features){
 
 which_rows_with_no_sd2 <- function(RNAseq_Annotated_Matrix, matrix_features){
   #sourceCpp("src/which_rows_with_no_sd.cpp")
-  mat <- as.matrix(RNAseq_Annotated_Matrix)
-
   #filtered_matrix still contains empty row
-  filtered_matrix <- which_rows_with_no_sd_cpp(mat, (matrix_features@SS-1):(matrix_features@SE - 1))
+  sample_cols <- (matrix_features@SS-1):(matrix_features@SE - 1)
+  filtered_matrix <- which_rows_with_no_sd_cpp(as.matrix(RNAseq_Annotated_Matrix),
+                                               sample_cols)
 
   #return matrix without empty rows
-  return(a[!apply(a, 1, function(x) all(x=="")),])
+  return(filtered_matrix[which(filtered_matrix[, ncol(filtered_matrix)] != "0"), 1:ncol(filtered_matrix)])
 
 }
