@@ -35,30 +35,20 @@ double Calculate_StandardDeviation(double * values, int size)
 }
 
 // [[Rcpp::export]]
-StringMatrix which_rows_with_no_sd_cpp(CharacterMatrix x, NumericVector sampleCols)
+NumericVector which_rows_with_no_sd_cpp(NumericMatrix x)
 {
-    int colSize = sampleCols.size();
-    CharacterMatrix out(x.nrow(), (x.ncol()+1));
+    std::vector<double> out;
+    out.reserve(x.nrow());
 
     for(int i = 0; i < x.nrow(); i++)
     {
-        double expressions[colSize];
-        //Extract an array containing the sample expression values
-        for(int j = 0; j < colSize; j++)
-        {
-            std::string a = as<std::string>(x(i, sampleCols[j]));
-            double expression = atof(a.c_str());
-            expressions[j] = expression;
-        }
+        NumericVector expressions(x.ncol());
+        expressions = x(i, _);
 
-        double stdev = Calculate_StandardDeviation(expressions, colSize);
-        for(int j = 0; j < x.ncol(); j++)
-        {
-            out(i, j) = x(i, j );
-        }
-        out(i, x.ncol()) = stdev;
+        double stdev = Calculate_StandardDeviation(expressions.begin(), x.ncol());
+        out.push_back(stdev);
 
     }
 
-    return out;
+    return wrap(out);
 }
