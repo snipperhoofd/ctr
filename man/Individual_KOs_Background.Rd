@@ -4,7 +4,8 @@
 \alias{Individual_KOs_Background}
 \title{Calculating the background distribution for an indiviudal gene}
 \usage{
-Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero, N)
+Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero,
+  matrix_features, N)
 }
 \arguments{
 \item{RNAseq_Annotation_Matrix_no_sd_of_zero, }{the original matrix with rows that have a standard deviation of zero removed.}
