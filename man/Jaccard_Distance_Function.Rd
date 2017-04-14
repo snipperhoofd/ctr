@@ -4,7 +4,8 @@
 \alias{Jaccard_Distance_Function}
 \title{Calculte the Jaccard Distance}
 \usage{
-Jaccard_Distance_Function(Module)
+Jaccard_Distance_Function(Pairwise_Bin_Array_Presence, RNAseq_Annotated_Matrix,
+  Module)
 }
 \value{
 A matrix of pairwise Jaccard distnces

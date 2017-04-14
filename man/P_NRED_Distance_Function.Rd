@@ -4,7 +4,7 @@
 \alias{P_NRED_Distance_Function}
 \title{Calculates pairwise composite PC & NRED scores for a module}
 \usage{
-P_NRED_Distance_Function(Subset_KOs)
+P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Subset_KOs)
 }
 \arguments{
 \item{Subset_KOs}{A list of KOs that form a module}

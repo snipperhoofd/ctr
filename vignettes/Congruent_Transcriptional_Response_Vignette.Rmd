@@ -16,21 +16,13 @@ knitr::opts_chunk$set(echo = TRUE)
 ## Introduction:
 Micrbiobial Ecologists often use genomic content to infer the biogeochemical processes and interactions within a microbial community. When organisms overlap in their genomic content, they are often inferred to possess similar traits. Conversely, divergent genomic content is indicative of niche differentiation. 
 
-Transcriptomics data may aid in making these ecological inferences by providing information on the regulation of this genetic content. Congruent transcriptional responses (CTRs) of particular metabolic modules in disparate organisms within a community may be indicative of common metabolic features shared by many organisms. Conversely, when divergent transcriptional responses are observed across numerous lineages, this is indicative of the disparate niches in the community.
+Transcriptomics data may aid in making these ecological inferences by providing information on the regulation of this genetic content. Congruent transcriptional responses (CTRs) of particular metabolic modules in disparate organisms within a community may be indicative of common metabolic features shared by many organisms. Together, organisms with shared metabolic features may contribute to functional redundancy within an community, with important ecological implications.   Conversely, when divergent transcriptional responses are observed across numerous lineages, this is indicative of the disparate niches in the community.
 
 In this package we present a statistical framework to identify CTRs of (pre-defined) metabolic modules in microbial communties. In this manner, genomic bins may be clustered into sub-networks that share responses for particular modules, thereby facilitating inferences on functional redundancy (e.g. intra-cluster), niche partitioning (inter-cluster), and the emergence of complex traits (integrating infromation about multiple modules). 
 
-To demonstrate the utility of this approach, we identify CTRs in polymer storage (polyphosphate, glycogen, and polyhydroxyalkanoates) and amino acid biosynthesis modules of 38 genome bins recovered from a bioreactor operated under conditions that select for organisms capable of storing polymers.
+To demonstrate the utility of this approach, we identify CTRs in polymer storage (polyphosphate, glycogen, and polyhydroxyalkanoates) and amino acid biosynthesis modules of 38 genome bins recovered from a bioreactor operated under conditions that select for organisms capable of storing polymers. We compare different normalization techniques, and look at the role of genomic bin completeness in interpretating results.
 
-
-### A) Importing Raw Data
-
-  - Structure (Tab deliminated)
-    - Locus Tag, Raw Counts, Annotations
-  - Import KEGG Orthology Table  
-  - Statistics for normalize: Total reads per sample, total reads mapped per genome, log(2,RPKM)
-
-### B) Define Functions
+![](/Users/benoyserman/Desktop/ctr/CTR_workflow.png)
 
 <center>
 
@@ -56,9 +48,16 @@ Function  | Name              | Description
 
 </center>
 
-### C) Calculate background distributions for individual KOs and modules of 'N' KOs
+### A) Importing raw data
 
-### D) Calculate Distances 
+  - Structure (Tab deliminated)
+    - Locus Tag, Raw Counts, Annotations
+  - Import KEGG Orthology Table  
+  - Statistics for normalize: Total reads per sample, total reads mapped per genome, edgeR
+
+### B) Calculate background distributions for individual KOs and modules of 'N' KOs
+
+### C) Calculate pairwise distances in the data sets
 
   - All pairwise Pearson Correlations (PC), Normalized Rank Euclidean Distances (NRED) for each KO<sub>n</sub> in each module, across all bins ($N*\# genomes^2$)
   - Jaccard Distances between Genome A and B ($J_{AB}$)
@@ -70,13 +69,12 @@ CS_{AB}
 
 The number of calculations is equal to $\# genomes^{2* \# KOs}$  
 
-### E) Calculating statistics for each module
+### D) Calculating statistics for each module
 
 The distribution of pairwise distances within each cluster may be compared to a background distribution to calculate a p-value. A small p-value indicates a strong intra-cluster CTR.
 
 In a similar manner, the KOs forming each module (each KO), may be organized based on the distribution of pairwise distances.
 
-![](/Users/benoyserman/Desktop/ctr/CTR_workflow.png)
 
 # Section A) Importing Raw Data & Data structure
 
@@ -101,11 +99,15 @@ Next, the necessary files are uploaded including
 ```{r uploading the matrix}
 # First set working directory setwd("/path/to/directory/ctr")
 KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
-RNAseq_Annotated_Matrix<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE)
+
+# Load example data set one. Bins obtained from metagenomic assembly -> binning with metabat
+RNAseq_Annotated_Matrix_B<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE, col.names=c("Locus_Tag","Sample1","Sample2","Sample3","Sample4","Sample5","Sample6","KO"))
+
+# Load example data set one. Bins obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome 
+RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",sep=" ",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE, col.names=c("Locus_Tag","Sample1","Sample2","Sample3","Sample4","Sample5","Sample6","KO"))
 ```
 
 Modules are defined based on their KEGG Orthology (KO) annotations
-
 
 ```{r pre-defined modules, echo = TRUE}
 All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1]
@@ -114,72 +116,32 @@ polyP_module <- c("K00937","K02040","K02037","K02038","K02036","K07636","K07657"
 Glycogen_module<- c("K00700","K00688","K00703","K01214","K15778","K00975","K00845")
 ```
 
-```{r echo=FALSE}
-# These are other modules that will be defined
-Alanine_module<- c("K00814","K00827","K00830","K00259","K19244","K14272","K14260","K00824","K01175","K09758")
-Arginine_module<- KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00220")]
-asparagine_module<-
-  aspartic_acid_module<- c()
-cysteine_module<- c()
-glutamine_module<- c()
-glutamic_acid_module<- c()
-glycine_module<- c()
-Histidine_module<- KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00340")][KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00340")]%in%names(table(RNAseq_Annotated_Matrix$KO))]
-isoleucine_module<- c()
-leucine_module<- c()
-lysine_module<- KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00300")]
-methionine_module<- c()
-phenylalanine_module<- c()
-proline_module<- c()
-serine_module<- c()
-threonine_module<- c()
-tryptophan_module<- c()
-Phen_tyro_trypt_module <-  KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00400")]
-valine_module<- c()
-Taurine_and_hypotaurine_module<-KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00430")][KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00430")]%in%names(table(RNAseq_Annotated_Matrix$KO))]
-sulfate_transport_module<-c("K02048","K02046","K02047","K02045")
-tungstate_molybdate_transport_module<-c("K05572","K05573","K06857","K15495","K15496","K15497","K02020","K02018","K02017","K05776")
-histidine_transport_module<-c("K10015","K10016","K10017","K10014")
-glutamine_transport_module<-c("K10036","K10037","K10038","K10039","K10039","K10041")
-arginine_transport_module<-c("K09996","K09997","K09998","K09999","K10000")
-glutamate_aspartate_transport_module<-c("K10001","K10002","K10003","K10004","K10005","K10006","K10007","K10008")
-cystine_transport_module<-c("K02424","K10009","K10010","K16956","K16957","K16958","K16959","K16960")
-arginine_ornithine_lysine_transport_module<-c("K10022","K10023","K10024","K10025","K17062","K17063","K17074","K17076")
-branched_transport_module<-c("K01999","K01997","K01998","K01995","K01996")
-neutral_transport_module<-c("K11954","K11955","K11956","K11957","K11958")
-
-```
-
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
 
 ```{r modifying the matrix if necessary, echo = TRUE}
-# This code is only necessary to modify the original matrix
-# These bins were identified through visual inspection of the relative abundances 
-Clade_IIA_bins<-c(39,61,71,92,96,99)
-
 # add a column with the bin number ($Bin). This one-liner parses out the Bin number from the Locus ID
 # This is unnecessary if y
-RNAseq_Annotated_Matrix$Bin<-gsub(".*\\.(.*)\\..*", "\\1", RNAseq_Annotated_Matrix[,1])
+RNAseq_Annotated_Matrix_B$Bin<-gsub(".*\\.(.*)\\..*", "\\1", RNAseq_Annotated_Matrix_B[,1])
+RNAseq_Annotated_Matrix_BR$Bin<-gsub(".*\\.(.*)\\..*", "\\1", RNAseq_Annotated_Matrix_BR[,1])
 
-# Save the full matrix under another name because the subsequent step will filter out all Bins that are not >80% complete <5% contaminated
-RNAseq_Annotated_Matrix_full<-RNAseq_Annotated_Matrix
-
-# Merge Clade IIA bins 
-RNAseq_Annotated_Matrix$Bin[which(RNAseq_Annotated_Matrix$Bin %in% Clade_IIA_bins)]<-39
+# Rename Clade IIA reference to be consistent with bin number
+RNAseq_Annotated_Matrix_BR$Bin[grep("CAP2UW1*",RNAseq_Annotated_Matrix_BR$Bin)]<-39
 
 # These are genomes that are  >80% complete <5% contaminated, define a subset matrix with only these genomes
 high_quality_bins<-c(8,28,25,7,46,39,22,38,54,53,48,45,31,42,16,33,26,40,36,21,27,17,19,32,14,11,30,43,35,29,23,58,41,20,15,37,49,50)
-RNAseq_Annotated_Matrix<-RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin %in% high_quality_bins),]
+
+# Keep only high-quality bins
+RNAseq_Annotated_Matrix_B<-RNAseq_Annotated_Matrix_B[which(RNAseq_Annotated_Matrix_B$Bin %in% high_quality_bins),]
+RNAseq_Annotated_Matrix_BR<-RNAseq_Annotated_Matrix_BR[which(RNAseq_Annotated_Matrix_BR$Bin %in% high_quality_bins),]
 ```
 
 If the data is already in the correct format and contains only high-quality bins it should look like this:
 ```{r Raw Data, include = FALSE}
 # Give column names
-sample_names<-rep(NA,dim(RNAseq_Annotated_Matrix)[2]-3)
-for (i in 1:dim(RNAseq_Annotated_Matrix)[2]-3) {sample_names[i]<-paste("Sample",i,sep="")}
-colnames(RNAseq_Annotated_Matrix)<-c("Locus_ID",sample_names,"KO","Bin")
-high_quality_bins<-names(table(RNAseq_Annotated_Matrix$Bin))
-kable(RNAseq_Annotated_Matrix[1:5,], caption = "Raw Data")
+sample_names<-rep(NA,dim(RNAseq_Annotated_Matrix_B)[2]-3)
+for (i in 1:dim(RNAseq_Annotated_Matrix_B)[2]-3) {sample_names[i]<-paste("Sample",i,sep="")}
+# colnames(RNAseq_Annotated_Matrix_B)<-c("Locus_ID",sample_names,"KO","Bin")
+kable(RNAseq_Annotated_Matrix_B[1:5,], caption = "Raw Data")
 ```
 
 # Section C) Normalize and calculate background distributions for individual KOs and modules of 'N' KOs
@@ -188,34 +150,48 @@ Data will be normalized by the depth of sequencing and the number of reads mappe
 
 ### Define inputs
 ```{r input variables for background distributions, echo=TRUE, results = 'asis'}
-no_feature<- c(9159700,4459877,9826273,8171512,9542765,10522313)
-ambiguous<- c(3940698,2023389,4675033,3308789,6446272,5966543)
-not_aligned<- c(0,19317660,0,0,0,0)
-unmapped_reads<-no_feature+ ambiguous+ not_aligned
-library_size<-c(234232896,183166236,228746720,198024002,231567992,259156166)
-```
+ ```
 
 ### Normalize
 ```{r Normalize the raw data, echo=TRUE, results = 'asis'}
-RNAseq_Annotated_Matrix_TMM<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="RLE")
-RNAseq_Annotated_Matrix_RLE<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="TMM")
-RNAseq_Annotated_Matrix_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix,no_feature,ambiguous,not_aligned)
-RNAseq_Annotated_Matrix_default_by_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_default)
-RNAseq_Annotated_Matrix_RLE_by_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_RLE)
+# RNAseq_Annotated_Matrix_TMM<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="RLE")
+# RNAseq_Annotated_Matrix_RLE<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="TMM")
+# RNAseq_Annotated_Matrix_RLE_by_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_RLE)
 
-kable(RNAseq_Annotated_Matrix[1:5,], caption = "Normalized Data")
+RNAseq_Annotated_Matrix_B_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_B,no_feature_B,ambiguous_B,not_aligned_B)
+RNAseq_Annotated_Matrix_B_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_B_default)
+
+RNAseq_Annotated_Matrix_BR_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_BR,no_feature,ambiguous,not_aligned)
+RNAseq_Annotated_Matrix_BR_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_BR_default)
+
+kable(RNAseq_Annotated_Matrix_B_default_bin[1:5,], caption = "Normalized Data")
 ```
 
 ### Calculate Ranks
 
 ```{r Create Abundance Columns, echo=TRUE, results = 'asis'}
-RNAseq_Annotated_Matrix<-Create_Rank_Columns(RNAseq_Annotated_Matrix)
-kable(RNAseq_Annotated_Matrix[1:5,], caption = "Data with Rank Column added")
+set.seed(1396558) # ties are dealt with randomly, so set.seed must be used to ensure reproducibility
+RNAseq_Annotated_Matrix_B_default<-Create_Rank_Columns(RNAseq_Annotated_Matrix_B_default)
+set.seed(1396558)
+RNAseq_Annotated_Matrix_B_default_bin<-Create_Rank_Columns(RNAseq_Annotated_Matrix_B_default_bin)
+
+set.seed(1396558) # ties are dealt with randomly, so set.seed must be used to ensure reproducibility
+RNAseq_Annotated_Matrix_BR_default<-Create_Rank_Columns(RNAseq_Annotated_Matrix_BR_default)
+set.seed(1396558)
+RNAseq_Annotated_Matrix_BR_default_bin<-Create_Rank_Columns(RNAseq_Annotated_Matrix_BR_default_bin)
+
+
+
+kable(RNAseq_Annotated_Matrix_BR_default_bin[1:5,], caption = "Data with Rank Column added")
+
 ```
 
 ### How many rows have a SD of zero?
 ```{r remove rows with standard deviation of 0, echo=TRUE, results = 'asis'}
-RNAseq_Annotation_Matrix_no_sd_of_zero<-which_rows_with_no_sd(RNAseq_Annotated_Matrix)
+
+RNAseq_Annotation_Matrix_no_sd_of_zero_B<-which_rows_with_no_sd(RNAseq_Annotated_Matrix_B_default_bin)
+RNAseq_Annotation_Matrix_no_sd_of_zero_BR<-which_rows_with_no_sd(RNAseq_Annotated_Matrix_BR_default_bin)
+
 ```
 
 Of `r dim(RNAseq_Annotated_Matrix)[1]` rows (transcripts), `r dim(RNAseq_Annotated_Matrix)[1]-dim(RNAseq_Annotation_Matrix_no_sd_of_zero)[1]` had a standard deviation of 0. These are not included when calculating background distibutions.
@@ -223,55 +199,9 @@ Of `r dim(RNAseq_Annotated_Matrix)[1]` rows (transcripts), `r dim(RNAseq_Annotat
 Here we calculate the background distribution of the individual KOs, and test whether there is a significant difference between a random pairing of genes in two bins, and a random pairing of genes *with same function* in two bins. When multiple genes with a given function are present in a genome, two alternative strategies are taken whereby either 1) a random pairwise distance is used or 2) the minimum distance is used. 
 
 ``` {r, Calculates background distributions for individual KOs, echo=TRUE, results = 'asis' }
-All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1]
 
-I_KOs_Background <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero,10000)
-
-t.test_KO_random_pearson<-t.test(I_KOs_Background$KO_pairwise_gene_correlation,I_KOs_Background$random_pairwise_gene_correlation, alternative="greater") # x > y (NULL)
-t.test_H_KO_H_random_pearson<-t.test(I_KOs_Background$H_KO_pairwise_gene_correlation,I_KOs_Background$H_random_pairwise_gene_correlation, alternative="greater")
-t.test_H_KO_KO_pearson<-t.test(I_KOs_Background$H_KO_pairwise_gene_correlation,I_KOs_Background$KO_pairwise_gene_correlation, alternative="greater")
-
-t.test_KO_random_euclidean<-t.test(I_KOs_Background$KO_pairwise_gene_euclidean,I_KOs_Background$random_pairwise_gene_euclidean, alternative="less") # x > y (NULL)
-t.test_H_KO_H_random_euclidean<-t.test(I_KOs_Background$H_KO_pairwise_gene_euclidean,I_KOs_Background$H_random_pairwise_gene_euclidean, alternative="less")
-t.test_H_KO_KO_euclidean<-t.test(I_KOs_Background$H_KO_pairwise_gene_euclidean,I_KOs_Background$KO_pairwise_gene_euclidean, alternative="less")
-
-t.test_KO_random_pearson$p.value
-t.test_H_KO_H_random_pearson$p.value
-# t.test_H_KO_KO_pearson # This is for comparing the two KO distributions
-
-t.test_KO_random_euclidean$p.value
-t.test_H_KO_H_random_euclidean$p.value
-# t.test_H_KO_KO_euclidean # This is for comparing the two KO distributions
-
-par(mfrow=c(2,2),mar=c(3,3,3,1))
-# plot 1
-plot(density(I_KOs_Background$random_pairwise_gene_correlation,adjust = 2,na.rm=TRUE),ylim=c(0,1),xlab="",ylab="",main="")
-points(density(I_KOs_Background$KO_pairwise_gene_correlation,adjust = 2),typ="l",col="blue")
-mtext(paste("p-value = ",signif(t.test_KO_random_pearson$p.value,2)),side=3,col="blue",padj=2,cex=.75)
-title(ylab="Density", line=2, cex.lab=1)
-title(xlab="PC", line=2, cex.lab=1)
-
-# plot 2
-plot(density(I_KOs_Background$H_random_pairwise_gene_correlation,adjust = 2),ylim=c(0,1),xlab="",ylab="",main=" ")
-points(density(I_KOs_Background$H_KO_pairwise_gene_correlation,adjust = 2),typ="l",col="red")
-mtext(paste("p-value = ",signif(t.test_H_KO_H_random_pearson$p.value,2)),side=3,col="red",padj=2,cex=.75)
-title(ylab="Density", line=2, cex.lab=1)
-title(xlab="PC", line=2, cex.lab=1)
-
-# plot 3
-plot(density(I_KOs_Background$random_pairwise_gene_euclidean,adjust = 2),typ="l" ,ylim=c(0,1.25),xlab="",ylab="",main="")
-points(density(I_KOs_Background$KO_pairwise_gene_euclidean,adjust = 2),typ="l",col="blue")
-title(ylab="Density", line=2, cex.lab=1)
-title(xlab="NRED", line=2, cex.lab=1)
-mtext(paste("p-value = ",signif(t.test_KO_random_euclidean$p.value,2)),side=3,col="blue",padj=2,cex=.75)
-
-# plot 4
-plot(density(I_KOs_Background$H_random_pairwise_gene_euclidean,adjust = 2),typ="l" ,ylim=c(0,1.25),xlab="",ylab="",main="")
-points(density(I_KOs_Background$H_KO_pairwise_gene_euclidean,adjust = 2),typ="l",col="red")
-title(ylab="Density", line=2, cex.lab=1)
-title(xlab="NRED", line=2, cex.lab=1)
-title(" \n\nComparison of random & functional \n pairwise comparisons", outer=TRUE) 
-mtext(paste("p-value = ",signif(t.test_H_KO_H_random_euclidean$p.value,2)),side=3,col="red",padj=2,cex=.75)
+I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,10000)
+I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,10000)
 
 # What would a background distribution look like if there were no ties (e.g. genes with the same counts)?
 # random_euclidean_distances<-rep(NA,10000)
@@ -279,64 +209,48 @@ mtext(paste("p-value = ",signif(t.test_H_KO_H_random_euclidean$p.value,2)),side=
 
 ```
 
-Based on these background statistics, means & standard deviations for calculating Z scores may be calcualted. Here we used the random background distribution (e.g. not necessarily between genes with the same KO annotations).
+Based on these background statistics, means & standard deviations for calculating Z scores may be calcualted. To calculate the Z score, here we used the mu and sd from the random background distribution and account for multiple comparisons when a KO is present in multiple copies in a genome.
 
 ```{r}
-mu_pearson<-mean(I_KOs_Background$random_pairwise_gene_correlation)[1]
-sd_pearson<-sd(I_KOs_Background$random_pairwise_gene_correlation)[1]
-# A KO distribution
-mu_KO_pearson<-mean(I_KOs_Background$KO_pairwise_gene_correlation)[1]
-sd_KO_pearson<-sd(I_KOs_Background$KO_pairwise_gene_correlation)[1]
-# A maximized background KO distribution
-mu_H_KO_pearson<-mean(I_KOs_Background$H_KO_pairwise_gene_correlation)[1]
-sd_H_KO_pearson<-sd(I_KOs_Background$H_KO_pairwise_gene_correlation)[1]
-
-# means & standard deviations for calculating Z scores (NRED)
-# A completely random background distribution
-mu_euclidean<-mean(I_KOs_Background$random_pairwise_gene_euclidean)[1]
-sd_euclidean<-sd(I_KOs_Background$random_pairwise_gene_euclidean)[1]
-# A KO distribution
-mu_KO_euclidean<-mean(I_KOs_Background$KO_pairwise_gene_euclidean)[1]
-sd_KO_euclidean<-sd(I_KOs_Background$KO_pairwise_gene_euclidean)[1]
-# A maximized background KO distribution
-mu_H_KO_euclidean<-mean(I_KOs_Background$H_KO_pairwise_gene_euclidean)[1]
-sd_H_KO_euclidean<-sd(I_KOs_Background$H_KO_pairwise_gene_euclidean)[1]
-
-Z_random_pairwise_gene_correlation<-((I_KOs_Background$random_pairwise_gene_correlation)-mu_pearson)/sd_pearson
-Z_random_pairwise_gene_euclidean<-((I_KOs_Background$random_pairwise_gene_euclidean)-mu_euclidean)/sd_euclidean
-
-Z_H_KO_pairwise_gene_correlation<-((I_KOs_Background$H_KO_pairwise_gene_correlation)-mu_pearson)/sd_pearson
-Z_H_KO_pairwise_gene_euclidean<-((I_KOs_Background$H_KO_pairwise_gene_euclidean)-mu_euclidean)/sd_euclidean
-
-# df_random<-as.data.frame(cbind((Z_random_pairwise_gene_correlation),(Z_random_pairwise_gene_euclidean)))
-# df_KO<-as.data.frame(cbind((KO_pairwise_gene_correlation),(KO_pairwise_gene_euclidean)))
-# df_H_KO<-as.data.frame(cbind((Z_H_KO_pairwise_gene_euclidean),(H_KO_pairwise_gene_euclidean)))
-
-Z_df_random<-as.data.frame(cbind(-(Z_random_pairwise_gene_correlation),(Z_random_pairwise_gene_euclidean)))
-Z_df_H_KO<-as.data.frame(cbind(-(Z_H_KO_pairwise_gene_correlation),(Z_H_KO_pairwise_gene_euclidean)))
+Z_scores_B<-calc_Z_scores(I_KOs_Background_B)
+Z_scores_BR<-calc_Z_scores(I_KOs_Background_BR)
 ```
 
-These Z-scores may be combined into a composite score.
+These Z-scores may be combined into a composite score. Below is a visualization of Z scores from the random background distributions (accounting for multiple comparisons). It is clear that when genes share a KO, they also share an expression profile.
 
 ```{r, echo=TRUE}
 rf <- colorRampPalette(rev(brewer.pal(11,'Spectral')))
-plot(hexbin(Z_df_random), colramp=rf, mincnt=1, maxcnt=75,ylab="NRED",xlab="PC")
-plot(hexbin(Z_df_H_KO), colramp=rf, mincnt=1, maxcnt=75,ylab="NRED",xlab="PC")
-```
+plot(hexbin(Z_scores_B$Z_H_random), colramp=rf, mincnt=1, maxcnt=60,ylab="NRED",xlab="PC")
+plot(hexbin(Z_scores_B$Z_H_KO), colramp=rf, mincnt=1,maxcnt=60,ylab="NRED",xlab="PC")
 
+plot(hexbin(Z_scores_BR$Z_H_random), colramp=rf, mincnt=1, maxcnt=60,ylab="NRED",xlab="PC")
+plot(hexbin(Z_scores_BR$Z_H_KO), colramp=rf, mincnt=1,maxcnt=60,ylab="NRED",xlab="PC")
+```
 
 # Section D) Calculate background distributions for modules of 'N' KOs
 
 ```{r Backround Distributions for Modules, echo=FALSE}   
-Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5)
-Random_Background_Module_Distances_6<-Background_Distribution_Modules(6,10000)
-Random_Background_Module_Distances_7<-Background_Distribution_Modules(7,10000)
-Random_Background_Module_Distances_8<-Background_Distribution_Modules(8,10000)
+# RNAseq_Annotated_Matrix_BR_default_by_bin
+# RNAseq_Annotated_Matrix_default_by_bin
 
-par(mfrow=c(1,1))
-plot(density(Random_Background_Module_Distances_6,na.rm=TRUE),col="red",main="Background distributions of modules \nof size \"N\"",ylim=c(0,1))
-points(density(Random_Background_Module_Distances_7,na.rm=TRUE),main="N=7",col="blue",type="l")
-points(density(Random_Background_Module_Distances_8,na.rm=TRUE),main="N=8",col="green",type="l")
+
+Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin,6,10000)
+Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin,7,10000)
+Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin,8,10000)
+
+Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,6,10000)
+Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,7,10000)
+Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,8,10000)
+
+par(mfrow=c(1,2))
+plot(density(Random_Background_Module_Distances_6_B,na.rm=TRUE),col="red",main="Background distributions of \nmodules of size \"N\"\nB",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
+points(density(Random_Background_Module_Distances_7_B,na.rm=TRUE),main="N=7",col="blue",type="l")
+points(density(Random_Background_Module_Distances_8_B,na.rm=TRUE),main="N=8",col="green",type="l")
+legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(1,1,1))
+
+plot(density(Random_Background_Module_Distances_6_BR,na.rm=TRUE),col="red",main="Background distributions of modules \nof size \"N\"\nBR",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
+points(density(Random_Background_Module_Distances_7_BR,na.rm=TRUE),main="N=7",col="blue",type="l")
+points(density(Random_Background_Module_Distances_8_BR,na.rm=TRUE),main="N=8",col="green",type="l")
 legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(1,1,1))
 ```
 
@@ -347,358 +261,64 @@ legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(
 ```{r plotting the groups PHA, echo=FALSE}
 
 # Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
-PHA_module_NRED <- NRED_Distance_Function(PHA_module)
-PHA_module_P <- P_Distance_Function(PHA_module)
-PHA_module_P_NRED <- P_NRED_Distance_Function(PHA_module)
+# PHA_module_NRED <- NRED_Distance_Function(PHA_module) # need to change these codes to have RNAseq_Annotated_Matrix as a local rather than global variable
+# PHA_module_P <- P_Distance_Function(PHA_module) # need to change these codes to have RNAseq_Annotated_Matrix as a local rather than global variable
 
-Jaccard_Distance_PHA <- Jaccard_Distance_Function(PHA_module)
- 
-PHA_clustering_results_NRED <-cluster_func(PHA_module_NRED$Zscore,Jaccard_Distance_PHA)
-PHA_clustering_results_P_NRED <-cluster_func(PHA_module_P_NRED$combined,Jaccard_Distance_PHA)
+# calculate composite scores and jaccard distances, first for B
+PHA_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,PHA_module)
+Jaccard_Distance_PHA_B <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,PHA_module)
+PHA_clustering_results_P_NRED_B <-cluster_func(PHA_module_P_NRED_B$combined,Jaccard_Distance_PHA_B)
 
-# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
-par(mfrow=c(1,2),mar=c(4,4,3,1))
-plot(PHA_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_PHA, ylab="Average Composite Z-score",xlab="Jaccard Distance")
-plot(PHA_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_PHA, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
+Glycogen_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,Glycogen_module)
+Jaccard_Distance_Glycogen_B <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,Glycogen_module)
+Glycogen_clustering_results_P_NRED_B <-cluster_func(Glycogen_module_P_NRED_B$combined,Jaccard_Distance_Glycogen_B)
 
-########### Inter-Cluster Module Comparison ###########
-PHA_cluster_pvalues<-rep(NA,length(PHA_clustering_results_P_NRED$cl))
+polyP_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,polyP_module)
+Jaccard_Distance_polyP_B <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,polyP_module)
+polyP_clustering_results_P_NRED_B <-cluster_func(polyP_module_P_NRED_B$combined,Jaccard_Distance_polyP_B)
 
-for (i in 1:length(PHA_clustering_results_P_NRED$cl)) { 
-ttest_temp<-t.test((PHA_clustering_results_P_NRED$JPE_distance[which(colnames(PHA_clustering_results_P_NRED$JPE_distance)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==i)]),which(colnames(PHA_clustering_results_P_NRED$JPE_distance)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
-  PHA_cluster_pvalues[i]<-ttest_temp$p.value 
-}
+# than for BR
+PHA_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,PHA_module)
+Jaccard_Distance_PHA_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,PHA_module)
+PHA_clustering_results_P_NRED_BR <-cluster_func(PHA_module_P_NRED_BR$combined,Jaccard_Distance_PHA_BR)
 
-cluster_text<-rep(NA,length(PHA_clustering_results_P_NRED$cl))
-for (i in 1:length(PHA_clustering_results_P_NRED$cl)) {
-cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(PHA_cluster_pvalues[i],2),scientific=TRUE))
-}
-par(mfrow=c(1,1))
-# This needs to be turned into a function
-plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-3,3),ylim=c(0,1.5))
-colors<-rainbow(length(PHA_clustering_results_P_NRED$cl))
-legend("topleft",c("background",cluster_text),text.col=c("black",colors))
-for (i in 1:length(table(PHA_clustering_results_P_NRED$cl$membership))) {
-points(density(PHA_clustering_results_P_NRED$JPE_distance[which(colnames(PHA_clustering_results_P_NRED$JPE_distance)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==i)]),which(colnames(PHA_clustering_results_P_NRED$JPE_distance)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="PHA",ylab="Density",xlab="Distance")
-}
+Glycogen_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Glycogen_module)
+Jaccard_Distance_Glycogen_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Glycogen_module)
+Glycogen_clustering_results_P_NRED_BR <-cluster_func(Glycogen_module_P_NRED_BR$combined,Jaccard_Distance_Glycogen_BR)
 
+polyP_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,polyP_module)
+Jaccard_Distance_polyP_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,polyP_module)
+polyP_clustering_results_P_NRED_BR <-cluster_func(polyP_module_P_NRED_BR$combined,Jaccard_Distance_polyP_BR)
 
-########### Intra_cluster Comparison ###########
-PHA_gene_pvalues_clusters<-matrix(NA,length(PHA_module),length(PHA_clustering_results_P_NRED$cl))
-PHA_gene_sd_clusters<-PHA_gene_pvalues_clusters
+# replace NAs with a large distance
+Glycogen_pvalues_BR$distances[[2]][which(upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE))[is.na(Glycogen_pvalues_BR$distances[[2]][upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE)])]]<-4
 
-for (i in 1:length(PHA_module)) { 
-  for (j in 1:length(PHA_clustering_results_P_NRED$cl)) {
-    if(sum(!is.na(PHA_module_P_NRED$combined[ which(rownames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),which(colnames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
-    ttest_temp<-t.test(PHA_module_P_NRED$combined[ which(rownames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),which(colnames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
-    PHA_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
-    PHA_gene_sd_clusters[i,j]<-sd(PHA_module_P_NRED$combined[ which(rownames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),which(colnames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
-    }
+# Prune clusters #
+
+ClusterPrune <- function(clustering_results,Background_Module_Distances) {
+  pvalues<-rep(NA,length(clustering_results$cl))
+  distances<-list(NA)
+
+  for (i in 1:length(clustering_results$cl)) {
+    bin_names<- colnames(clustering_results$JPE_distance)
+    bin_membership <- clustering_results$cl$names[which(clustering_results$cl$membership==i)]
+    bin_in_cluster<-which(bin_names %in% bin_membership)
+    clusterX<-(clustering_results$JPE_distance[bin_in_cluster,bin_in_cluster])
+    ttest_temp<-t.test(clusterX,Background_Module_Distances)
+    
+  pvalues[i]<-ttest_temp$p.value
+  distances[[i]]<-clusterX
   }
+  newList<-list("pvalues"=pvalues,"distances"=distances)
+    return(newList)
 }
 
-cluster_text_matrix<-matrix(NA,length(PHA_module),length(PHA_clustering_results_P_NRED$cl))
-for (j in 1:length(PHA_clustering_results_P_NRED$cl)) {
-  for (i in 1:length(PHA_module)) {
-    cluster_text_matrix[i,j]<-paste(PHA_module[i],"p-value=", format(signif(PHA_gene_pvalues_clusters[i,j],2),scientific=TRUE))
-    }
-  }
+PHA_pvalues_BR<-ClusterPrune(PHA_clustering_results_P_NRED_BR,Random_Background_Module_Distances_6_BR)
+Glycogen_pvalues_BR<-ClusterPrune(Glycogen_clustering_results_P_NRED_BR,Random_Background_Module_Distances_7_BR)
+polyP_pvalues_BR<-ClusterPrune(polyP_clustering_results_P_NRED_BR,Random_Background_Module_Distances_8_BR)
 
-par(mfrow=c(length(PHA_clustering_results_P_NRED$cl),1))
-for(i in 1:length(PHA_clustering_results_P_NRED$cl)) {
-array_fig(PHA_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1),I_KOs_Background$random_pairwise_gene_correlation,PHA_clustering_results_P_NRED$cl)
-}
+PHA_pvalues_B<-ClusterPrune(PHA_clustering_results_P_NRED_B,Random_Background_Module_Distances_6_B)
+Glycogen_pvalues_B<-ClusterPrune(Glycogen_clustering_results_P_NRED_B,Random_Background_Module_Distances_7_B)
+polyP_pvalues_B<-ClusterPrune(polyP_clustering_results_P_NRED_B,Random_Background_Module_Distances_8_B)
 
-########### Inter_cluster Comparison ##########
-PHA_gene_pvalues<-rep(NA,length(PHA_module))
-PHA_gene_sd<-rep(NA,length(PHA_module))
-
-for (i in 1:length(PHA_module)) { 
-ttest_temp<-t.test((PHA_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
-  PHA_gene_pvalues[i]<-ttest_temp$p.value 
-  PHA_gene_sd[i]<-sd(PHA_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
-}
-
-# PHA_module_P_NRED$combined[ which(rownames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==1)]),which(colnames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==1)]),i]
-
-
-
-par(mfrow=c(length(PHA_module),length(table(PHA_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
-
-
-for (i in order(PHA_gene_pvalues)) {
-hist(PHA_module_P_NRED$combined[,,i],main=PHA_module[i],col="lightblue",xlim=c(-4,4))
-par(new = T)
-plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
-mtext(paste("p-value = ",signif(PHA_gene_pvalues[i],2)),side=3,col="red",cex=.75)
-
-for (j in 1:length(table(PHA_clustering_results_P_NRED$cl$membership))) {
-if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%PHA_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
-  
-# matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(PHA_module_P_NRED$positionsA[ which(rownames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),which(colnames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
-# par(new = T)
-  boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(PHA_module_P_NRED$positionsA[ which(rownames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),which(colnames(PHA_module_P_NRED$positionsA)%in%PHA_clustering_results_P_NRED$cl$names[which(PHA_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
-
-  }
-}
-}
-```
-
-#### Statistics for the Glycogen module
-```{r plotting the groups Glycogen, echo=FALSE}
-
-# Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
-Glycogen_module_NRED <- NRED_Distance_Function(Glycogen_module)
-Glycogen_module_P <- P_Distance_Function(Glycogen_module)
-Glycogen_module_P_NRED <- P_NRED_Distance_Function(Glycogen_module)
-
-Jaccard_Distance_Glycogen <- Jaccard_Distance_Function(Glycogen_module)
- 
-Glycogen_clustering_results_NRED <-cluster_func(Glycogen_module_NRED$Zscore,Jaccard_Distance_Glycogen)
-Glycogen_clustering_results_P_NRED <-cluster_func(Glycogen_module_P_NRED$combined,Jaccard_Distance_Glycogen)
-
-# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
-par(mfrow=c(1,2),mar=c(4,4,3,1))
-plot(Glycogen_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_Glycogen, ylab="Average Composite Z-score",xlab="Jaccard Distance")
-plot(Glycogen_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_Glycogen, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
-
-########### Inter-Cluster Module Comparison ###########
-Glycogen_cluster_pvalues<-rep(NA,length(Glycogen_clustering_results_P_NRED$cl))
-
-for (i in 1:length(Glycogen_clustering_results_P_NRED$cl)) { 
-ttest_temp<-t.test((Glycogen_clustering_results_P_NRED$JPE_distance[which(colnames(Glycogen_clustering_results_P_NRED$JPE_distance)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==i)]),which(colnames(Glycogen_clustering_results_P_NRED$JPE_distance)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
-  Glycogen_cluster_pvalues[i]<-ttest_temp$p.value 
-}
-
-cluster_text<-rep(NA,length(Glycogen_clustering_results_P_NRED$cl))
-for (i in 1:length(Glycogen_clustering_results_P_NRED$cl)) {
-cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(Glycogen_cluster_pvalues[i],2),scientific=TRUE))
-}
-par(mfrow=c(1,1))
-# This needs to be turned into a function
-plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-3,3),ylim=c(0,1.5))
-colors<-rainbow(length(Glycogen_clustering_results_P_NRED$cl))
-legend("topleft",c("background",cluster_text),text.col=c("black",colors))
-for (i in 1:length(table(Glycogen_clustering_results_P_NRED$cl$membership))) {
-points(density(Glycogen_clustering_results_P_NRED$JPE_distance[which(colnames(Glycogen_clustering_results_P_NRED$JPE_distance)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==i)]),which(colnames(Glycogen_clustering_results_P_NRED$JPE_distance)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="Glycogen",ylab="Density",xlab="Distance")
-}
-
-
-########### Intra_cluster Comparison ###########
-Glycogen_gene_pvalues_clusters<-matrix(NA,length(Glycogen_module),length(Glycogen_clustering_results_P_NRED$cl))
-Glycogen_gene_sd_clusters<-Glycogen_gene_pvalues_clusters
-
-for (i in 1:length(Glycogen_module)) { 
-  for (j in 1:length(Glycogen_clustering_results_P_NRED$cl)) {
-    if(sum(!is.na(Glycogen_module_P_NRED$combined[ which(rownames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
-    ttest_temp<-t.test(Glycogen_module_P_NRED$combined[ which(rownames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
-    Glycogen_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
-    Glycogen_gene_sd_clusters[i,j]<-sd(Glycogen_module_P_NRED$combined[ which(rownames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
-    }
-  }
-}
-
-cluster_text_matrix<-matrix(NA,length(Glycogen_module),length(Glycogen_clustering_results_P_NRED$cl))
-for (j in 1:length(Glycogen_clustering_results_P_NRED$cl)) {
-  for (i in 1:length(Glycogen_module)) {
-    cluster_text_matrix[i,j]<-paste(Glycogen_module[i],"p-value=", format(signif(Glycogen_gene_pvalues_clusters[i,j],2),scientific=TRUE))
-    }
-  }
-
-par(mfrow=c(length(Glycogen_clustering_results_P_NRED$cl),1))
-for(i in 1:length(Glycogen_clustering_results_P_NRED$cl)) {
-array_fig(Glycogen_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1),I_KOs_Background$random_pairwise_gene_correlation,Glycogen_clustering_results_P_NRED$cl)
-}
-
-########### Inter_cluster Comparison ##########
-Glycogen_gene_pvalues<-rep(NA,length(Glycogen_module))
-Glycogen_gene_sd<-rep(NA,length(Glycogen_module))
-
-for (i in 1:length(Glycogen_module)) { 
-ttest_temp<-t.test((Glycogen_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
-  Glycogen_gene_pvalues[i]<-ttest_temp$p.value 
-  Glycogen_gene_sd[i]<-sd(Glycogen_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
-}
-
-# Glycogen_module_P_NRED$combined[ which(rownames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==1)]),which(colnames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==1)]),i]
-
-
-
-par(mfrow=c(length(Glycogen_module),length(table(Glycogen_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
-
-
-for (i in order(Glycogen_gene_pvalues)) {
-hist(Glycogen_module_P_NRED$combined[,,i],main=Glycogen_module[i],col="lightblue",xlim=c(-4,4))
-par(new = T)
-plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
-mtext(paste("p-value = ",signif(Glycogen_gene_pvalues[i],2)),side=3,col="red",cex=.75)
-
-for (j in 1:length(table(Glycogen_clustering_results_P_NRED$cl$membership))) {
-if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%Glycogen_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
-  
-# matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(Glycogen_module_P_NRED$positionsA[ which(rownames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
-# par(new = T)
-  boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(Glycogen_module_P_NRED$positionsA[ which(rownames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),which(colnames(Glycogen_module_P_NRED$positionsA)%in%Glycogen_clustering_results_P_NRED$cl$names[which(Glycogen_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
-
-  }
-}
-}
-```
-
-#### Statistics for the polyP module
-```{r plotting the groups polyP, echo=FALSE}
-
-# Calculating distances based on univariate (Normalized Rank Euclidean Distances OR Pearson Correlation) or multivariate (Statistically)
-polyP_module_NRED <- NRED_Distance_Function(polyP_module)
-polyP_module_P <- P_Distance_Function(polyP_module)
-polyP_module_P_NRED <- P_NRED_Distance_Function(polyP_module)
-
-Jaccard_Distance_polyP <- Jaccard_Distance_Function(polyP_module)
- 
-polyP_clustering_results_NRED <-cluster_func(polyP_module_NRED$Zscore,Jaccard_Distance_polyP)
-polyP_clustering_results_P_NRED <-cluster_func(polyP_module_P_NRED$combined,Jaccard_Distance_polyP)
-
-# Here we demonstrate how the average Z-score is influenced by amount of shared genomic content 
-par(mfrow=c(1,2),mar=c(4,4,3,1))
-plot(polyP_clustering_results_P_NRED$ave_Z_score_matrix~Jaccard_Distance_polyP, ylab="Average Composite Z-score",xlab="Jaccard Distance")
-plot(polyP_clustering_results_P_NRED$JPE_distance~Jaccard_Distance_polyP, ylab="Average Composite Z-score/Jaccard Distance",xlab="Jaccard Distance")
-
-########### Inter-Cluster Module Comparison ###########
-polyP_cluster_pvalues<-rep(NA,length(polyP_clustering_results_P_NRED$cl))
-
-for (i in 1:length(polyP_clustering_results_P_NRED$cl)) { 
-ttest_temp<-t.test((polyP_clustering_results_P_NRED$JPE_distance[which(colnames(polyP_clustering_results_P_NRED$JPE_distance)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==i)]),which(colnames(polyP_clustering_results_P_NRED$JPE_distance)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==i)])]),Random_Background_Module_Distances_7)  
-  polyP_cluster_pvalues[i]<-ttest_temp$p.value 
-}
-
-cluster_text<-rep(NA,length(polyP_clustering_results_P_NRED$cl))
-for (i in 1:length(polyP_clustering_results_P_NRED$cl)) {
-cluster_text[i]<-paste("cluster",i,"p-value=", format(signif(polyP_cluster_pvalues[i],2),scientific=TRUE))
-}
-par(mfrow=c(1,1))
-# This needs to be turned into a function
-plot(density(Random_Background_Module_Distances_7,na.rm=TRUE),col="black",type="l",lwd=2,xlim=c(-3,3),ylim=c(0,1.5))
-colors<-rainbow(length(polyP_clustering_results_P_NRED$cl))
-legend("topleft",c("background",cluster_text),text.col=c("black",colors))
-for (i in 1:length(table(polyP_clustering_results_P_NRED$cl$membership))) {
-points(density(polyP_clustering_results_P_NRED$JPE_distance[which(colnames(polyP_clustering_results_P_NRED$JPE_distance)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==i)]),which(colnames(polyP_clustering_results_P_NRED$JPE_distance)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==i)])],na.rm=TRUE),xlim=c(-3,3),ylim=c(0,1.25),col=colors[i],type="l",main="polyP",ylab="Density",xlab="Distance")
-}
-
-
-########### Intra_cluster Comparison ###########
-polyP_gene_pvalues_clusters<-matrix(NA,length(polyP_module),length(polyP_clustering_results_P_NRED$cl))
-polyP_gene_sd_clusters<-polyP_gene_pvalues_clusters
-
-for (i in 1:length(polyP_module)) { 
-  for (j in 1:length(polyP_clustering_results_P_NRED$cl)) {
-    if(sum(!is.na(polyP_module_P_NRED$combined[ which(rownames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),which(colnames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),i]))<=3) {ttest_temp$p.value=NA} else {
-    ttest_temp<-t.test(polyP_module_P_NRED$combined[ which(rownames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),which(colnames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),i],I_KOs_Background$random_pairwise_gene_correlation)  
-    polyP_gene_pvalues_clusters[i,j]<-ttest_temp$p.value 
-    polyP_gene_sd_clusters[i,j]<-sd(polyP_module_P_NRED$combined[ which(rownames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),which(colnames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),i],na.rm=TRUE)[1]
-    }
-  }
-}
-
-cluster_text_matrix<-matrix(NA,length(polyP_module),length(polyP_clustering_results_P_NRED$cl))
-for (j in 1:length(polyP_clustering_results_P_NRED$cl)) {
-  for (i in 1:length(polyP_module)) {
-    cluster_text_matrix[i,j]<-paste(polyP_module[i],"p-value=", format(signif(polyP_gene_pvalues_clusters[i,j],2),scientific=TRUE))
-    }
-  }
-
-par(mfrow=c(length(polyP_clustering_results_P_NRED$cl),1))
-for(i in 1:length(polyP_clustering_results_P_NRED$cl)) {
-array_fig(polyP_module_P_NRED$combined,cluster_text_matrix[,i],c(-4,4),c(0,1),I_KOs_Background$random_pairwise_gene_correlation,polyP_clustering_results_P_NRED$cl)
-}
-
-########### Inter_cluster Comparison ##########
-polyP_gene_pvalues<-rep(NA,length(polyP_module))
-polyP_gene_sd<-rep(NA,length(polyP_module))
-
-for (i in 1:length(polyP_module)) { 
-ttest_temp<-t.test((polyP_module_P_NRED$combined[,,i]),I_KOs_Background$random_pairwise_gene_correlation)  
-  polyP_gene_pvalues[i]<-ttest_temp$p.value 
-  polyP_gene_sd[i]<-sd(polyP_module_P_NRED$combined[,,i],na.rm=TRUE)[1]
-}
-
-# polyP_module_P_NRED$combined[ which(rownames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==1)]),which(colnames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==1)]),i]
-
-
-
-par(mfrow=c(length(polyP_module),length(table(polyP_clustering_results_P_NRED$cl$membership))+1),mar=c(1,2,3,1))
-
-
-for (i in order(polyP_gene_pvalues)) {
-hist(polyP_module_P_NRED$combined[,,i],main=polyP_module[i],col="lightblue",xlim=c(-4,4))
-par(new = T)
-plot(density(I_KOs_Background$random_pairwise_gene_correlation),typ="l",main="",axes=F,xlim=c(-4,4),lwd=3,ylim=c(0,1))
-mtext(paste("p-value = ",signif(polyP_gene_pvalues[i],2)),side=3,col="red",cex=.75)
-
-for (j in 1:length(table(polyP_clustering_results_P_NRED$cl$membership))) {
-if(dim(RNAseq_Annotated_Matrix[intersect(which(RNAseq_Annotated_Matrix$KO%in%polyP_module[i]),which(RNAseq_Annotated_Matrix$Bin%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)])),10:15])[1]<=3) {plot.new()} else {
-  
-# matplot(t(RNAseq_Annotated_Matrix[unique(as.numeric(polyP_module_P_NRED$positionsA[ which(rownames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),which(colnames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),i])),10:15]),main=paste("Cluster",j),ylim=c(0,1),type="h",lwd=3,col=rgb(0,0,0,0.05),lty=1,cex=1)
-# par(new = T)
-  boxplot(RNAseq_Annotated_Matrix[unique(as.numeric(polyP_module_P_NRED$positionsA[ which(rownames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),which(colnames(polyP_module_P_NRED$positionsA)%in%polyP_clustering_results_P_NRED$cl$names[which(polyP_clustering_results_P_NRED$cl$membership==j)]),i])),10:15],main=paste("Cluster",j),ylim=c(0,1))
-
-  }
-}
-}
-```
-
-```{r, echo =FALSE}
-par(mfrow=c(3,2))
-plot(density(I_KOs_Background$random_pairwise_gene_correlation,na.rm=TRUE),col="red",xlim=c(-4,4))
-points(density(PHA_module_P_NRED$combined[,,1],na.rm=TRUE),typ="l")
-points(density(PHA_module_P_NRED$combined[,,2],na.rm=TRUE),typ="l")
-points(density(PHA_module_P_NRED$combined[,,3],na.rm=TRUE),typ="l")
-points(density(PHA_module_P_NRED$combined[,,4],na.rm=TRUE),typ="l")
-points(density(PHA_module_P_NRED$combined[,,5],na.rm=TRUE),typ="l")
-points(density(PHA_module_P_NRED$combined[,,6],na.rm=TRUE),typ="l")
-
-plot(density(I_KOs_Background$random_pairwise_gene_correlation,na.rm=TRUE),col="red",xlim=c(-4,4))
-points(density(PHA_module_NRED$Zscore[,,1],na.rm=TRUE),typ="l")
-points(density(PHA_module_NRED$Zscore[,,2],na.rm=TRUE),typ="l")
-points(density(PHA_module_NRED$Zscore[,,3],na.rm=TRUE),typ="l")
-points(density(PHA_module_NRED$Zscore[,,4],na.rm=TRUE),typ="l")
-points(density(PHA_module_NRED$Zscore[,,5],na.rm=TRUE),typ="l")
-points(density(PHA_module_NRED$Zscore[,,6],na.rm=TRUE),typ="l")
-
-plot(density(I_KOs_Background$random_pairwise_gene_correlation,na.rm=TRUE),col="red",xlim=c(-4,4))
-points(density(Glycogen_module_P_NRED$combined[,,1],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_P_NRED$combined[,,2],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_P_NRED$combined[,,3],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_P_NRED$combined[,,4],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_P_NRED$combined[,,5],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_P_NRED$combined[,,6],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_P_NRED$combined[,,7],na.rm=TRUE),typ="l")
-
-plot(density(I_KOs_Background$random_pairwise_gene_correlation,na.rm=TRUE),col="red",xlim=c(-4,4))
-points(density(Glycogen_module_NRED$Zscore[,,1],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_NRED$Zscore[,,2],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_NRED$Zscore[,,3],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_NRED$Zscore[,,4],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_NRED$Zscore[,,5],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_NRED$Zscore[,,6],na.rm=TRUE),typ="l")
-points(density(Glycogen_module_NRED$Zscore[,,7],na.rm=TRUE),typ="l")
-
-plot(density(I_KOs_Background$random_pairwise_gene_correlation,na.rm=TRUE),col="red",xlim=c(-4,4))
-points(density(polyP_module_P_NRED$combined[,,1],na.rm=TRUE),typ="l")
-points(density(polyP_module_P_NRED$combined[,,2],na.rm=TRUE),typ="l")
-points(density(polyP_module_P_NRED$combined[,,3],na.rm=TRUE),typ="l")
-points(density(polyP_module_P_NRED$combined[,,4],na.rm=TRUE),typ="l")
-points(density(polyP_module_P_NRED$combined[,,5],na.rm=TRUE),typ="l")
-points(density(polyP_module_P_NRED$combined[,,6],na.rm=TRUE),typ="l")
-points(density(polyP_module_P_NRED$combined[,,7],na.rm=TRUE),typ="l")
-points(density(polyP_module_P_NRED$combined[,,8],na.rm=TRUE),typ="l")
-
-plot(density(I_KOs_Background$random_pairwise_gene_correlation,na.rm=TRUE),col="red",xlim=c(-4,4))
-points(density(polyP_module_NRED$Zscore[,,1],na.rm=TRUE),typ="l")
-points(density(polyP_module_NRED$Zscore[,,2],na.rm=TRUE),typ="l")
-points(density(polyP_module_NRED$Zscore[,,3],na.rm=TRUE),typ="l")
-points(density(polyP_module_NRED$Zscore[,,4],na.rm=TRUE),typ="l")
-points(density(polyP_module_NRED$Zscore[,,5],na.rm=TRUE),typ="l")
-points(density(polyP_module_NRED$Zscore[,,6],na.rm=TRUE),typ="l")
-points(density(polyP_module_NRED$Zscore[,,7],na.rm=TRUE),typ="l")
-points(density(polyP_module_NRED$Zscore[,,8],na.rm=TRUE),typ="l")
 ```

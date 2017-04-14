@@ -12,7 +12,7 @@
 #' (positionA & positionB respectively)
 #' @examples PHA_module_P_NRED <- P_NRED_Distance_Function(PHA_module)
 
-P_NRED_Distance_Function <- function(Subset_KOs) {
+P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix,Subset_KOs) {
 
   # Define two congruent arrays to be filled during the second step. Name the columns and rows based on the genome bins
   dim_matrix<-length(table(RNAseq_Annotated_Matrix$Bin))

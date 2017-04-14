@@ -1,4 +1,5 @@
-#' Normalized RNAseq raw read counts
+#' Normalized RNAseq raw read counts!
+#'
 #'
 #' RNAseq raw read counts may by normalized based on various parameters including reads per sample,
 #' reads mapped per genome, gene length etc. Here we implement the normalization of edgeR (citation)
@@ -35,10 +36,10 @@ RNAseq_Normalize <- function(RNAseq_Annotated_Matrix, no_feature, ambiguous,
     }
 }
 
-defaultRNA_Normalize <- function(SS, SE, RNAseq_Annotated_Matrix,no_feature, ambiguous,not_aligned){
-  
+defaultRNA_Normalize <- function(SS, SE, RNAseq_Annotated_Matrix, no_feature, ambiguous, not_aligned){
+  # asdf
   # normalized by total of non-rRNA reads per sample mapped
-  sum_aligned<-apply(sum_reads_per_genome_matrix,2,sum)
+  sum_aligned<-apply(RNAseq_Annotated_Matrix[,SS:SE],2,sum)
   total_nonRNA_reads<-sum_aligned+no_feature+ ambiguous+ not_aligned
   normalized_by_total<- total_nonRNA_reads/max(total_nonRNA_reads) 
   
@@ -69,12 +70,16 @@ edgeRmethods <- function(SS, SE, method_name, RNAseq_Annotated_Matrix){
 }
 
 Normalize_by_bin <- function(RNAseq_Annotated_Matrix){
+
+  SS<-2 # start column for samples
+  SE<-length(sample_names) + 1 # end column of samples
   
   # Step 1: Calculate the number of reads mapped to each bin in each sample (This may be a separate function)
   sum_reads_per_genome_matrix<-matrix(NA,nrow=length(high_quality_bins),ncol=length(sample_names))
   for (i in 1:length(high_quality_bins)) {
     for (j in 2:(length(sample_names)+1)) {
-      sum_reads_per_genome_matrix[i,j-1]<-sum(RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),j])
+      bin_row<-which(RNAseq_Annotated_Matrix[,which(names(RNAseq_Annotated_Matrix)=="Bin")]==high_quality_bins[i])
+      sum_reads_per_genome_matrix[i,j-1]<-sum(RNAseq_Annotated_Matrix[bin_row,j])
     }
   }
 
@@ -86,7 +91,8 @@ Normalize_by_bin <- function(RNAseq_Annotated_Matrix){
 
   # Step 3: normalize reads by max mapped to a genome
   for (i in 1:length(high_quality_bins)) {
-  RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),SS:SE]<-t(t(RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[i]),SS:SE])/normalized_sum_reads_per_genome_matrix[i,])
+  bin_row<-which(RNAseq_Annotated_Matrix[,which(names(RNAseq_Annotated_Matrix)=="Bin")]==high_quality_bins[i])
+  RNAseq_Annotated_Matrix[bin_row,SS:SE]<-t(t(RNAseq_Annotated_Matrix[bin_row,SS:SE])/normalized_sum_reads_per_genome_matrix[i,])
   }
 
 return(RNAseq_Annotated_Matrix)
