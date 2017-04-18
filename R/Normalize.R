@@ -23,11 +23,14 @@
 #' \code{RNAseq_Annotated_Matrix[apply(RNAseq_Annotated_Matrix[, SS:SE], 1, function(x) !any(x == 0)), ]}
 #' \preformatted{Where SS and SE are the start and end columns of the samples (raw counts).}
 
-RNAseq_Normalize <- function(RNAseq_Annotated_Matrix, no_feature, ambiguous,
-                             not_aligned, method = "default"){
+RNAseq_Normalize <- function(RNAseq_Annotated_Matrix, matrix_features, method = "default"){
 
-  SS<-2 # start column for samples
-  SE<-length(sample_names) + 1 # end column of samples
+  SS <- matrix_features@SS
+  SE <- matrix_features@SE
+  no_feature <- matrix_features@no_feature
+  ambiguous <- matrix_features@ambiguous
+  not_aligned <- matrix_features@not_aligned
+
   if(method == "default"){
     return(defaultRNA_Normalize(SS, SE, RNAseq_Annotated_Matrix, no_feature, ambiguous,not_aligned))
   }
@@ -69,10 +72,14 @@ edgeRmethods <- function(SS, SE, method_name, RNAseq_Annotated_Matrix){
   return(RNAseq_Annotated_Matrix)
 }
 
-Normalize_by_bin <- function(RNAseq_Annotated_Matrix){
+Normalize_by_bin <- function(RNAseq_Annotated_Matrix, matrix_features){
 
-  SS<-2 # start column for samples
-  SE<-length(sample_names) + 1 # end column of samples
+  SS <- matrix_features@SS
+  SE <- matrix_features@SE
+  no_feature <- matrix_features@no_feature
+  ambiguous <- matrix_features@ambiguous
+  not_aligned <- matrix_features@not_aligned
+  high_quality_bins <- matrix_features@high_quality_bins
 
   # Step 1: Calculate the number of reads mapped to each bin in each sample (This may be a separate function)
   sum_reads_per_genome_matrix<-matrix(NA,nrow=length(high_quality_bins),ncol=length(sample_names))

@@ -98,9 +98,10 @@ Next, the necessary files are uploaded including
 
 ```{r uploading the matrix}
 # First set working directory setwd("/path/to/directory/ctr")
+setwd('/home/joris/tools/ctr')
 KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
-KO_modules_table<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
-KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017.txt_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
+#KO_modules_table<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
+KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
 
 # Barplot of pathway modules
 par(mar=c(10,3,3,3))
@@ -121,15 +122,10 @@ RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matri
 Modules are defined based on their KEGG Orthology (KO) annotations
 
 ```{r manually pre-defined modules, echo = TRUE}
-All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1]
 PHA_module <- c("K01895","K00925","K00625","K00626","K00023", "K03821")
 polyP_module <- c("K00937","K02040","K02037","K02038","K02036","K07636","K07657","K03306")
 Glycogen_module<- c("K00700","K00688","K00703","K01214","K15778","K00975","K00845")
-lysine_module<- KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00300")]
-valine_isoleucine<- KO_modules_table[which(KO_modules_table$V1=="M00019"),2]
-isoleucine<- KO_modules_table[which(KO_modules_table$V1=="M00535"),2]
-isoleucine2<- KO_modules_table[which(KO_modules_table$V1=="M00570"),2]
-Leucine<-KO_modules_table[which(KO_modules_table$V1=="M00432"),2]
+
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
@@ -166,19 +162,34 @@ Data will be normalized by the depth of sequencing and the number of reads mappe
 
 ### Define inputs
 ```{r input variables for background distributions, echo=TRUE, results = 'asis'}
-matrix_features <- new("General_features",
+matrix_features_B <- new("General_features",
                        high_quality_bins = high_quality_bins,
-                       Bin_Column = which(colnames(RNAseq_Annotated_Matrix) == "Bin"),
+                       Bin_Column = which(colnames(RNAseq_Annotated_Matrix_B) == "Bin"),
                        sample_names = sample_names,
                        sample_size = length(sample_names),
                        SS = 2,
                        SE = length(sample_names) + 1,
-                       RS = which(colnames(RNAseq_Annotated_Matrix) == "Bin") + 1,
-                       RE = which(colnames(RNAseq_Annotated_Matrix) == "Bin") + length(sample_names),
+                       RS = which(colnames(RNAseq_Annotated_Matrix_B) == "Bin") + 1,
+                       RE = which(colnames(RNAseq_Annotated_Matrix_B) == "Bin") + length(sample_names),
                        no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
                        ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
                        not_aligned = c(0, 19317660, 0, 0, 0, 0),
-                       library_size <-c(234232896,183166236,228746720,198024002,231567992,259156166)
+                       library_size =c(234232896,183166236,228746720,198024002,231567992,259156166)
+                       )
+
+matrix_features_BR <- new("General_features",
+                       high_quality_bins = high_quality_bins,
+                       Bin_Column = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin"),
+                       sample_names = sample_names,
+                       sample_size = length(sample_names),
+                       SS = 2,
+                       SE = length(sample_names) + 1,
+                       RS = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + 1,
+                       RE = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + length(sample_names),
+                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
+                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
+                       not_aligned = c(0, 0, 0, 0, 0, 0),
+                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166)
                        )
 ```
 
@@ -188,39 +199,43 @@ matrix_features <- new("General_features",
 # RNAseq_Annotated_Matrix_RLE<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="TMM")
 # RNAseq_Annotated_Matrix_RLE_by_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_RLE)
 
-RNAseq_Annotated_Matrix_B_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_B,no_feature_B,ambiguous_B,not_aligned_B)
-RNAseq_Annotated_Matrix_B_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_B_default)
+RNAseq_Annotated_Matrix_B_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_B, matrix_features_B,
+                                                    method = "default")
+RNAseq_Annotated_Matrix_B_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_B_default, matrix_features_B)
 
-RNAseq_Annotated_Matrix_BR_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_BR,no_feature,ambiguous,not_aligned)
-RNAseq_Annotated_Matrix_BR_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_BR_default)
+RNAseq_Annotated_Matrix_BR_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_BR, matrix_features_BR,
+                                                     method = "default")
+RNAseq_Annotated_Matrix_BR_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_BR_default, matrix_features_BR)
 
-kable(RNAseq_Annotated_Matrix_B_default_bin[1:5,], caption = "Normalized Data")
+kable(RNAseq_Annotated_Matrix_B_default[1:5,], caption = "Normalized Data")
 ```
 
 ### Calculate Ranks
 
 ```{r Create Abundance Columns, echo=TRUE, results = 'asis'}
 set.seed(1396558) # ties are dealt with randomly, so set.seed must be used to ensure reproducibility
-RNAseq_Annotated_Matrix_B_default<-Create_Rank_Columns(RNAseq_Annotated_Matrix_B_default)
+RNAseq_Annotated_Matrix_B_default<-Create_Rank_Columns(RNAseq_Annotated_Matrix_B_default, matrix_features_B)
 set.seed(1396558)
-RNAseq_Annotated_Matrix_B_default_bin<-Create_Rank_Columns(RNAseq_Annotated_Matrix_B_default_bin)
+RNAseq_Annotated_Matrix_B_default_bin<-Create_Rank_Columns(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B)
 
 set.seed(1396558) # ties are dealt with randomly, so set.seed must be used to ensure reproducibility
-RNAseq_Annotated_Matrix_BR_default<-Create_Rank_Columns(RNAseq_Annotated_Matrix_BR_default)
+RNAseq_Annotated_Matrix_BR_default<-Create_Rank_Columns(RNAseq_Annotated_Matrix_BR_default, matrix_features_BR)
 set.seed(1396558)
-RNAseq_Annotated_Matrix_BR_default_bin<-Create_Rank_Columns(RNAseq_Annotated_Matrix_BR_default_bin)
+RNAseq_Annotated_Matrix_BR_default_bin<-Create_Rank_Columns(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR)
 
 
 
-kable(RNAseq_Annotated_Matrix_BR_default_bin[1:5,], caption = "Data with Rank Column added")
-
+kable(RNAseq_Annotated_Matrix_B_default[1:5,], caption = "Data with Rank Column added")
+kable(RNAseq_Annotated_Matrix_B_default_bin[1:5,], caption = "Data with Rank Column added")
 ```
 
 ### How many rows have a SD of zero?
 ```{r remove rows with standard deviation of 0, echo=TRUE, results = 'asis'}
 
-RNAseq_Annotation_Matrix_no_sd_of_zero_B<-which_rows_with_no_sd(RNAseq_Annotated_Matrix_B_default_bin)
-RNAseq_Annotation_Matrix_no_sd_of_zero_BR<-which_rows_with_no_sd(RNAseq_Annotated_Matrix_BR_default_bin)
+RNAseq_Annotation_Matrix_no_sd_of_zero_B<-which_rows_with_no_sd(RNAseq_Annotated_Matrix_B_default_bin, 
+                                                                matrix_features_B)
+RNAseq_Annotation_Matrix_no_sd_of_zero_BR<-which_rows_with_no_sd(RNAseq_Annotated_Matrix_BR_default_bin,
+                                                                 matrix_features_BR)
 
 ```
 
