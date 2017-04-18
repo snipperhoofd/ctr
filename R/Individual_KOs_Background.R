@@ -19,28 +19,24 @@
 #' @examples 	Jaccard_Distance_Function(PHA_Module)
 # first remove rows with standard deviations of 0
 
-Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero,N){
-  Bin_Column<-which(colnames(RNAseq_Annotated_Matrix) == "Bin")
-  SS<-2 # start column for samples
-  SE<-length(sample_names) + 1 # end column of samples
-  RS<-Bin_Column + 1 # start column for ranks
-  RE<-Bin_Column + length(sample_names) # end column for ranks
+Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N){
 
   # build empty vectors for each Pearson Correlation and NRED
-  random_pairwise_gene_correlation<-rep(NA,N)
-  H_random_pairwise_gene_correlation<-rep(NA,N)
-  random_pairwise_gene_euclidean<-rep(NA,N)
-  H_random_pairwise_gene_euclidean<-rep(NA,N)
+  random_pairwise_gene_correlation<- rep(NA, N)
+  H_random_pairwise_gene_correlation<- rep(NA, N)
+  random_pairwise_gene_euclidean<- rep(NA, N)
+  H_random_pairwise_gene_euclidean<- rep(NA, N)
 
-  KO_pairwise_gene_correlation<-rep(NA,N)
-  H_KO_pairwise_gene_correlation<-rep(NA,N)
-  KO_pairwise_gene_euclidean<-rep(NA,N)
-  H_KO_pairwise_gene_euclidean<-rep(NA,N)
+  KO_pairwise_gene_correlation<- rep(NA, N)
+  H_KO_pairwise_gene_correlation<- rep(NA, N)
+  KO_pairwise_gene_euclidean<- rep(NA, N)
+  H_KO_pairwise_gene_euclidean<- rep(NA, N)
 
-  dim_matrix<-length(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))
-  All_KOs<-names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO)>5))[-1] #list of all KOs which apear greater than 5 times
-  Pairwise_Bin_Array_Presence<-matrix(0,dim_matrix,length(All_KOs))
-  rownames(Pairwise_Bin_Array_Presence)<-names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))[order(as.numeric(names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))))]
+  dim_matrix<- length(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))
+  All_KOs<- names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > 5)) [-1] #list of all KOs which apear greater than 5 times
+  Pairwise_Bin_Array_Presence<- matrix(0, dim_matrix, length(All_KOs))
+  rownames(Pairwise_Bin_Array_Presence)<- names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))[
+                                          order(as.numeric(names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))))]
 
   for (x in 1:N) {
     random_genomes<-sample(length(high_quality_bins),2) # grab 2 genomes, no replacing
@@ -49,8 +45,12 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero,N){
     position_of_A = sample(position_of_genome_A,1)
     position_of_B = sample(position_of_genome_B,1)
     # m0
-    random_pairwise_gene_correlation[x]<-cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A,SS:SE]),as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,SS:SE]))
-    random_pairwise_gene_euclidean[x]<-Calc_Norm_Euc(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A,RS:RE]),as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,RS:RE]))
+    random_pairwise_gene_correlation[x]<- cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A, 
+                                                                                               matrix_features@SS : matrix_features@SE]),
+                                             as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,matrix_features@SS : matrix_features@SE]))
+    
+    random_pairwise_gene_euclidean[x]<- Calc_Norm_Euc(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A, RS:RE]),
+                                                     as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B, RS:RE]))
     #
     shared_KO<-intersect(RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_A],RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_B])
     shared_KO<-shared_KO[shared_KO!=""]

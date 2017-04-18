@@ -2,7 +2,7 @@
 % Please edit documentation in R/Background_Distribution_Modules.R
 \name{Background_Distribution_Modules}
 \alias{Background_Distribution_Modules}
-\title{Generate a background distibution of composite Z scores!}
+\title{Generate a background distibution of composite Z scores}
 \usage{
 Background_Distribution_Modules(RNAseq_Annotated_Matrix, N, Z)
 }

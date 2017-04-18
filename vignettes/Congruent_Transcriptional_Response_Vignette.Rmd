@@ -99,6 +99,17 @@ Next, the necessary files are uploaded including
 ```{r uploading the matrix}
 # First set working directory setwd("/path/to/directory/ctr")
 KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
+KO_modules_table<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
+KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017.txt_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
+
+# Barplot of pathway modules
+par(mar=c(10,3,3,3))
+x <- barplot(sort(table(KO_modules_table2$V1)), xaxt="n")
+labs <- names(sort(table(KO_modules_table2$V1)))
+text(cex=.5, x=x+1.25, y=-1.25, labs, xpd=TRUE, srt=45, pos=2)
+
+# Barplot of  modules
+barplot(table(as.numeric(table(KO_modules_table2$V2))),ylim=c(0,200))
 
 # Load example data set one. Bins obtained from metagenomic assembly -> binning with metabat
 RNAseq_Annotated_Matrix_B<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE, col.names=c("Locus_Tag","Sample1","Sample2","Sample3","Sample4","Sample5","Sample6","KO"))
@@ -109,11 +120,16 @@ RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matri
 
 Modules are defined based on their KEGG Orthology (KO) annotations
 
-```{r pre-defined modules, echo = TRUE}
+```{r manually pre-defined modules, echo = TRUE}
 All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1]
 PHA_module <- c("K01895","K00925","K00625","K00626","K00023", "K03821")
 polyP_module <- c("K00937","K02040","K02037","K02038","K02036","K07636","K07657","K03306")
 Glycogen_module<- c("K00700","K00688","K00703","K01214","K15778","K00975","K00845")
+lysine_module<- KO_pathways_table[,3][which(KO_pathways_table[,2]=="ko00300")]
+valine_isoleucine<- KO_modules_table[which(KO_modules_table$V1=="M00019"),2]
+isoleucine<- KO_modules_table[which(KO_modules_table$V1=="M00535"),2]
+isoleucine2<- KO_modules_table[which(KO_modules_table$V1=="M00570"),2]
+Leucine<-KO_modules_table[which(KO_modules_table$V1=="M00432"),2]
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
@@ -150,7 +166,21 @@ Data will be normalized by the depth of sequencing and the number of reads mappe
 
 ### Define inputs
 ```{r input variables for background distributions, echo=TRUE, results = 'asis'}
- ```
+matrix_features <- new("General_features",
+                       high_quality_bins = high_quality_bins,
+                       Bin_Column = which(colnames(RNAseq_Annotated_Matrix) == "Bin"),
+                       sample_names = sample_names,
+                       sample_size = length(sample_names),
+                       SS = 2,
+                       SE = length(sample_names) + 1,
+                       RS = which(colnames(RNAseq_Annotated_Matrix) == "Bin") + 1,
+                       RE = which(colnames(RNAseq_Annotated_Matrix) == "Bin") + length(sample_names),
+                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
+                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
+                       not_aligned = c(0, 19317660, 0, 0, 0, 0),
+                       library_size <-c(234232896,183166236,228746720,198024002,231567992,259156166)
+                       )
+```
 
 ### Normalize
 ```{r Normalize the raw data, echo=TRUE, results = 'asis'}
@@ -290,35 +320,24 @@ polyP_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_de
 Jaccard_Distance_polyP_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,polyP_module)
 polyP_clustering_results_P_NRED_BR <-cluster_func(polyP_module_P_NRED_BR$combined,Jaccard_Distance_polyP_BR)
 
+Leucine_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Leucine)
+Jaccard_Distance_Leucine_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Leucine)
+Leucine_clustering_results_P_NRED_BR <-cluster_func(Leucine_module_P_NRED_BR$combined,Jaccard_Distance_Leucine_BR)
+
+
 # replace NAs with a large distance
 Glycogen_pvalues_BR$distances[[2]][which(upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE))[is.na(Glycogen_pvalues_BR$distances[[2]][upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE)])]]<-4
 
 # Prune clusters #
-
-ClusterPrune <- function(clustering_results,Background_Module_Distances) {
-  pvalues<-rep(NA,length(clustering_results$cl))
-  distances<-list(NA)
-
-  for (i in 1:length(clustering_results$cl)) {
-    bin_names<- colnames(clustering_results$JPE_distance)
-    bin_membership <- clustering_results$cl$names[which(clustering_results$cl$membership==i)]
-    bin_in_cluster<-which(bin_names %in% bin_membership)
-    clusterX<-(clustering_results$JPE_distance[bin_in_cluster,bin_in_cluster])
-    ttest_temp<-t.test(clusterX,Background_Module_Distances)
-    
-  pvalues[i]<-ttest_temp$p.value
-  distances[[i]]<-clusterX
-  }
-  newList<-list("pvalues"=pvalues,"distances"=distances)
-    return(newList)
-}
-
 PHA_pvalues_BR<-ClusterPrune(PHA_clustering_results_P_NRED_BR,Random_Background_Module_Distances_6_BR)
 Glycogen_pvalues_BR<-ClusterPrune(Glycogen_clustering_results_P_NRED_BR,Random_Background_Module_Distances_7_BR)
 polyP_pvalues_BR<-ClusterPrune(polyP_clustering_results_P_NRED_BR,Random_Background_Module_Distances_8_BR)
+Leucine_pvalues_BR<-ClusterPrune(Leucine_clustering_results_P_NRED_BR,Random_Background_Module_Distances_6_BR)
 
 PHA_pvalues_B<-ClusterPrune(PHA_clustering_results_P_NRED_B,Random_Background_Module_Distances_6_B)
 Glycogen_pvalues_B<-ClusterPrune(Glycogen_clustering_results_P_NRED_B,Random_Background_Module_Distances_7_B)
 polyP_pvalues_B<-ClusterPrune(polyP_clustering_results_P_NRED_B,Random_Background_Module_Distances_8_B)
 
+
+plot(hclust(as.dist(t(as.matrix(PHA_pvalues_BR$distances[[3]])))))
 ```
