@@ -7,3 +7,8 @@ Individual_KO_background <- function(RNAseqExpressionCounts, RNAseqExpressionRan
     .Call('ctr_Individual_KO_background', PACKAGE = 'ctr', RNAseqExpressionCounts, RNAseqExpressionRanks, KOTerms, allBins, HighQBins, N)
 }
 
+#'@export
+which_rows_with_no_sd_cpp <- function(x) {
+    .Call('ctr_which_rows_with_no_sd_cpp', PACKAGE = 'ctr', x)
+}
+

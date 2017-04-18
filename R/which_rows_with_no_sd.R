@@ -8,11 +8,13 @@
 #' @export
 #' @return The matrix with rows that have a standard deviation of 0 removed
 #' @examples RNAseq_Annotated_Matrix<-Create_Rank_Columns(RNAseq_Annotated_Matrix)
+#'@importFrom Rcpp evalCpp
+#'@useDynLib ctr
+
 which_rows_with_no_sd<- function(RNAseq_Annotated_Matrix, matrix_features){
 
   sample_cols <- matrix_features@SS:matrix_features@SE
   data_matrix <- matrix(apply(RNAseq_Annotated_Matrix[, sample_cols], 2, as.numeric), ncol = length(sample_cols))
-  print(data_matrix[1:5,])
   stdev_vector <- which_rows_with_no_sd_cpp(data_matrix)
   RNAseq_Annotated_Matrix <- cbind(RNAseq_Annotated_Matrix, stdev_vector)
 

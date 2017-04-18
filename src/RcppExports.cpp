@@ -21,3 +21,14 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// which_rows_with_no_sd_cpp
+NumericVector which_rows_with_no_sd_cpp(NumericMatrix x);
+RcppExport SEXP ctr_which_rows_with_no_sd_cpp(SEXP xSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericMatrix >::type x(xSEXP);
+    rcpp_result_gen = Rcpp::wrap(which_rows_with_no_sd_cpp(x));
+    return rcpp_result_gen;
+END_RCPP
+}

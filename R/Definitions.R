@@ -12,5 +12,6 @@ setClass('General_features', representation(name = 'character',
                                             sample_size = 'numeric',
                                             no_feature = 'vector',
                                             ambiguous = 'vector',
-                                            not_aligned = 'vector'),
+                                            not_aligned = 'vector',
+                                            library_size = 'vector'),
                               prototype(name = 'matrix_features'))

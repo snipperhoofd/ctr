@@ -8,6 +8,8 @@ which_rows_with_no_sd(RNAseq_Annotated_Matrix, matrix_features)
 }
 \arguments{
 \item{RNAseq_Annotated_Matrix}{The original count matrix (See X for format details).}
+
+\item{matrix_features}{The General_features object containing matrix feature information}
 }
 \value{
 The matrix with rows that have a standard deviation of 0 removed
