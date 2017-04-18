@@ -12,7 +12,7 @@
 #' (positionA & positionB respectively)
 #' @examples PHA_module_P_NRED <- P_NRED_Distance_Function(PHA_module)
 
-P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix,Subset_KOs) {
+P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix,Z_scores,Subset_KOs) {
 
   # Define two congruent arrays to be filled during the second step. Name the columns and rows based on the genome bins
   dim_matrix<-length(table(RNAseq_Annotated_Matrix$Bin))
@@ -22,6 +22,8 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix,Subset_KOs) {
   Pairwise_Bin_Array_Euclidean<-Pairwise_Bin_Array_Pearson
   Pairwise_PositionsA<-Pairwise_Bin_Array_Euclidean
   Pairwise_PositionsB<-Pairwise_Bin_Array_Euclidean
+  Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5)
+
 
   ######### This is the maximum pairwise Pearson correlation between genome bins for all KOs, converted to Z score, and keeping the pair with the highest sum z-score
 
@@ -57,8 +59,8 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix,Subset_KOs) {
             }
           }
           # Convert to Z scores
-          Zscore_pairwise_gene_correlation<-((max_pairwise_gene_correlation-mu_pearson)/sd_pearson) # need to inverse PCC
-          Zscore_pairwise_gene_euclidean<-((max_pairwise_gene_euclidean-mu_euclidean)/sd_euclidean)
+          Zscore_pairwise_gene_correlation<-((max_pairwise_gene_correlation-Z_scores$mu[2])/Z_scores$sd[2]) # need to inverse PCC
+          Zscore_pairwise_gene_euclidean<-((max_pairwise_gene_euclidean-Z_scores$mu[6])/Z_scores$mu[6])
 
           best_scoring_pair<-which.min((1-max_pairwise_gene_correlation)+(Zscore_pairwise_gene_euclidean))
           rownames(max_pairwise_gene_correlation)<-position_of_kegg_enzyme_A
@@ -80,8 +82,8 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix,Subset_KOs) {
     }
   }
 
-  Zscore_pairwise_gene_correlation<-((Pairwise_Bin_Array_Pearson-mu_pearson)/sd_pearson) # need to inverse PCC
-  Zscore_pairwise_gene_euclidean<-((Pairwise_Bin_Array_Euclidean-mu_euclidean)/sd_euclidean)
+  Zscore_pairwise_gene_correlation<-((Pairwise_Bin_Array_Pearson-Z_scores$mu[2])/Z_scores$sd[2]) # need to inverse PCC
+  Zscore_pairwise_gene_euclidean<-((Pairwise_Bin_Array_Euclidean-Z_scores$sd[2])/Z_scores$sd[2])
   Combined_Pairwise_Z_Score_Array<-((-Zscore_pairwise_gene_correlation)+Zscore_pairwise_gene_euclidean)
 
   newList <- list("pearsons" = Zscore_pairwise_gene_correlation, "nred" = Zscore_pairwise_gene_euclidean,"combined"=Combined_Pairwise_Z_Score_Array,"positionsA"=Pairwise_PositionsA,"positionsB"=Pairwise_PositionsB)

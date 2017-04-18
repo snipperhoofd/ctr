@@ -208,6 +208,8 @@ RNAseq_Annotated_Matrix_BR_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_BR,
 RNAseq_Annotated_Matrix_BR_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_BR_default, matrix_features_BR)
 
 kable(RNAseq_Annotated_Matrix_B_default[1:5,], caption = "Normalized Data")
+kable(RNAseq_Annotated_Matrix_B_default_bin[1:5,], caption = "Normalized Data")
+
 ```
 
 ### Calculate Ranks
@@ -245,8 +247,8 @@ Here we calculate the background distribution of the individual KOs, and test wh
 
 ``` {r, Calculates background distributions for individual KOs, echo=TRUE, results = 'asis' }
 
-I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,10000)
-I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,10000)
+I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000)
+I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,matrix_features_BR,10000)
 
 # What would a background distribution look like if there were no ties (e.g. genes with the same counts)?
 # random_euclidean_distances<-rep(NA,10000)
@@ -265,8 +267,9 @@ These Z-scores may be combined into a composite score. Below is a visualization 
 
 ```{r, echo=TRUE}
 rf <- colorRampPalette(rev(brewer.pal(11,'Spectral')))
-plot(hexbin(Z_scores_B$Z_H_random), colramp=rf, mincnt=1, maxcnt=60,ylab="NRED",xlab="PC")
-plot(hexbin(Z_scores_B$Z_H_KO), colramp=rf, mincnt=1,maxcnt=60,ylab="NRED",xlab="PC")
+plot(hexbin(Z_scores_B$Z_H_random), colramp=rf, mincnt=1, maxcnt=max(hexbin(Z_scores_B$Z_H_KO)@count),ylab="NRED",xlab="PC")
+
+plot(hexbin(Z_scores_B$Z_H_KO), colramp=rf, mincnt=1, maxcnt=max(hexbin(Z_scores_B$Z_H_KO)@count),ylab="NRED",xlab="PC")
 
 plot(hexbin(Z_scores_BR$Z_H_random), colramp=rf, mincnt=1, maxcnt=60,ylab="NRED",xlab="PC")
 plot(hexbin(Z_scores_BR$Z_H_KO), colramp=rf, mincnt=1,maxcnt=60,ylab="NRED",xlab="PC")

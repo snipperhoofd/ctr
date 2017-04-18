@@ -16,8 +16,8 @@
 #' @return a list of vectors containing XXX & YYY
 #' @examples Random_Background_Module_Distances_6<-Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
 
-Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,N,Z) {
-  
+Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,Z_scores,N,Z) {
+
   Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5) # add another variable to replace 5 (e.g. The minimum number of times a KO term must be present to be included in the matrix)
   Random_Jaccard_Distances<-rep(NA,Z)
   Random_Composite_Distances<-rep(NA,Z)
@@ -66,8 +66,8 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,N,Z) {
           }
         }
         # Convert to Z scores
-        Zscore_pairwise_gene_correlation<-((max_pairwise_gene_correlation-mu_pearson)/sd_pearson) # need to inverse PCC
-        Zscore_pairwise_gene_euclidean<-((max_pairwise_gene_euclidean-mu_euclidean)/sd_euclidean)
+        Zscore_pairwise_gene_correlation<-((max_pairwise_gene_correlation-Z_scores$mu[2])/Z_scores$sd[2]) # need to inverse PCC
+        Zscore_pairwise_gene_euclidean<-((max_pairwise_gene_euclidean-Z_scores$mu[6])/Z_scores$sd[6])
         best_scoring_pair<-which.min((1-Zscore_pairwise_gene_correlation)+(Zscore_pairwise_gene_euclidean))
         if (length(best_scoring_pair)>0) {
           Random_Pearson_Distances<-max_pairwise_gene_correlation[best_scoring_pair]
@@ -81,8 +81,8 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,N,Z) {
         Random_Pearson_Distances<-NA
         Random_Euclidean_Distances<-NA
       }
-      Random_Zscore_Pearson_Distances[j]<-((Random_Pearson_Distances-mu_pearson)/sd_pearson) # need to inverse PCC
-      Random_Zscore_Euclidean_Distances[j]<-((Random_Euclidean_Distances-mu_euclidean)/sd_euclidean)
+      Random_Zscore_Pearson_Distances[j]<-((Random_Pearson_Distances-Z_scores$mu[2])/Z_scores$sd[2]) # Need to input the Z_scores matrix
+      Random_Zscore_Euclidean_Distances[j]<-((Random_Euclidean_Distances-Z_scores$mu[6])/Z_scores$sd[6])
 
     }
     Random_Composite_Distances[i]<-mean((-Random_Zscore_Pearson_Distances)+Random_Zscore_Euclidean_Distances,na.rm=TRUE)[1]

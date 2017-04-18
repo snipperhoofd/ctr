@@ -23,13 +23,13 @@
 Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N){
 
   # build empty vectors for each Pearson Correlation and NRED
-  random_pairwise_gene_correlation<- rep(NA, N)
-  H_random_pairwise_gene_correlation<- rep(NA, N)
+  random_pairwise_gene_pearson<- rep(NA, N)
+  H_random_pairwise_gene_pearson<- rep(NA, N)
   random_pairwise_gene_euclidean<- rep(NA, N)
   H_random_pairwise_gene_euclidean<- rep(NA, N)
 
-  KO_pairwise_gene_correlation<- rep(NA, N)
-  H_KO_pairwise_gene_correlation<- rep(NA, N)
+  KO_pairwise_gene_pearson<- rep(NA, N)
+  H_KO_pairwise_gene_pearson<- rep(NA, N)
 
   KO_pairwise_gene_euclidean<- rep(NA, N)
   H_KO_pairwise_gene_euclidean<- rep(NA, N)
@@ -55,20 +55,24 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
                                           as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,
                                                                                             matrix_features@SS : matrix_features@SE]))
 
-    random_pairwise_gene_euclidean[x]<- Calc_Norm_Euc(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A, RS:RE]),
-                                                      as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B, RS:RE]))
+    random_pairwise_gene_euclidean[x]<- Calc_Norm_Euc(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A,
+                                                                                            matrix_features@RS : matrix_features@RE]),
+                                                      as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,
+                                                                                            matrix_features@RS : matrix_features@RE]))
     #
     sample_KO_positions <- sample_KO(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B)
 
 
     # m1
     KO_pairwise_gene_pearson[x]<- cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_A,
-                                                                                        matrix_features@SS:matrix_features@SE]),
+                                                                                            matrix_features@SS : matrix_features@SE]),
                                       as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_B,
-                                                                                        matrix_features@SS:matrix_features@SE]))
+                                                                                            matrix_features@SS : matrix_features@SE]))
 
-    KO_pairwise_gene_euclidean[x]<- Calc_Norm_Euc(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_A, RS:RE]),
-                                                  as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_B, RS:RE]))
+    KO_pairwise_gene_euclidean[x]<- Calc_Norm_Euc(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_A,
+                                                                                            matrix_features@RS : matrix_features@RE]),
+                                                  as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_B,
+                                                                                            matrix_features@RS : matrix_features@RE]))
     # m2
     Array_Pearson_Euclidean<- Cor_Matrix(sample_KO_positions$KO_position_of_A,
                                         sample_KO_positions$KO_position_of_B,
