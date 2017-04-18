@@ -2,7 +2,7 @@
 % Please edit documentation in R/Normalize.R
 \name{RNAseq_Normalize}
 \alias{RNAseq_Normalize}
-\title{Normalized RNAseq raw read counts}
+\title{Normalized RNAseq raw read counts!}
 \usage{
 RNAseq_Normalize(RNAseq_Annotated_Matrix, matrix_features,
   method = "default2")

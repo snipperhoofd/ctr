@@ -11,22 +11,21 @@
 
 Create_Rank_Columns <- function(RNAseq_Annotated_Matrix, matrix_features){
 
-  Bin_Column <- which(colnames(RNAseq_Annotated_Matrix) == "Bin")
-  Rank_column_name <- rep(NA, matrix_features@sample_size)
-  for (i in 1 : matrix_features@sample_size) {
-    Rank_column_name[i] <- paste("Rank", i, sep = "")
-    RNAseq_Annotated_Matrix[, Bin_Column + i] <- c(NA)
-  }
+#   Bin_Column<-which(colnames(RNAseq_Annotated_Matrix)=="Bin")
+#  for (i in 1:length(sample_names)) {
+#    Rank_column_name<-paste("rank",i,sep="")
+#    RNAseq_Annotated_Matrix[,Bin_Column+i]<-c(NA)
+#  }
 
-  colnames(RNAseq_Annotated_Matrix)<-c("Locus_ID", matrix_features@sample_names, "KO", "Bin", Rank_column_name)
+#  colnames(RNAseq_Annotated_Matrix)<-c("Locus_ID",matrix_features@sample_names,"KO","Bin",Rank_column_name)
 
   # add to the matrix the ranks
-  for (i in 1:matrix_features@sample_size) {
+  for (i in 1:length(matrix_features@sample_size)) {
     for (s in 1:length(matrix_features@high_quality_bins)) {
       matrix_HQ_bins <- RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==matrix_features@high_quality_bins[s]),]
       matrix_HQ_bins[,Bin_Column+i]<-rank(-matrix_HQ_bins[,i+1], na.last=TRUE, ties.method="random")/max(rank(-matrix_HQ_bins[,i+1], na.last=TRUE, ties.method="random"))
-      RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[s]),] <- matrix_HQ_bins
-    }
+      RNAseq_Annotated_Matrix[which(RNAseq_Annotated_Matrix$Bin==high_quality_bins[s]),] <- matrix_HQ_bins    }
+
   }
   return(RNAseq_Annotated_Matrix)
 }

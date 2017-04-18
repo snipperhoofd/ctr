@@ -19,26 +19,27 @@
 #' @examples 	Jaccard_Distance_Function(PHA_Module)
 # first remove rows with standard deviations of 0
 
-Individual_KOs_Background<- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N){
-  RS<-matrix_features@Bin_Column + 1 # start column for ranks
-  RE<-matrix_features@Bin_Column + matrix_features@sample_size # end column for ranks
+
+Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N){
 
   # build empty vectors for each Pearson Correlation and NRED
-  random_pairwise_gene_pearson<- rep(NA, N)
-  H_random_pairwise_gene_pearson<- rep(NA, N)
+  random_pairwise_gene_correlation<- rep(NA, N)
+  H_random_pairwise_gene_correlation<- rep(NA, N)
   random_pairwise_gene_euclidean<- rep(NA, N)
   H_random_pairwise_gene_euclidean<- rep(NA, N)
 
-  KO_pairwise_gene_pearson<- rep(NA, N)
-  H_KO_pairwise_gene_pearson<- rep(NA, N)
+  KO_pairwise_gene_correlation<- rep(NA, N)
+  H_KO_pairwise_gene_correlation<- rep(NA, N)
+
   KO_pairwise_gene_euclidean<- rep(NA, N)
   H_KO_pairwise_gene_euclidean<- rep(NA, N)
 
   dim_matrix<- length(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))
-  All_KOs<- names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > 5))[-1] #list of all KOs which apear greater than 5 times
+  All_KOs<- names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > 5)) [-1] #list of all KOs which apear greater than 5 times
   Pairwise_Bin_Array_Presence<- matrix(0, dim_matrix, length(All_KOs))
   rownames(Pairwise_Bin_Array_Presence)<- names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))[
-                                           order(as.numeric(names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))))]
+                                          order(as.numeric(names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))))]
+
 
   for (x in 1:N) {
     random_genomes<- sample(length(high_quality_bins), 2) # grab 2 genomes, no replacing
@@ -48,6 +49,7 @@ Individual_KOs_Background<- function(RNAseq_Annotation_Matrix_no_sd_of_zero, mat
     position_of_B<- sample(position_of_genome_B, 1)
 
     # m0
+
     random_pairwise_gene_pearson[x]<- cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A,
                                                                                             matrix_features@SS : matrix_features@SE]),
                                           as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,

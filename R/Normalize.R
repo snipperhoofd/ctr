@@ -91,8 +91,9 @@ Normalize_by_bin <- function(RNAseq_Annotated_Matrix){
 
   # Step 3: normalize reads by max mapped to a genome
   for (i in 1:length(high_quality_bins)) {
-    bin_row<-which(RNAseq_Annotated_Matrix[,which(names(RNAseq_Annotated_Matrix)=="Bin")]==high_quality_bins[i])
-    RNAseq_Annotated_Matrix[bin_row,SS:SE]<-t(t(RNAseq_Annotated_Matrix[bin_row,SS:SE])/normalized_sum_reads_per_genome_matrix[i,])
+  bin_row<-which(RNAseq_Annotated_Matrix[,which(names(RNAseq_Annotated_Matrix)=="Bin")]==high_quality_bins[i])
+  RNAseq_Annotated_Matrix[bin_row,SS:SE]<-t(t(RNAseq_Annotated_Matrix[bin_row,SS:SE])/normalized_sum_reads_per_genome_matrix[i,])
+
   }
 
   return(RNAseq_Annotated_Matrix)

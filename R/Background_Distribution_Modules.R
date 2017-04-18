@@ -7,14 +7,18 @@
 #' or by taking the score with the maximum similarity. A background distribution using each method
 #' is provided for comparison. (Currently it only provides the score that minimizes the distances)
 #'
+#' @param RNAseq_Annotated_Matrix The annotated matrix
 #' @param N The number of elements to be included in the randomly generated module
 #' @param Z The number of iterations used to calculatea background distribution
+
+
 #' @export
 #' @return a list of vectors containing XXX & YYY
-#' @examples Random_Background_Module_Distances_6<-Background_Distribution_Modules(6,1000)
+#' @examples Random_Background_Module_Distances_6<-Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
 
-Background_Distribution_Modules <- function(N,Z) {
-
+Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,N,Z) {
+  
+  Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5) # add another variable to replace 5 (e.g. The minimum number of times a KO term must be present to be included in the matrix)
   Random_Jaccard_Distances<-rep(NA,Z)
   Random_Composite_Distances<-rep(NA,Z)
   Random_Pearson_Distances<-rep(NA,N)
@@ -22,7 +26,7 @@ Background_Distribution_Modules <- function(N,Z) {
   Random_Zscore_Pearson_Distances<-rep(NA,N)
   Random_Zscore_Euclidean_Distances<-rep(NA,N)
   dim_matrix<-length(table(RNAseq_Annotated_Matrix$Bin))
-
+  All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
   for (i in 1:Z) {
     two_random_genomes<-sample(length(high_quality_bins),2)
     Random_Module<-Generate_Random_Module(All_KOs,N)
