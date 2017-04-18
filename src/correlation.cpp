@@ -2,7 +2,7 @@
 #include <math.h>
 #include <Rcpp.h>
 #include <stdlib.h>
-#include "stdev.hpp"
+#include "deviation.h"
 
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]

@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <Rcpp.h>
 #include <math.h>
-#include "stdev.hpp"
+#include "deviation.h"
 
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
@@ -22,6 +22,7 @@ inline double round( double val )
 
 
 
+//'@export
 // [[Rcpp::export]]
 NumericVector which_rows_with_no_sd_cpp(NumericMatrix x)
 {
@@ -34,8 +35,6 @@ NumericVector which_rows_with_no_sd_cpp(NumericMatrix x)
         double stdev = Calculate_StandardDeviation(expressions.begin(), x.ncol());
         stdev = (round(stdev * 1000.0) / 1000.0);
         out(i) = stdev;
-
     }
-
     return out;
 }

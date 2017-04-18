@@ -5,5 +5,5 @@
 \title{Individual_KO_background}
 \usage{
 Individual_KO_background(RNAseqExpressionCounts, RNAseqExpressionRanks, KOTerms,
-  N)
+  allBins, HighQBins, N)
 }
