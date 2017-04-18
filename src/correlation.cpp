@@ -2,7 +2,7 @@
 #include <math.h>
 #include <Rcpp.h>
 #include <stdlib.h>
-#include <vector>
+#include "stdev.hpp"
 
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
@@ -52,132 +52,6 @@ bool SampleKO(StringVector * KOterms);
  *
  */
 std::vector<int> positionsOfGenome(StringVector allBins, char bin);
-
-
-class StdDeviation
-{
-
-private:
-    int max;
-    double value[100];
-    double mean;
-
-
-
-public:
-    double CalculateMean()
-    {
-        double sum = 0;
-        for(int i = 0; i < max; i++)
-        {
-            sum += value[i];
-        }
-        return (sum / max);
-    }
-
-
-
-    double CalculateVariane()
-    {
-        mean = CalculateMean();
-        double temp = 0;
-        for(int i = 0; i < max; i++)
-        {
-             temp += (value[i] - mean) * (value[i] - mean) ;
-        }
-        return temp / max;
-    }
-
-
-    double CalculateSampleVariane()
-    {
-        mean = CalculateMean();
-        double temp = 0;
-        for(int i = 0; i < max; i++)
-        {
-             temp += (value[i] - mean) * (value[i] - mean) ;
-        }
-        return temp / (max - 1);
-    }
-
-
-
-    int SetValues(double *p, int count)
-    {
-        if(count > 100)
-            return -1;
-        max = count;
-        for(int i = 0; i < count; i++)
-            value[i] = p[i];
-        return 0;
-    }
-
-
-    double Calculate_StandardDeviation()
-    {
-        return sqrt(CalculateVariane());
-    }
-
-
-
-    double Calculate_SampleStandardDeviation()
-    {
-        return sqrt(CalculateSampleVariane());
-    }
-
-};
-
-class Calculator
-{
-
-    private:
-    double XSeries[100];
-    double YSeries[100];
-    int max;
-
-    StdDeviation x;
-    StdDeviation y;
-
-
-
-    public:
-    void SetValues(double *xvalues, double *yvalues, int count)
-    {
-        for(int i = 0; i < count; i++)
-        {
-            XSeries[i] = xvalues[i];
-            YSeries[i] = yvalues[i];
-        }
-        x.SetValues(xvalues, count);
-        y.SetValues(yvalues, count);
-        max = count;
-    }
-
-
-
-
-    double Calculate_Covariance()
-    {
-        double xmean = x.CalculateMean();
-        double ymean = y.CalculateMean();
-        double total = 0;
-
-        for(int i = 0; i < max; i++)
-        {
-            total += (XSeries[i] - xmean) * (YSeries[i] - ymean);
-        }
-        return total / max;
-    }
-
-
-    double Calculate_Correlation()
-    {
-        double cov = Calculate_Covariance();
-        double correlation = cov / (x.Calculate_StandardDeviation() * y.Calculate_StandardDeviation());
-        return correlation;
-    }
-
-};
 
 
 bool SampleKO(String a, String b)
@@ -277,7 +151,7 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
         int randomGeneB = rand() % positionsOfGenomeB.size();
 
 
-          printf("value: %d", positionsOfGenomeA[randomGeneA]);
+        printf("value: %d", positionsOfGenomeA[randomGeneA]);
       //  NumericVector gA = RNAseqExpressionCounts(positionsOfGenomeA[randomGeneA], _);
       //  NumericVector gB = RNAseqExpressionCounts(positionsOfGenomeB[randomGeneB], _);
       //  RandomPairwiseGenePearson[i] = CalcNormPearson(RNAseqExpressionCounts(positionsOfGenomeA[randomGeneA], _),
