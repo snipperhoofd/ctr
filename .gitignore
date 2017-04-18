@@ -3,3 +3,6 @@
 .RData
 .Ruserdata
 .Rapp.history
+*.o
+*.so
+*.swp

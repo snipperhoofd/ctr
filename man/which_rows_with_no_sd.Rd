@@ -4,17 +4,19 @@
 \alias{which_rows_with_no_sd}
 \title{Removes rows with no standard deviation}
 \usage{
-which_rows_with_no_sd(RNAseq_Annotated_Matrix)
+which_rows_with_no_sd(RNAseq_Annotated_Matrix, matrix_features)
 }
 \arguments{
 \item{RNAseq_Annotated_Matrix}{The original count matrix (See X for format details).}
+
+\item{matrix_features}{The General_features object containing matrix feature information}
 }
 \value{
 The matrix with rows that have a standard deviation of 0 removed
 }
 \description{
 This function removes all rows with a standard deviation of 0.
-This is necessary because Pearon Correlations cannot be calcualted in these cases.
+This is necessary because Pearson Correlations cannot be calcualted in these cases.
 }
 \examples{
 RNAseq_Annotated_Matrix<-Create_Rank_Columns(RNAseq_Annotated_Matrix)
