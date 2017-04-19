@@ -12,7 +12,7 @@ Jaccard_Distance_Function <- function(RNAseq_Annotated_Matrix,Module) {
   Jaccard_Module_Distance <- matrix(NA,nrow=length(high_quality_bins),ncol=length(high_quality_bins))
   colnames(Jaccard_Module_Distance)<-names(table(RNAseq_Annotated_Matrix$Bin))[order(as.numeric(names(table(RNAseq_Annotated_Matrix$Bin))))]
   rownames(Jaccard_Module_Distance)<-colnames(Pairwise_Bin_Array_Presence)
-  All_KOs<-names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO)>5))[-1]
+  All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>5))[-1]
   for (x in 1:37) { #iterate over lower part of matrix
     for (y in (x+1):38) {
       Jaccard_Module_Distance[x,y]<-Calc_Jaccard(Pairwise_Bin_Array_Presence[x, which(All_KOs%in%Module)],Pairwise_Bin_Array_Presence[y, which(All_KOs%in%Module)])
