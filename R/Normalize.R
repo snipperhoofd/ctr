@@ -72,6 +72,7 @@ edgeRmethods <- function(SS, SE, method_name, RNAseq_Annotated_Matrix){
   return(RNAseq_Annotated_Matrix)
 }
 
+#' @export
 Normalize_by_bin <- function(RNAseq_Annotated_Matrix, matrix_features){
 
   SS <- matrix_features@SS
