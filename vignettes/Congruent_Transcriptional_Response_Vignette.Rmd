@@ -125,7 +125,6 @@ Modules are defined based on their KEGG Orthology (KO) annotations
 PHA_module <- c("K01895","K00925","K00625","K00626","K00023", "K03821")
 polyP_module <- c("K00937","K02040","K02037","K02038","K02036","K07636","K07657","K03306")
 Glycogen_module<- c("K00700","K00688","K00703","K01214","K15778","K00975","K00845")
-
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
@@ -282,13 +281,19 @@ plot(hexbin(Z_scores_BR$Z_H_KO), colramp=rf, mincnt=1,maxcnt=60,ylab="NRED",xlab
 # RNAseq_Annotated_Matrix_default_by_bin
 
 
-Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin,6,10000)
-Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin,7,10000)
-Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin,8,10000)
+Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, 
+                                                                         Z_scores_BR, 6, 100)
+Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, 
+                                                                         Z_scores_BR, 7, 100)
+Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin,
+                                                                         Z_scores_BR, 8, 100)
 
-Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,6,10000)
-Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,7,10000)
-Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,8,10000)
+Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, 
+                                                                        Z_scores_B, 6, 100)
+Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,
+                                                                        Z_scores_B, 7, 100)
+Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin,
+                                                                        Z_scores_B, 8, 100)
 
 par(mfrow=c(1,2))
 plot(density(Random_Background_Module_Distances_6_B,na.rm=TRUE),col="red",main="Background distributions of \nmodules of size \"N\"\nB",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
