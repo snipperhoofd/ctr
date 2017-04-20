@@ -63,14 +63,13 @@ bool SampleKO(String a, String b)
 }
 
 
-std::vector<int> positionsOfGenome(StringVector allBins, char bin)
+std::vector<int> positionsOfGenome(double * allBins, int size, int bin)
 {
-
     std::vector<int> positions;
     positions.reserve(20000);//arbitrary value
 
 
-    for(int i = 0; i < allBins.size(); i++){
+    for(int i = 0; i < size; i++){
         if(allBins[i] == bin){
             positions.push_back(i);
         }
@@ -80,29 +79,19 @@ std::vector<int> positionsOfGenome(StringVector allBins, char bin)
 
 double CalcNormPearson(NumericVector genomeA, NumericVector genomeB)
 {
-  /*
-  Calculator calc;
+    int n = genomeA.size(); //should be equal to genomeB size
+    double r = 0.0;
 
+    double xbar = CalculateMean(genomeA.begin(), n);
+    double ybar = CalculateMean(genomeB.begin(), n);
+    double xstdev = Calculate_StandardDeviation(genomeA.begin(), n);
+    double ystdev = Calculate_StandardDeviation(genomeB.begin(), n);
 
-    int size = genomeA.size();
-
-
-    double x[size];
-    double y[size];
-
-    //Transform NumericVector to an array of doubles
-    //std::vector<double> x = Rcpp::as<std::vector<double>>(genomeA);
-    //std::vector<double> y = Rcpp::as<std::vector<double>>(genomeB);
-    //Make the calculator accept std::vector<double> would be good
-    for(int i = 0; i < size;i++){
-        x[i] = genomeA[i];
-        y[i] = genomeB[i];
+    for(int i = 0; i < n; i++)
+    {
+      r += (((genomeA[i] - xbar) / xstdev) * ((genomeB[i] - ybar) / ystdev));
     }
-
-*/
-  //calc.SetValues(x, y, size);
-  //double correlation = calc.Calculate_Correlation();
-  return 1.0;
+    return (r /= (n-1));
 }
 
 double CalcNormEuclidean(double * vector1, double * vector2, int size)
@@ -130,11 +119,10 @@ double CalcNormEuclidean(double * vector1, double * vector2, int size)
 List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
                               NumericMatrix RNAseqExpressionRanks,
                               StringVector KOTerms,
-                              StringVector allBins,
-                              StringVector HighQBins,
+                              NumericVector allBins,
+                              NumericVector HighQBins,
                               int N)
 {
-
     NumericVector RandomPairwiseGenePearson(N);
     NumericVector RandomPairwiseGeneEuclidean(N);
 
@@ -144,23 +132,22 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
         int genomeBBinIndex = rand() % HighQBins.size();
 
         //determine the positions of the genes associated with a certain genome/bin
-        std::vector<int> positionsOfGenomeA = positionsOfGenome(allBins, HighQBins[genomeABinIndex][0]);
-        std::vector<int> positionsOfGenomeB = positionsOfGenome(allBins, HighQBins[genomeBBinIndex][0]);
+        std::vector<int> positionsOfGenomeA = positionsOfGenome(allBins.begin(),
+                                                                allBins.size(),
+                                                                HighQBins[genomeABinIndex]);
+        std::vector<int> positionsOfGenomeB = positionsOfGenome(allBins.begin(),
+                                                                allBins.size(),
+                                                                HighQBins[genomeBBinIndex]);
 
         int randomGeneA = rand() % positionsOfGenomeA.size();
         int randomGeneB = rand() % positionsOfGenomeB.size();
 
+        //correlation
+        NumericVector geneA = RNAseqExpressionCounts(randomGeneA, _);
+        NumericVector geneB = RNAseqExpressionCounts(randomGeneB, _);
 
-        printf("value: %d", positionsOfGenomeA[randomGeneA]);
-      //  NumericVector gA = RNAseqExpressionCounts(positionsOfGenomeA[randomGeneA], _);
-      //  NumericVector gB = RNAseqExpressionCounts(positionsOfGenomeB[randomGeneB], _);
-      //  RandomPairwiseGenePearson[i] = CalcNormPearson(RNAseqExpressionCounts(positionsOfGenomeA[randomGeneA], _),
-        //                                               RNAseqExpressionCounts(positionsOfGenomeB[randomGeneB], _));
-       // RandomPairwiseGeneEuclidean[i] = CalcNormEuclidean(x, y, genomeA.size());
-
+        RandomPairwiseGenePearson[i] = CalcNormPearson(geneA, geneB);
     }
-
-
 
     return List::create(
      _["random_pairwise_gene_pearson"] = RandomPairwiseGenePearson,
