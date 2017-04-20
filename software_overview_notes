@@ -1,0 +1,42 @@
+ctr: module-based analysis of metatranscriptional data
+Who are the users?
+Anyone with a time-series data set in which the time-points across organisms are comparable. Initially this will be developed primarily for metatranscritpomics, where the assumption of comparable time-points is reasonably met. In addition, the package will be geared towards users with high-quality bins/reference genomes. Future work will be done to look at how this may be implemented in datasets in which bins cannot be assembled together, perhaps by using taxonomic classifications. For more information, see the usage scenarios described below.
+ 
+Primary Developers: 	WUR: Ben Oyserman, Joris van Steenbrugge
+Test users: 		WUR: Ben Oyserman, Joris van Steenbrugge, Victoria Pascal Andreu 
+UW-Madison: McMahon lab members (Alex Linz & Pamela Camejor?)
+What would users want?
+The main purpose of this package is to provide a rapid, module-based, exploratory and statistical analysis of metatranscritpomics data.
+
+Questions a user may have:
+1)	What are the different expression patterns of a gene or module?
+2)	What organisms display this pattern?
+a.	How much redundancy for this KO/module/trait in the community?
+3)	Statistically significance?
+4)	How are modules combined in this community? 
+a.	e.g. what are the association rules between clusters
+b.	are there novel/complex combinations
+Minimal Functionality
+Input: 
+•	A matrix annotated with the following information: Locus tags, bin/genome identifiers, count data, annotations.
+•	Custom module database (a build in database will also be provided)
+Output: 
+1)	A matrix (bin x gene annotations such as KO) with distances for each KO.
+2)	A matrix (bin x module) with cluster information for each bin/module
+3)	Visualizing specific clusters
+o	Changes through time in both relative, rank and delta (sample – min) abundance for each gene in a module/cluster
+4)	Association rules between clusters 
+Multiple usage scenarios
+1) targeted
+2) global 
+3) with differential expressions (for future?)
+4) EBPR, low DO EBPR, 3 lakes, other public data
+
+Profiling? measuring what functions take the most time. Benchmark library
+
+
+Other random things:
+transitivity
+Pathway view in R: http://pathview.r-forge.r-project.org/
+Network statistics: python network edge X # https://networkx.github.io/
+NETWORK BIOLOGY: UNDERSTANDING THE CELL’S FUNCTIONAL ORGANIZATION
