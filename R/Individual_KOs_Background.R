@@ -49,7 +49,6 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
     position_of_B<- sample(position_of_genome_B, 1)
 
     # m0
-
     random_pairwise_gene_pearson[x]<- cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A,
                                                                                             matrix_features@SS : matrix_features@SE]),
                                           as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,
@@ -107,7 +106,7 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
   return(newList)
 }
 
-sample_KO <- function(RNAseq_Annotation_matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B){
+sample_KO <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B){
 
   shared_KO<- intersect(RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_A],
                         RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_B])
@@ -134,10 +133,10 @@ Individual_KO_background_C_implementation <- function(RNAseq_Annotated_Matrix_no
   #C++ implementation of the functions
   #sourceCpp("src/correlation.cpp")
 
-  RNAseqExpresssionCounts <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@SS:matrix_features@SE])
-  RNAseqExpressionRanks <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@RS:matrix_features@RE])
+  RNAseqExpresssionCounts <- as.matrix(RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@SS:matrix_features@SE])
+  RNAseqExpressionRanks <- as.matrix(RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@RS:matrix_features@RE])
   KOterms<- RNAseq_Annotated_Matrix_no_sd_of_zero[, 8]
-  All_Bins <- RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@Bin_Column]
+  All_Bins <- sapply(RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@Bin_Column], as.numeric)
 
   Individual_KO_background(RNAseqExpresssionCounts,
                            RNAseqExpressionRanks,
