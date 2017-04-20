@@ -167,7 +167,7 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
                                                            geneB.begin(),
                                                            geneA.size());
 
-        std::vector<String> test = sample_KO(positionsOfGenomeA, positionsOfGenomeB,  KOTerms);
+     //   std::vector<String> test = sample_KO(positionsOfGenomeA, positionsOfGenomeB,  KOTerms);
 
     }
 
