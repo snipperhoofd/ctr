@@ -65,7 +65,6 @@ std::vector<std::string> sample_KO(std::vector<int> positionsOfGenomeA, std::vec
           if(compareKO(koA, KOTerms[j]))
           {
               terms.push_back(koA);
-              std::cout << koA << std::endl;
           }
       }
   }
