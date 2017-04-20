@@ -35,20 +35,22 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
   H_KO_pairwise_gene_euclidean<- rep(NA, N)
 
   dim_matrix<- length(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))
-  All_KOs<- names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > 5)) [-1] #list of all KOs which apear greater than 5 times
+  All_KOs<- names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > 5)) [-1] #list of all KOs which appear greater than 5 times
   Pairwise_Bin_Array_Presence<- matrix(0, dim_matrix, length(All_KOs))
   rownames(Pairwise_Bin_Array_Presence)<- names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))[
                                           order(as.numeric(names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))))]
 
 
   for (x in 1:N) {
-    random_genomes<- sample(length(high_quality_bins), 2) # grab 2 genomes, no replacing
-    position_of_genome_A<- which(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin == rownames(Pairwise_Bin_Array_Presence)[random_genomes[1]])
-    position_of_genome_B<- which(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin == rownames(Pairwise_Bin_Array_Presence)[random_genomes[2]])
+    random_genomes<- sample(length(matrix_features@high_quality_bins), 2) # grab 2 genomes, no replacing
+    position_of_genome_A<- which(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin == matrix_features@high_quality_bins[random_genomes[1]])
+    position_of_genome_B<- which(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin == matrix_features@high_quality_bins[random_genomes[2]])
     position_of_A<- sample(position_of_genome_A, 1)
     position_of_B<- sample(position_of_genome_B, 1)
 
     # m0
+    # Calculate pearson correlation and euclidean distance for random genes in random genomes.
+    # The results per iteration are saved in a vector
     random_pairwise_gene_pearson[x]<- cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_A,
                                                                                             matrix_features@SS : matrix_features@SE]),
                                           as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,
@@ -58,11 +60,11 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
                                                                                             matrix_features@RS : matrix_features@RE]),
                                                       as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[position_of_B,
                                                                                             matrix_features@RS : matrix_features@RE]))
-    #
-    sample_KO_positions <- sample_KO(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B)
-
 
     # m1
+    # Same as m0, except now the comparison is done for random genes with the same KO term.
+    # Sample_KO_Position_of_A is a single value from all possible positions shared between genome and KO match.
+    sample_KO_positions <- sample_KO(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B)
     KO_pairwise_gene_pearson[x]<- cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_A,
                                                                                             matrix_features@SS : matrix_features@SE]),
                                       as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_B,
@@ -72,26 +74,32 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
                                                                                             matrix_features@RS : matrix_features@RE]),
                                                   as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_B,
                                                                                             matrix_features@RS : matrix_features@RE]))
-    # m2
-    Array_Pearson_Euclidean<- Cor_Matrix(sample_KO_positions$KO_position_of_A,
-                                        sample_KO_positions$KO_position_of_B,
-                                        RNAseq_Annotation_Matrix_no_sd_of_zero)
+    # m1.1
+    Array_Pearson_Euclidean<- Cor_Matrix(sample_KO_positions$KO_positions_of_A,
+                                        sample_KO_positions$KO_positions_of_B,
+                                        RNAseq_Annotation_Matrix_no_sd_of_zero,
+                                        matrix_features)
 
-    random_row<-sample(dim(Array_Pearson_Euclidean)[1],1)
-    H_KO_pairwise_gene_pearson[x]<- max(Array_Pearson_Euclidean[random_row,,1],na.rm=TRUE)
-    H_KO_pairwise_gene_euclidean[x]<- min(Array_Pearson_Euclidean[random_row,,2],na.rm=TRUE)
-    # m0.a
+    H_KO_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean[,,1][which.min((1-Array_Pearson_Euclidean[,,1])-Array_Pearson_Euclidean[,,2])] # max(Array_Pearson_Euclidean[random_row,,1],na.rm=TRUE)
+    H_KO_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean[,,2][which.min((1-Array_Pearson_Euclidean[,,1])-Array_Pearson_Euclidean[,,2])] # min(Array_Pearson_Euclidean[random_row,,2],na.rm=TRUE)
+
+    # m0.1
     position_of_As<- sample(position_of_genome_A,
-                            length(sample_KO_positions$KO_position_of_A))
+                            length(sample_KO_positions$KO_positions_of_A))
     position_of_Bs<- sample(position_of_genome_B,
-                            length(sample_KO_positions$KO_position_of_B))
+                            length(sample_KO_positions$KO_positions_of_B))
 
     Array_Pearson_Euclidean_random<-Cor_Matrix(position_of_As,
                                                position_of_Bs,
-                                               RNAseq_Annotation_Matrix_no_sd_of_zero)
+                                               RNAseq_Annotation_Matrix_no_sd_of_zero,
+                                               matrix_features)
 
-    H_random_pairwise_gene_pearson[x]<- max(Array_Pearson_Euclidean_random[random_row,,1],na.rm=TRUE)
-    H_random_pairwise_gene_euclidean[x]<- min(Array_Pearson_Euclidean_random[random_row,,2],na.rm=TRUE)
+    random_position_matrix <- sample(Array_Pearson_Euclidean_random[,,1], 1)
+    random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random[,,1][1]
+    random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random[,,2][1]
+
+    H_random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random[,,1][which.min((1-Array_Pearson_Euclidean_random[,,1])-Array_Pearson_Euclidean_random[,,2])]
+    H_random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random[,,2][which.min((1-Array_Pearson_Euclidean_random[,,1])-Array_Pearson_Euclidean_random[,,2])]
   }
 
   newList<- list("random_pairwise_gene_pearson" = random_pairwise_gene_pearson,
@@ -114,16 +122,16 @@ sample_KO <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome
   shared_KO<- shared_KO[shared_KO != ""]
   random_KO<- shared_KO[sample(length(shared_KO), 1)]
 
-  KO_position_of_A<- intersect(which(RNAseq_Annotation_Matrix_no_sd_of_zero$KO == random_KO), position_of_genome_A)
-  KO_position_of_B<- intersect(which(RNAseq_Annotation_Matrix_no_sd_of_zero$KO == random_KO), position_of_genome_B)
+  KO_positions_of_A<- intersect(which(RNAseq_Annotation_Matrix_no_sd_of_zero$KO == random_KO), position_of_genome_A)
+  KO_positions_of_B<- intersect(which(RNAseq_Annotation_Matrix_no_sd_of_zero$KO == random_KO), position_of_genome_B)
 
 
-  sample_KO_position_of_A<- KO_position_of_A[sample(length(KO_position_of_A), 1)]
-  sample_KO_position_of_B<- KO_position_of_B[sample(length(KO_position_of_B), 1)]
+  sample_KO_position_of_A<- KO_positions_of_A[sample(length(KO_positions_of_A), 1)]
+  sample_KO_position_of_B<- KO_positions_of_B[sample(length(KO_positions_of_B), 1)]
   return(list("sample_KO_position_of_A" = sample_KO_position_of_A,
               "sample_KO_position_of_B" = sample_KO_position_of_B,
-              "KO_position_of_A" = KO_position_of_A,
-              "KO_position_of_B" = KO_position_of_B))
+              "KO_positions_of_A" = KO_positions_of_A,
+              "KO_positions_of_B" = KO_positions_of_B))
 }
 
 

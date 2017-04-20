@@ -34,17 +34,7 @@ double CalcNormPearson(double * vector1, double * vector2, int size);
  */
 double CalcNormEuclidean(double * vector1, double * vector2, int size);
 
-/**
- * Determines if two samples share the same KO term
- *
- * @param K01 char array containing the first KO term
- * @param K02 char array containing the second KO term
- * @return true if the terms match
- *
- * @author Joris van Steenbrugge
- * @version 1.0 10 april 2017
- */
-bool SampleKO(StringVector * KOterms);
+
 
 /**
  * Selects the row counts of genes in a bin
@@ -54,14 +44,36 @@ bool SampleKO(StringVector * KOterms);
 std::vector<int> positionsOfGenome(StringVector allBins, char bin);
 
 
-bool SampleKO(String a, String b)
+bool compareKO(String a, String b)
 {
-    if(a != "" && a == b)
+    if(a == b)
       return true;
     else
       return false;
 }
 
+std::vector<std::string> sample_KO(std::vector<int> positionsOfGenomeA, std::vector<int> positionsOfGenomeB,
+               StringVector KOTerms)
+{
+  std::vector<std::string> terms;
+  terms.reserve(KOTerms.size());
+
+  for(int i = 0; i < positionsOfGenomeA.size(); i++){
+      String koA = KOTerms[i];
+      for(int j = 0; j < positionsOfGenomeB.size(); j++)
+      {
+          if(compareKO(koA, KOTerms[j]))
+          {
+              terms.push_back(koA);
+              std::cout << koA << std::endl;
+          }
+      }
+  }
+  //shared KO terms between the genes
+
+  //take a random shared KO
+  return terms;
+}
 
 std::vector<int> positionsOfGenome(double * allBins, int size, int bin)
 {
@@ -96,7 +108,7 @@ double CalcNormPearson(NumericVector genomeA, NumericVector genomeB)
 
 double CalcNormEuclidean(double * vector1, double * vector2, int size)
 {
-  int total = 0;
+  double total = 0.0;
     for(int i = 0; i < size; i++)
     {
         total +=  ((vector1[i]-vector2[i]) * (vector1[i] - vector2[i]));
@@ -128,6 +140,7 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
 
     for(int i = 0; i < N; i++)
     {
+        //Take two random genomes
         int genomeABinIndex = rand() % HighQBins.size();
         int genomeBBinIndex = rand() % HighQBins.size();
 
@@ -138,15 +151,24 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
         std::vector<int> positionsOfGenomeB = positionsOfGenome(allBins.begin(),
                                                                 allBins.size(),
                                                                 HighQBins[genomeBBinIndex]);
-
+        //within the randome genomes take a random gene each
         int randomGeneA = rand() % positionsOfGenomeA.size();
         int randomGeneB = rand() % positionsOfGenomeB.size();
 
-        //correlation
+        //Pearson
         NumericVector geneA = RNAseqExpressionCounts(randomGeneA, _);
         NumericVector geneB = RNAseqExpressionCounts(randomGeneB, _);
-
         RandomPairwiseGenePearson[i] = CalcNormPearson(geneA, geneB);
+
+        //NRED
+        geneA = RNAseqExpressionRanks(randomGeneA, _);
+        geneB = RNAseqExpressionRanks(randomGeneB, _);
+        RandomPairwiseGeneEuclidean[i] = CalcNormEuclidean(geneA.begin(),
+                                                           geneB.begin(),
+                                                           geneA.size());
+
+        std::vector<String> test = sample_KO(positionsOfGenomeA, positionsOfGenomeB,  KOTerms);
+
     }
 
     return List::create(
