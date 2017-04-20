@@ -246,8 +246,8 @@ Here we calculate the background distribution of the individual KOs, and test wh
 
 ```{r, Calculates background distributions for individual KOs, echo=TRUE, results = 'asis' }
 
-I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000)
-I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,matrix_features_BR,10000)
+I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,100)
+I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,matrix_features_BR,100)
 
 # What would a background distribution look like if there were no ties (e.g. genes with the same counts)?
 # random_euclidean_distances<-rep(NA,10000)
@@ -318,32 +318,39 @@ legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(
 # PHA_module_P <- P_Distance_Function(PHA_module) # need to change these codes to have RNAseq_Annotated_Matrix as a local rather than global variable
 
 # calculate composite scores and jaccard distances, first for B
-PHA_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,PHA_module)
+PHA_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,
+                                                Z_scores_B, PHA_module)
 Jaccard_Distance_PHA_B <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,PHA_module)
 PHA_clustering_results_P_NRED_B <-cluster_func(PHA_module_P_NRED_B$combined,Jaccard_Distance_PHA_B)
 
-Glycogen_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,Glycogen_module)
+Glycogen_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,
+                                                     Z_scores_B, Glycogen_module)
 Jaccard_Distance_Glycogen_B <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,Glycogen_module)
 Glycogen_clustering_results_P_NRED_B <-cluster_func(Glycogen_module_P_NRED_B$combined,Jaccard_Distance_Glycogen_B)
 
-polyP_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,polyP_module)
+polyP_module_P_NRED_B <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,
+                                                  Z_scores_B, polyP_module)
 Jaccard_Distance_polyP_B <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin,polyP_module)
 polyP_clustering_results_P_NRED_B <-cluster_func(polyP_module_P_NRED_B$combined,Jaccard_Distance_polyP_B)
 
 # than for BR
-PHA_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,PHA_module)
+PHA_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,
+                                                 Z_scores_B, PHA_module)
 Jaccard_Distance_PHA_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,PHA_module)
 PHA_clustering_results_P_NRED_BR <-cluster_func(PHA_module_P_NRED_BR$combined,Jaccard_Distance_PHA_BR)
 
-Glycogen_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Glycogen_module)
+Glycogen_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,
+                                                      Z_scores_B, Glycogen_module)
 Jaccard_Distance_Glycogen_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Glycogen_module)
 Glycogen_clustering_results_P_NRED_BR <-cluster_func(Glycogen_module_P_NRED_BR$combined,Jaccard_Distance_Glycogen_BR)
 
-polyP_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,polyP_module)
+polyP_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default,_
+                                                   Z_scores_B, bin,polyP_module)
 Jaccard_Distance_polyP_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,polyP_module)
 polyP_clustering_results_P_NRED_BR <-cluster_func(polyP_module_P_NRED_BR$combined,Jaccard_Distance_polyP_BR)
 
-Leucine_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Leucine)
+Leucine_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,
+                                                     Z_scores_B, Leucine)
 Jaccard_Distance_Leucine_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Leucine)
 Leucine_clustering_results_P_NRED_BR <-cluster_func(Leucine_module_P_NRED_BR$combined,Jaccard_Distance_Leucine_BR)
 
