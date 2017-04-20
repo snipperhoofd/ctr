@@ -318,13 +318,13 @@ mtext(paste("p-value = ",signif(t_test_KO_random_euclidean_BR$p.value,2)),side=3
 # RNAseq_Annotated_Matrix_default_by_bin
 
 
-Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 6, 10)
-Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, 7, 1000)
-Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, 8, 1000)
+Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 6, 1000)
+Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 7, 1000)
+Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 8, 1000)
 
-Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, 6, 1000)
-Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, 7, 1000)
-Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, 8, 1000)
+Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 6, 1000)
+Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 7, 1000)
+Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 8, 1000)
 
 par(mfrow=c(1,2))
 plot(density(Random_Background_Module_Distances_6_B,na.rm=TRUE),col="red",main="Background distributions of \nmodules of size \"N\"\nB",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
@@ -380,14 +380,8 @@ polyP_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_de
 Jaccard_Distance_polyP_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,polyP_module)
 polyP_clustering_results_P_NRED_BR <-cluster_func(polyP_module_P_NRED_BR$combined,Jaccard_Distance_polyP_BR)
 
-Leucine_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,
-                                                     Z_scores_B, Leucine)
-Jaccard_Distance_Leucine_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Leucine)
-Leucine_clustering_results_P_NRED_BR <-cluster_func(Leucine_module_P_NRED_BR$combined,Jaccard_Distance_Leucine_BR)
-
-
 # replace NAs with a large distance
-Glycogen_pvalues_BR$distances[[2]][which(upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE))[is.na(Glycogen_pvalues_BR$distances[[2]][upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE)])]]<-4
+# Glycogen_pvalues_BR$distances[[2]][which(upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE))[is.na(Glycogen_pvalues_BR$distances[[2]][upper.tri(Glycogen_pvalues_BR$distances[[2]], diag = FALSE)])]]<-4
 
 # Prune clusters #
 PHA_pvalues_BR<-ClusterPrune(PHA_clustering_results_P_NRED_BR,Random_Background_Module_Distances_6_BR)
