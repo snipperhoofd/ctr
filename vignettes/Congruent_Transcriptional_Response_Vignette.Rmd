@@ -344,8 +344,8 @@ Glycogen_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR
 Jaccard_Distance_Glycogen_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,Glycogen_module)
 Glycogen_clustering_results_P_NRED_BR <-cluster_func(Glycogen_module_P_NRED_BR$combined,Jaccard_Distance_Glycogen_BR)
 
-polyP_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default,_
-                                                   Z_scores_B, bin,polyP_module)
+polyP_module_P_NRED_BR <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,
+                                                   Z_scores_B, polyP_module)
 Jaccard_Distance_polyP_BR <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,polyP_module)
 polyP_clustering_results_P_NRED_BR <-cluster_func(polyP_module_P_NRED_BR$combined,Jaccard_Distance_polyP_BR)
 
