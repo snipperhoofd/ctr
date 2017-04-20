@@ -80,8 +80,8 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
                                         RNAseq_Annotation_Matrix_no_sd_of_zero,
                                         matrix_features)
 
-    H_KO_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean[,,1][which.min((1-Array_Pearson_Euclidean[,,1])-Array_Pearson_Euclidean[,,2])] # max(Array_Pearson_Euclidean[random_row,,1],na.rm=TRUE)
-    H_KO_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean[,,2][which.min((1-Array_Pearson_Euclidean[,,1])-Array_Pearson_Euclidean[,,2])] # min(Array_Pearson_Euclidean[random_row,,2],na.rm=TRUE)
+    H_KO_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean[,,1][which.min((1-Array_Pearson_Euclidean[,,1])+Array_Pearson_Euclidean[,,2])] # max(Array_Pearson_Euclidean[random_row,,1],na.rm=TRUE)
+    H_KO_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean[,,2][which.min((1-Array_Pearson_Euclidean[,,1])+Array_Pearson_Euclidean[,,2])] # min(Array_Pearson_Euclidean[random_row,,2],na.rm=TRUE)
 
     # m0.1
     position_of_As<- sample(position_of_genome_A,
@@ -98,8 +98,8 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
     random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random[,,1][1]
     random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random[,,2][1]
 
-    H_random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random[,,1][which.min((1-Array_Pearson_Euclidean_random[,,1])-Array_Pearson_Euclidean_random[,,2])]
-    H_random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random[,,2][which.min((1-Array_Pearson_Euclidean_random[,,1])-Array_Pearson_Euclidean_random[,,2])]
+    H_random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random[,,1][which.min((1-Array_Pearson_Euclidean_random[,,1])+Array_Pearson_Euclidean_random[,,2])]
+    H_random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random[,,2][which.min((1-Array_Pearson_Euclidean_random[,,1])+Array_Pearson_Euclidean_random[,,2])]
   }
 
   newList<- list("random_pairwise_gene_pearson" = random_pairwise_gene_pearson,
