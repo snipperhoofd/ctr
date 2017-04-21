@@ -46,32 +46,64 @@ std::vector<int> positionsOfGenome(StringVector allBins, char bin);
 
 bool compareKO(String a, String b)
 {
-    if(a == b)
+    if( a != "" && a == b)
       return true;
     else
       return false;
 }
 
-std::vector<std::string> sample_KO(std::vector<int> positionsOfGenomeA, std::vector<int> positionsOfGenomeB,
-               StringVector KOTerms)
+List getMatchingKO(std::vector<int> positionsOfGenomeA,
+                                       std::vector<int> positionsOfGenomeB,
+                                       StringVector KOTerms)
 {
-  std::vector<std::string> terms;
-  terms.reserve(KOTerms.size());
+
+  std::vector<int> posA, posB;
+  posA.reserve(KOTerms.size());
+  posB.reserve(KOTerms.size());
 
   for(int i = 0; i < positionsOfGenomeA.size(); i++){
-      String koA = KOTerms[i];
-      for(int j = 0; j < positionsOfGenomeB.size(); j++)
+    String koA = KOTerms[positionsOfGenomeA[i]];
+    for(int j = 0; j < positionsOfGenomeB.size(); j++)
+    {
+      if(compareKO(koA, KOTerms[positionsOfGenomeB[j]]))
       {
-          if(compareKO(koA, KOTerms[j]))
-          {
-              terms.push_back(koA);
-          }
+        posA.push_back(positionsOfGenomeA[i]);
+        posB.push_back(positionsOfGenomeB[j]);
       }
+    }
   }
-  //shared KO terms between the genes
+
+
+
+  return List::create(
+    _["positionsA"] = posA,
+    _["positionsB"] = posB
+  );
+}
+
+
+
+
+
+
+List sample_KO(std::vector<int> positionsOfGenomeA,
+                                   std::vector<int> positionsOfGenomeB,
+               StringVector KOTerms)
+{
+  List positions = getMatchingKO(positionsOfGenomeA,
+                                                 positionsOfGenomeB,
+                                                 KOTerms);
+
+ // std::string randomKO = matchingTerms[rand() % matchingTerms.size()];
+  //which lines do have that random term in A and B
 
   //take a random shared KO
-  return terms;
+  return List::create(
+    _["sample_KO_position_of_A"] = NULL,
+    _["sample_KO_position_of_B"] = NULL,
+    _["KO_positions_of_A"] = NULL,
+    _["KO_positions_of_B"] = NULL
+  );
 }
 
 std::vector<int> positionsOfGenome(double * allBins, int size, int bin)
@@ -166,7 +198,7 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
                                                            geneB.begin(),
                                                            geneA.size());
 
-     //   std::vector<String> test = sample_KO(positionsOfGenomeA, positionsOfGenomeB,  KOTerms);
+        List test = sample_KO(positionsOfGenomeA, positionsOfGenomeB,  KOTerms);
 
     }
 
