@@ -317,14 +317,29 @@ mtext(paste("p-value = ",signif(t_test_KO_random_euclidean_BR$p.value,2)),side=3
 # RNAseq_Annotated_Matrix_BR_default_by_bin
 # RNAseq_Annotated_Matrix_default_by_bin
 
+ptm <- proc.time()
+for (i in 1:1000) {
+!length(table(test_matrix[4,]))==1
+}
+proc.time() - ptm
 
+ptm <- proc.time()
+for (i in 1:1000) {
+!sd(test_matrix[4,])==0
+}
+proc.time() - ptm
+
+ptm <- proc.time()
 Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 6, 1000)
+proc.time() - ptm
+
 Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 7, 1000)
 Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 8, 1000)
 
 Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 6, 1000)
 Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 7, 1000)
 Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 8, 1000)
+proc.time() - ptm
 
 par(mfrow=c(1,2))
 plot(density(Random_Background_Module_Distances_6_B,na.rm=TRUE),col="red",main="Background distributions of \nmodules of size \"N\"\nB",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
