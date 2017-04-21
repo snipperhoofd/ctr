@@ -2,6 +2,8 @@
 #include <math.h>
 #include <Rcpp.h>
 #include <stdlib.h>
+#include <unordered_map>
+#include <unordered_set>
 #include "deviation.h"
 
 using namespace Rcpp;
@@ -46,32 +48,80 @@ std::vector<int> positionsOfGenome(StringVector allBins, char bin);
 
 bool compareKO(String a, String b)
 {
-    if(a == b)
+    if( a != "" && a == b)
       return true;
     else
       return false;
 }
 
-std::vector<std::string> sample_KO(std::vector<int> positionsOfGenomeA, std::vector<int> positionsOfGenomeB,
-               StringVector KOTerms)
+List getMatchingKO(std::vector<int> positionsOfGenomeA,
+                                       std::vector<int> positionsOfGenomeB,
+                                       StringVector KOTerms)
 {
-  std::vector<std::string> terms;
-  terms.reserve(KOTerms.size());
+
+  std::unordered_map<std::string, std::unordered_set<int> > mapA;
+  std::unordered_map<std::string, std::unordered_set<int> > mapB;
+  std::unordered_set<int> test;
+
 
   for(int i = 0; i < positionsOfGenomeA.size(); i++){
-      String koA = KOTerms[i];
-      for(int j = 0; j < positionsOfGenomeB.size(); j++)
+    String koA = KOTerms[positionsOfGenomeA[i]];
+    for(int j = 0; j < positionsOfGenomeB.size(); j++)
+    {
+      if(compareKO(koA, KOTerms[positionsOfGenomeB[j]]))
       {
-          if(compareKO(koA, KOTerms[j]))
-          {
-              terms.push_back(koA);
-          }
+        if(mapA.find(koA) != mapA.end())
+        {
+          mapA[koA].insert(positionsOfGenomeA[i]);
+          mapB[koA].insert(positionsOfGenomeB[j]);
+        }
+        else{
+          std::unordered_set<int> setA;
+          setA.reserve(positionsOfGenomeA.size());
+          std::unordered_set<int> setB;
+          setB.reserve(positionsOfGenomeB.size());
+
+          setA.insert(positionsOfGenomeA[i]);
+          setB.insert(positionsOfGenomeB[j]);
+          mapA[koA] = setA;
+          mapB[koA] = setB;
+        }
       }
+    }
   }
-  //shared KO terms between the genes
+
+
+
+  return List::create(
+    _["mapA"] = mapA,
+    _["mapB"] = mapB
+  );
+}
+
+
+
+
+
+
+List sample_KO(std::vector<int> positionsOfGenomeA,
+                                   std::vector<int> positionsOfGenomeB,
+               StringVector KOTerms)
+{
+  List values = getMatchingKO(positionsOfGenomeA,
+                                                 positionsOfGenomeB,
+                                                 KOTerms);
+
+
+ // std::string randomKO = matchingTerms[rand() % matchingTerms.size()];
+  //which lines do have that random term in A and B
 
   //take a random shared KO
-  return terms;
+  return List::create(
+    _["sample_KO_position_of_A"] = NULL,
+    _["sample_KO_position_of_B"] = NULL,
+    _["KO_positions_of_A"] = NULL,
+    _["KO_positions_of_B"] = NULL
+  );
 }
 
 std::vector<int> positionsOfGenome(double * allBins, int size, int bin)
@@ -166,7 +216,7 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
                                                            geneB.begin(),
                                                            geneA.size());
 
-     //   std::vector<String> test = sample_KO(positionsOfGenomeA, positionsOfGenomeB,  KOTerms);
+        List test = sample_KO(positionsOfGenomeA, positionsOfGenomeB,  KOTerms);
 
     }
 
