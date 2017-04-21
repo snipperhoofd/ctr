@@ -10,19 +10,19 @@
 #' @return a list of vectors containing pairwise PC (pearsons), NRED (nred) and their composite Z-scores (Zscore),
 #' and the position in the matrix for the highest scoring pair between genomes A and B
 #' (positionA & positionB respectively)
-#' @examples PHA_module_P_NRED <- P_NRED_Distance_Function(PHA_module)
+#' @examples PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B,Z_scores_B,PHA_module)
 
-P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, Subset_KOs) {
+P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_features, Subset_KOs) {
 
   # Define two congruent arrays to be filled during the second step. Name the columns and rows based on the genome bins
-  dim_matrix<-length(table(RNAseq_Annotated_Matrix$Bin))
+  dim_matrix<-length(matrix_features_B@high_quality_bins)
   Pairwise_Bin_Array_Pearson<-array(NA,c(dim_matrix,dim_matrix,length(Subset_KOs)))
   colnames(Pairwise_Bin_Array_Pearson)<-names(table(RNAseq_Annotated_Matrix$Bin))[order(as.numeric(names(table(RNAseq_Annotated_Matrix$Bin))))]
   rownames(Pairwise_Bin_Array_Pearson)<-colnames(Pairwise_Bin_Array_Pearson)
   Pairwise_Bin_Array_Euclidean<-Pairwise_Bin_Array_Pearson
   Pairwise_PositionsA<-Pairwise_Bin_Array_Euclidean
   Pairwise_PositionsB<-Pairwise_Bin_Array_Euclidean
-  Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5)
+  Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5) # This should be removed from this function and stored globally, perhaps in matrix features
 
 
   ######### This is the maximum pairwise Pearson correlation between genome bins for all KOs, converted to Z score, and keeping the pair with the highest sum z-score

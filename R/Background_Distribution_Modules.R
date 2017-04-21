@@ -33,15 +33,15 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_featu
     
     random_genomes<- sample(length(matrix_features@high_quality_bins), 2)
     Random_Module<- Generate_Random_Module(All_KOs,N)
-    position_KOs<- which(All_KOs%in%Random_Module)
+    All_position_KOs<- which(All_KOs%in%Random_Module)
     # Calculate Jaccard Distance
     PA_position_of_genome_A<-which(rownames(Pairwise_Bin_Array_Presence)==matrix_features@high_quality_bins[random_genomes[1]])
     PA_position_of_genome_B<-which(rownames(Pairwise_Bin_Array_Presence)==matrix_features@high_quality_bins[random_genomes[2]])
     
     Random_Jaccard_Distances[i]<-Calc_Jaccard(Pairwise_Bin_Array_Presence[PA_position_of_genome_A, 
-                                                                          position_KOs],
+                                                                          All_position_KOs],
                                               Pairwise_Bin_Array_Presence[PA_position_of_genome_B, 
-                                                                          position_KOs])
+                                                                          All_position_KOs])
 
     # Next calculate Pearson and NRED
     for (j in 1:N) {
@@ -57,7 +57,7 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_featu
       l_position_of_kegg_enzyme_A<-length(position_of_kegg_enzyme_A)
       l_position_of_kegg_enzyme_B<-length(position_of_kegg_enzyme_B)
       # check if both are zero by multiplication
-      if (!(l_position_of_kegg_enzyme_A * l_position_of_kegg_enzyme_B)==0) {
+      if (!(l_position_of_kegg_enzyme_A * l_position_of_kegg_enzyme_B)==0) { # may be
         # Define two empty matrices and then fill them with the PCC and Euc distances
         max_pairwise_gene_correlation<-matrix(NA,nrow=l_position_of_kegg_enzyme_A,ncol=l_position_of_kegg_enzyme_B)
         max_pairwise_gene_euclidean<-max_pairwise_gene_correlation
@@ -66,7 +66,7 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_featu
           for (n in 1:l_position_of_kegg_enzyme_B){
             # make sure there is always a standard deviation, or else cor gives an error. If there is a sd, proceed with calculations
             if (sd(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],
-                                                      matrix_features@SS:matrix_features@SE])!= 0 & 
+                                                      matrix_features@SS:matrix_features@SE])!= 0 && 
                 sd(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],
                                                       matrix_features@SS:matrix_features@SE])!= 0) {
               max_pairwise_gene_correlation[m,n]<- cor(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],
