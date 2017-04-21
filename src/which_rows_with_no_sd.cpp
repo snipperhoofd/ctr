@@ -1,7 +1,7 @@
 #include <stdio.h>
 #include <Rcpp.h>
 #include <math.h>
-#include "deviation.h"
+#include "statistics.h"
 
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]

@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <unordered_map>
 #include <unordered_set>
-#include "deviation.h"
+#include "statistics.h"
 
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
@@ -138,32 +138,7 @@ std::vector<int> positionsOfGenome(double * allBins, int size, int bin)
     return positions;
 }
 
-double CalcNormPearson(NumericVector genomeA, NumericVector genomeB)
-{
-    int n = genomeA.size(); //should be equal to genomeB size
-    double r = 0.0;
 
-    double xbar = CalculateMean(genomeA.begin(), n);
-    double ybar = CalculateMean(genomeB.begin(), n);
-    double xstdev = Calculate_StandardDeviation(genomeA.begin(), n);
-    double ystdev = Calculate_StandardDeviation(genomeB.begin(), n);
-
-    for(int i = 0; i < n; i++)
-    {
-      r += (((genomeA[i] - xbar) / xstdev) * ((genomeB[i] - ybar) / ystdev));
-    }
-    return (r /= (n-1));
-}
-
-double CalcNormEuclidean(double * vector1, double * vector2, int size)
-{
-  double total = 0.0;
-    for(int i = 0; i < size; i++)
-    {
-        total +=  ((vector1[i]-vector2[i]) * (vector1[i] - vector2[i]));
-    }
-    return sqrt(total);
-}
 
 /*todo:
  * KO_pairwise_gene_pearson
@@ -207,7 +182,8 @@ List Individual_KO_background(NumericMatrix RNAseqExpressionCounts,
         //Pearson
         NumericVector geneA = RNAseqExpressionCounts(randomGeneA, _);
         NumericVector geneB = RNAseqExpressionCounts(randomGeneB, _);
-        RandomPairwiseGenePearson[i] = CalcNormPearson(geneA, geneB);
+        RandomPairwiseGenePearson[i] = CalcNormPearson(geneA.begin(), geneB.begin(),
+                                                       geneA.size());
 
         //NRED
         geneA = RNAseqExpressionRanks(randomGeneA, _);

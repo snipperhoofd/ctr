@@ -20,7 +20,7 @@
 # first remove rows with standard deviations of 0
 
 
-Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N){
+Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N, language = 'C'){
 
   # build empty vectors for each Pearson Correlation and NRED
   random_pairwise_gene_pearson<- rep(NA, N)
@@ -40,6 +40,9 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
   rownames(Pairwise_Bin_Array_Presence)<- names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))[
                                           order(as.numeric(names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))))]
 
+
+  RNAseqExpresssionCounts <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@SS:matrix_features@SE])
+  RNAseqExpressionRanks <- as.matrix(RNAseq_Annotation_Matrix_no_sd_of_zero[, matrix_features@RS:matrix_features@RE])
 
   for (x in 1:N) {
     random_genomes<- sample(length(matrix_features@high_quality_bins), 2) # grab 2 genomes, no replacing
@@ -75,13 +78,23 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
                                                   as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_B,
                                                                                             matrix_features@RS : matrix_features@RE]))
     # m1.1
-    Array_Pearson_Euclidean<- Cor_Matrix(sample_KO_positions$KO_positions_of_A,
-                                        sample_KO_positions$KO_positions_of_B,
-                                        RNAseq_Annotation_Matrix_no_sd_of_zero,
-                                        matrix_features)
-
-    H_KO_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean[,,1][which.min((1-Array_Pearson_Euclidean[,,1])+Array_Pearson_Euclidean[,,2])] # max(Array_Pearson_Euclidean[random_row,,1],na.rm=TRUE)
-    H_KO_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean[,,2][which.min((1-Array_Pearson_Euclidean[,,1])+Array_Pearson_Euclidean[,,2])] # min(Array_Pearson_Euclidean[random_row,,2],na.rm=TRUE)
+    Array_Pearson_Euclidean<-NULL
+    if(language == 'R'){
+      Array_Pearson_Euclidean <- Cor_Matrix(sample_KO_positions$KO_positions_of_A,
+                                          sample_KO_positions$KO_positions_of_B,
+                                          RNAseq_Annotation_Matrix_no_sd_of_zero,
+                                          matrix_features)
+    } else if(language == 'C'){
+      Array_Pearson_Euclidean <- Cor_Matrix_C(sample_KO_positions$KO_positions_of_A,
+                                              sample_KO_positions$KO_positions_of_B,
+                                              RNAseqExpresssionCounts,
+                                              RNAseqExpressionRanks
+                                              )
+    }
+    H_KO_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean$correlation[which.min((1-Array_Pearson_Euclidean$correlation) +
+                                                                             Array_Pearson_Euclidean$euclidean)] # max(Array_Pearson_Euclidean[random_row,,1],na.rm=TRUE)
+    H_KO_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean$euclidean[which.min((1-Array_Pearson_Euclidean$correlation)+
+                                                                               Array_Pearson_Euclidean$euclidean)] # min(Array_Pearson_Euclidean[random_row,,2],na.rm=TRUE)
 
     # m0.1
     position_of_As<- sample(position_of_genome_A,
@@ -89,17 +102,28 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
     position_of_Bs<- sample(position_of_genome_B,
                             length(sample_KO_positions$KO_positions_of_B))
 
-    Array_Pearson_Euclidean_random<-Cor_Matrix(position_of_As,
+    Array_Pearson_Euclidean_random<-NULL
+    if(language == 'R'){
+      Array_Pearson_Euclidean_random<- Cor_Matrix(position_of_As,
                                                position_of_Bs,
                                                RNAseq_Annotation_Matrix_no_sd_of_zero,
                                                matrix_features)
+    } else if(language == 'C'){
+      Array_Pearson_Euclidean_random <- Cor_Matrix_C(position_of_As,
+                                                     position_of_Bs,
+                                                     RNAseqExpresssionCounts,
+                                                     RNAseqExpressionRanks
+      )
+    }
 
-    random_position_matrix <- sample(Array_Pearson_Euclidean_random[,,1], 1)
-    random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random[,,1][1]
-    random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random[,,2][1]
+    random_position_matrix <- sample(Array_Pearson_Euclidean_random$correlation, 1)
+    random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random$correlation[1]
+    random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random$euclidean[1]
 
-    H_random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random[,,1][which.min((1-Array_Pearson_Euclidean_random[,,1])+Array_Pearson_Euclidean_random[,,2])]
-    H_random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random[,,2][which.min((1-Array_Pearson_Euclidean_random[,,1])+Array_Pearson_Euclidean_random[,,2])]
+    H_random_pairwise_gene_pearson[x]<- Array_Pearson_Euclidean_random$correlation[which.min((1-Array_Pearson_Euclidean_random$correlation)+
+                                                                                        Array_Pearson_Euclidean_random$euclidean)]
+    H_random_pairwise_gene_euclidean[x]<- Array_Pearson_Euclidean_random$euclidean[which.min((1-Array_Pearson_Euclidean_random$correlation)+
+                                                                                          Array_Pearson_Euclidean_random$euclidean)]
   }
 
   newList<- list("random_pairwise_gene_pearson" = random_pairwise_gene_pearson,
