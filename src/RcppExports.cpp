@@ -5,19 +5,17 @@
 
 using namespace Rcpp;
 
-// Individual_KO_background
-List Individual_KO_background(NumericMatrix RNAseqExpressionCounts, NumericMatrix RNAseqExpressionRanks, StringVector KOTerms, StringVector allBins, StringVector HighQBins, int N);
-RcppExport SEXP ctr_Individual_KO_background(SEXP RNAseqExpressionCountsSEXP, SEXP RNAseqExpressionRanksSEXP, SEXP KOTermsSEXP, SEXP allBinsSEXP, SEXP HighQBinsSEXP, SEXP NSEXP) {
+// Cor_Matrix_C
+List Cor_Matrix_C(NumericVector v1, NumericVector v2, NumericMatrix expression, NumericMatrix ranks);
+RcppExport SEXP ctr_Cor_Matrix_C(SEXP v1SEXP, SEXP v2SEXP, SEXP expressionSEXP, SEXP ranksSEXP) {
 BEGIN_RCPP
     Rcpp::RObject rcpp_result_gen;
     Rcpp::RNGScope rcpp_rngScope_gen;
-    Rcpp::traits::input_parameter< NumericMatrix >::type RNAseqExpressionCounts(RNAseqExpressionCountsSEXP);
-    Rcpp::traits::input_parameter< NumericMatrix >::type RNAseqExpressionRanks(RNAseqExpressionRanksSEXP);
-    Rcpp::traits::input_parameter< StringVector >::type KOTerms(KOTermsSEXP);
-    Rcpp::traits::input_parameter< StringVector >::type allBins(allBinsSEXP);
-    Rcpp::traits::input_parameter< StringVector >::type HighQBins(HighQBinsSEXP);
-    Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    rcpp_result_gen = Rcpp::wrap(Individual_KO_background(RNAseqExpressionCounts, RNAseqExpressionRanks, KOTerms, allBins, HighQBins, N));
+    Rcpp::traits::input_parameter< NumericVector >::type v1(v1SEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type v2(v2SEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type expression(expressionSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type ranks(ranksSEXP);
+    rcpp_result_gen = Rcpp::wrap(Cor_Matrix_C(v1, v2, expression, ranks));
     return rcpp_result_gen;
 END_RCPP
 }

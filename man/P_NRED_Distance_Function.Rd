@@ -4,7 +4,8 @@
 \alias{P_NRED_Distance_Function}
 \title{Calculates pairwise composite PC & NRED scores for a module}
 \usage{
-P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Z_scores, Subset_KOs)
+P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Z_scores, matrix_features,
+  Subset_KOs)
 }
 \arguments{
 \item{Subset_KOs}{A list of KOs that form a module}
@@ -21,5 +22,5 @@ or by taking the score with the maximum similarity. A background distribution us
 is provided for comparison. (Currently it only provides the score that minimizes the distances)
 }
 \examples{
-PHA_module_P_NRED <- P_NRED_Distance_Function(PHA_module)
+PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B,Z_scores_B,PHA_module)
 }

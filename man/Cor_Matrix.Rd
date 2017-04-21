@@ -4,10 +4,10 @@
 \alias{Cor_Matrix}
 \title{Calculates a correlation matrix between two vectors of rows}
 \usage{
-Cor_Matrix(vector1, vector2, input_matrix)
+Cor_Matrix(vector1, vector2, input_matrix, matrix_features)
 }
 \arguments{
-\item{vector1, vevctor2}{The two lists rows in which a particular KO is identified}
+\item{vector1, vector2}{The two lists rows in which a particular KO is identified}
 
 \item{RNAseq_Annotation_Matrix_no_sd_of_zero}{The annotated matrix of RNAseq data with rows that
 have a standard deviation of zero removed.}
@@ -16,7 +16,8 @@ have a standard deviation of zero removed.}
 a pairwise correlation matrix,
 }
 \description{
-This function calculates a pairwise correlation matrix.
+This function calculates a pairwise correlation matrix for both pearson and NRED.
+Returns an array containing two matrices.
 }
 \examples{
 Cor_Matrix(KO_position_of_A,KO_position_of_B,RNAseq_Annotation_Matrix_no_sd_of_zero)

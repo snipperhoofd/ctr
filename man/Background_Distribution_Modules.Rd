@@ -4,7 +4,8 @@
 \alias{Background_Distribution_Modules}
 \title{Generate a background distibution of composite Z scores}
 \usage{
-Background_Distribution_Modules(RNAseq_Annotated_Matrix, Z_scores, N, Z)
+Background_Distribution_Modules(RNAseq_Annotated_Matrix, matrix_features,
+  Z_scores, N, Z)
 }
 \arguments{
 \item{RNAseq_Annotated_Matrix}{The annotated matrix}
