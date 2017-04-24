@@ -34,10 +34,8 @@ List Cor_Matrix_C(NumericVector v1, NumericVector v2,
 
     for(int i = 0; i < v1.size(); i++)
     {
-      printf("v1: %f\n", v1[i]);
         for(int j = 0; j < v2.size(); j++)
         {
-          printf("v2: %f\n", v2[j]);
 
             int v1_index = (v1[i] - 1);
             int v2_index = (v2[j] - 1);
