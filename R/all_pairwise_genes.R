@@ -34,7 +34,7 @@ all_pairwise_genes <- function(RNAseq_Annotation_Matrix, Z_scores, matrix_featur
   
   for (x in 1:(dim(H_KO_pairwise_gene_pearson)[1]-1)) {
     for (y in (x+1):dim(H_KO_pairwise_gene_pearson)[2]) {
-      for (z in 1:dim(H_KO_pairwise_gene_pearson)[3]) { #iterate over array
+      for (z in 1:(dim(H_KO_pairwise_gene_pearson)[3])) { #iterate over array
         
         # Identify the rows in the original matrix corresponding to each genome
         position_of_genome_A = which(RNAseq_Annotated_Matrix$Bin==rownames(Pairwise_Bin_Array_Presence)[x])
@@ -92,6 +92,7 @@ all_pairwise_genes <- function(RNAseq_Annotation_Matrix, Z_scores, matrix_featur
             Pairwise_PositionsA[x,y,z]<-rownames(max_pairwise_gene_correlation)[scoring_pair]
             Pairwise_PositionsB[x,y,z]<-colnames(max_pairwise_gene_correlation)[scoring_pair]}
         } else {next}
+      #  print(c(x,y,z))
       }
     }
   }
