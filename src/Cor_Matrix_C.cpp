@@ -28,29 +28,37 @@ double sqrt_sum_multiply(std::vector<double> s, int size)
 // [[Rcpp::export]]
 List Cor_Matrix_C(NumericVector v1, NumericVector v2,
                            NumericMatrix expression, NumericMatrix ranks) {
+
     NumericMatrix pairwise_gene_correlation(v1.size(), v2.size());
     NumericMatrix pairwise_gene_euclidean(v1.size(), v2.size());
+
     for(int i = 0; i < v1.size(); i++)
     {
+      printf("v1: %f\n", v1[i]);
         for(int j = 0; j < v2.size(); j++)
         {
-            NumericVector sub_v1 = expression(v1[i], _);
-            NumericVector sub_v2 = expression(v2[j], _);
-            pairwise_gene_correlation(i, j) = CalcNormPearson(sub_v1.begin(),
-                                                              sub_v2.begin(),
-                                                              sub_v1.size());
+          printf("v2: %f\n", v2[j]);
 
-            NumericVector rank_v1 = ranks(v1[i],_ );
-            NumericVector rank_v2 = ranks(v2[j],_ );
+            int v1_index = (v1[i] - 1);
+            int v2_index = (v2[j] - 1);
+            NumericVector sub_v1 = expression(v1_index, _);
+            NumericVector sub_v2 = expression(v2_index, _);
+            pairwise_gene_correlation(i, j) = CalcNormPearson(sub_v1.begin(),
+                                                                  sub_v2.begin(),
+                                                                  sub_v1.size());
+
+            NumericVector rank_v1 = ranks(v1_index,_ );
+            NumericVector rank_v2 = ranks(v2_index,_ );
 
             std::vector<double> subtract_list = subtract(rank_v1.begin(), rank_v2.begin(), rank_v1.size());
             pairwise_gene_euclidean(i, j ) =  sqrt_sum_multiply(subtract_list, subtract_list.size());
         }
     }
-
     return List::create(
       _["correlation"] = pairwise_gene_correlation,
       _["euclidean"] = pairwise_gene_euclidean
     );
+
+
 }
 
