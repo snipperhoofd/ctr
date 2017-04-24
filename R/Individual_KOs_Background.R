@@ -80,10 +80,10 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
     # m1.1
     Array_Pearson_Euclidean<-NULL
     if(language == 'R'){
-      Array_Pearson_Euclidean <- Cor_Matrix(sample_KO_positions$KO_positions_of_A,
-                                          sample_KO_positions$KO_positions_of_B,
-                                          RNAseq_Annotation_Matrix_no_sd_of_zero,
-                                          matrix_features)
+      Array_Pearson_Euclidean <-   Cor_Matrix(sample_KO_positions$KO_positions_of_A,
+                                              sample_KO_positions$KO_positions_of_B,
+                                              RNAseq_Annotation_Matrix_no_sd_of_zero,
+                                              matrix_features)
     } else if(language == 'C'){
       Array_Pearson_Euclidean <- Cor_Matrix_C(sample_KO_positions$KO_positions_of_A,
                                               sample_KO_positions$KO_positions_of_B,
@@ -156,23 +156,4 @@ sample_KO <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome
               "sample_KO_position_of_B" = sample_KO_position_of_B,
               "KO_positions_of_A" = KO_positions_of_A,
               "KO_positions_of_B" = KO_positions_of_B))
-}
-
-
-
-Individual_KO_background_C_implementation <- function(RNAseq_Annotated_Matrix_no_sd_of_zero, matrix_features, N){
-  #C++ implementation of the functions
-  #sourceCpp("src/correlation.cpp")
-
-  RNAseqExpresssionCounts <- as.matrix(RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@SS:matrix_features@SE])
-  RNAseqExpressionRanks <- as.matrix(RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@RS:matrix_features@RE])
-  KOterms<- RNAseq_Annotated_Matrix_no_sd_of_zero[, 8]
-  All_Bins <- sapply(RNAseq_Annotated_Matrix_no_sd_of_zero[, matrix_features@Bin_Column], as.numeric)
-
-  Individual_KO_background(RNAseqExpresssionCounts,
-                           RNAseqExpressionRanks,
-                           KOterms,
-                           All_Bins,
-                           matrix_features@high_quality_bins,
-                           N)
 }
