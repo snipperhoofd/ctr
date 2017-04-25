@@ -16,7 +16,7 @@
 #' 
 #' @examples
 #' PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B, PHA_module)
-#' All_KO_module_P_NRED_test <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B, Subset_KOs=NULL)
+#' All_KO_module_P_NRED_test <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B)
 
 
 P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_features, Subset_KOs) {
@@ -31,10 +31,12 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
   # Pearson Correlation, NRED and the position of genome A and B
   dim_matrix<- length(matrix_features@high_quality_bins)
   # Pearson
-  Pairwise_Bin_Array_Pearson<-array(NA,c(dim_matrix,dim_matrix, length(Subset_KOs)))
-  colnames(Pairwise_Bin_Array_Pearson)<-names(table(RNAseq_Annotated_Matrix$Bin))[order(as.numeric(names(table(RNAseq_Annotated_Matrix$Bin))))]
-  rownames(Pairwise_Bin_Array_Pearson)<-colnames(Pairwise_Bin_Array_Pearson)
-  # NRED
+  Pairwise_Bin_Array_Pearson<-array(data=NA, 
+                                    dim = c(dim_matrix, dim_matrix, length(Subset_KOs)),
+                                    dimnames = list(sort(matrix_features@high_quality_bins),
+                                                    sort(matrix_features@high_quality_bins)))
+
+ # NRED
   Pairwise_Bin_Array_Euclidean<- Pairwise_Bin_Array_Pearson
   # Positions
   Pairwise_PositionsA<- Pairwise_Bin_Array_Euclidean
