@@ -1,30 +1,48 @@
 #' Calculates pairwise composite PC & NRED scores for a module
 #'
-#' This function calculates all pairwise NRED & PC for a given module. When two genomes contain multiple
-#' elements for comparison, this is handled either by takng a random pairwise comparison,
-#' or by taking the score with the maximum similarity. A background distribution using each method
-#' is provided for comparison. (Currently it only provides the score that minimizes the distances)
-#'
+#' This function calculates all pairwise NRED & PC for all genes, or a subset of of genes in a given module. 
+#' When two genomes contain multiple elements for comparison, this is handled either by takng the 
+#' score with the maximum similarity.
+#' 
+#' @param RNAseq_Annotated_Matrix The normalized count data with annotations
+#' @param matrix_features The matrix features associated with the annoated normalized count data
+#' @param Z_scores A list of KOs that form a module
 #' @param Subset_KOs A list of KOs that form a module
+#' 
 #' @export
-#' @return a list of vectors containing pairwise PC (pearsons), NRED (nred) and their composite Z-scores (Zscore),
-#' and the position in the matrix for the highest scoring pair between genomes A and B
-#' (positionA & positionB respectively)
-#' @examples PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B, Z_scores_B, matrix_features_B, PHA_module)
+#' @return a list of arrays including pairwise PC ($pearsons), NRED ($nred), the row for genome A and B 
+#' used in the calculation ($positionA and $positionB), the Z-scores ($Zscore_pearson and $Zscore_nred)
+#' and a composite Z-score ($Zscore). Each array has the dimensions #bins x #bins x #KOs.
+#' 
+#' @examples
+#' PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B, PHA_module)
+#' All_KO_module_P_NRED_test <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B, Subset_KOs=NULL)
+
 
 P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_features, Subset_KOs) {
 
-  # Define two congruent arrays to be filled during the second step. Name the columns and rows based on the genome bins
-  dim_matrix<-length(matrix_features@high_quality_bins)
+  # if no subset of KOs is introduced, than by default, all calcuations are conducted
+  if(missing(Subset_KOs)) {
+    no_annotation <- which(names((table(RNAseq_Annotated_Matrix$KO)))=="")
+    Subset_KOs<- names((table(RNAseq_Annotated_Matrix$KO)))[-no_annotation]
+  }
+  
+  # build empty arrays, label columns and rows, for each: 
+  # Pearson Correlation, NRED and the position of genome A and B
+  dim_matrix<- length(matrix_features@high_quality_bins)
+  # Pearson
   Pairwise_Bin_Array_Pearson<-array(NA,c(dim_matrix,dim_matrix, length(Subset_KOs)))
   colnames(Pairwise_Bin_Array_Pearson)<-names(table(RNAseq_Annotated_Matrix$Bin))[order(as.numeric(names(table(RNAseq_Annotated_Matrix$Bin))))]
   rownames(Pairwise_Bin_Array_Pearson)<-colnames(Pairwise_Bin_Array_Pearson)
-  Pairwise_Bin_Array_Euclidean<-Pairwise_Bin_Array_Pearson
-  Pairwise_PositionsA<-Pairwise_Bin_Array_Euclidean
-  Pairwise_PositionsB<-Pairwise_Bin_Array_Euclidean
-  Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5) # This should be removed from this function and stored globally, perhaps in matrix features
-
-
+  # NRED
+  Pairwise_Bin_Array_Euclidean<- Pairwise_Bin_Array_Pearson
+  # Positions
+  Pairwise_PositionsA<- Pairwise_Bin_Array_Euclidean
+  Pairwise_PositionsB<- Pairwise_Bin_Array_Euclidean
+  
+  # save names in variable to reduce the number of functions called
+  bin_names<- rownames(Pairwise_Bin_Array_Pearson)
+  
   ######### This is the maximum pairwise Pearson correlation between genome bins for all KOs, converted to Z score, and keeping the pair with the highest sum z-score
 
   for (x in 1:(dim(Pairwise_Bin_Array_Pearson)[1]-1)) {
@@ -32,18 +50,24 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
       for (z in 1:dim(Pairwise_Bin_Array_Pearson)[3]) { #iterate over array
 
         # Identify the rows in the original matrix corresponding to each genome
-        position_of_genome_A = which(RNAseq_Annotated_Matrix$Bin==rownames(Pairwise_Bin_Array_Presence)[x])
-        position_of_genome_B = which(RNAseq_Annotated_Matrix$Bin==rownames(Pairwise_Bin_Array_Presence)[y])
+        position_of_genome_A = which(RNAseq_Annotated_Matrix$Bin==bin_names[x])
+        position_of_genome_B = which(RNAseq_Annotated_Matrix$Bin==bin_names[y])
         # Second identify the rows in the original matrix corresponding to a KO
-        position_of_kegg_enzyme_A = intersect(which(RNAseq_Annotated_Matrix$KO==Subset_KOs[z]),position_of_genome_A)
-        position_of_kegg_enzyme_B = intersect(which(RNAseq_Annotated_Matrix$KO==Subset_KOs[z]),position_of_genome_B)
+        position_of_kegg_enzyme_A = intersect(which(RNAseq_Annotated_Matrix$KO==Subset_KOs[z]), position_of_genome_A)
+        position_of_kegg_enzyme_B = intersect(which(RNAseq_Annotated_Matrix$KO==Subset_KOs[z]), position_of_genome_B)
+        
         # Make sure the KO is present in both genomes
-        if (!length(position_of_kegg_enzyme_A)==0 && !length(position_of_kegg_enzyme_B)==0) {
+        if (!length(position_of_kegg_enzyme_A) == 0 && !length(position_of_kegg_enzyme_B) == 0) {
           # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances, converting to Z scores
-          # First define two empty matrices and then fill them with the PCC and Euc distances
-          max_pairwise_gene_correlation<-matrix(NA,nrow=length(position_of_kegg_enzyme_A),ncol=length(position_of_kegg_enzyme_B))
+          
+          # First define two empty matrices and then fill them with the PCC and NRED distances (This could be moved to improve speed)
+          max_pairwise_gene_correlation<-matrix(NA,
+                                                nrow=length(position_of_kegg_enzyme_A),
+                                                ncol=length(position_of_kegg_enzyme_B))
           max_pairwise_gene_euclidean<-max_pairwise_gene_correlation
-          for (m in 1:length(position_of_kegg_enzyme_A)){
+          
+            # loop through the possible KO pairs
+            for (m in 1:length(position_of_kegg_enzyme_A)){
             for (n in 1:length(position_of_kegg_enzyme_B)){
               # make sure there is always a standard deviation, or else cor gives an error. If there is a sd, proceed with calculations
               if (sd(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],
@@ -92,6 +116,7 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
             Pairwise_PositionsA[x,y,z]<- rownames(max_pairwise_gene_correlation)[scoring_pair]
             Pairwise_PositionsB[x,y,z]<- colnames(max_pairwise_gene_correlation)[scoring_pair]}
         } else {next}
+        #  print(c(x,y,z)) # Unhash to monitor progress
       }
     }
   }
@@ -100,9 +125,11 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
   Zscore_pairwise_gene_euclidean<- ((Pairwise_Bin_Array_Euclidean-Z_scores$sd[6]) / Z_scores$sd[6])
   Combined_Pairwise_Z_Score_Array<- ((-Zscore_pairwise_gene_correlation) + Zscore_pairwise_gene_euclidean)
 
-  newList <- list("pearsons" = Zscore_pairwise_gene_correlation, 
-                  "nred" = Zscore_pairwise_gene_euclidean,
+  newList <- list("pearsons" = Pairwise_Bin_Array_Pearson, 
+                  "nred" = Pairwise_Bin_Array_Euclidean,
                   "combined"=Combined_Pairwise_Z_Score_Array,
+                  "Zscore_pearson" = Zscore_pairwise_gene_correlation,
+                  "Zscore_nred" = Zscore_pairwise_gene_euclidean,
                   "positionsA"=Pairwise_PositionsA,
                   "positionsB"=Pairwise_PositionsB)
 

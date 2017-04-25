@@ -6,10 +6,10 @@
 #'
 #'
 #' @param RNAseq_Annotation_Matrix, the original matrix
-#' @param N the number of iterations (at least 10000 is suggested)
+#' @param Z_scores_BR, Z-scores obtained from the individual background distribution 
+#' @param matrix_features, the matrix features
 #' @export
-#' @return A list containting eight vectors of N distances: pearson and euclidean distances for
-#' random, multiple comparison corrected random, random KO, highest scoring pair KO.
+#' @return An array containing the pairwise distances between bins for all KOs and their positions in the original RNAseq_Annotation_Matrix
 #' @examples 	all_pairwise_genes(RNAseq_Annotation_Matrix_BR,Z_scores_BR,matrix_features_BR)
 # first remove rows with standard deviations of 0
 
@@ -54,10 +54,12 @@ all_pairwise_genes <- function(RNAseq_Annotation_Matrix, Z_scores, matrix_featur
           for (m in 1:length(position_of_kegg_enzyme_A)){
             for (n in 1:length(position_of_kegg_enzyme_B)){
               # make sure there is always a standard deviation, or else cor gives an error. If there is a sd, proceed with calculations
-              if (sd(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],2:7]))!=0 && 
-                  sd(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],2:7]))!=0) {
+              if (sd(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],matrix_features@SS:matrix_features@SE]))!=0 && 
+                  sd(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],matrix_features@SS:matrix_features@SE]))!=0) {
+                
                 max_pairwise_gene_correlation[m,n]<- (cor(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m], matrix_features@SS:matrix_features@SE]),
                                                           as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n], matrix_features@SS:matrix_features@SE])))
+                
                 subtracted_lists<- RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m], matrix_features@RS:matrix_features@RE] - 
                                    RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n], matrix_features@RS:matrix_features@RE]
                 
@@ -97,10 +99,17 @@ all_pairwise_genes <- function(RNAseq_Annotation_Matrix, Z_scores, matrix_featur
     }
   }
   
+  Zscore_pearson<- ((H_KO_pairwise_gene_pearson - Z_scores$mu[2]) / Z_scores$sd[2]) # need to inverse PCC
+  Zscore_nred<- ((H_KO_pairwise_gene_euclidean - Z_scores$sd[6]) / Z_scores$sd[6])
+  Composite_Z_Score<- ((-Zscore_pearson) + Zscore_nred)
+  
   newList <- list("pearsons" = H_KO_pairwise_gene_pearson, 
                   "nred" = H_KO_pairwise_gene_euclidean, 
                   "positionsA" = Pairwise_PositionsA, 
-                  "positionsB" = Pairwise_PositionsB)
+                  "positionsB" = Pairwise_PositionsB,
+                  "Zscore_pearson" = Zscore_pearson,
+                  "Zscore_nred" = Zscore_nred,
+                  "Composite_Z_Score" = Composite_Z_Score)
   
   return(newList)
 }
