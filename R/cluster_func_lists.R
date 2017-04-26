@@ -18,13 +18,11 @@
 # J_PHA <-Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin,matrix_features_BR, PHA_module)
 
 cluster_func<-function(RNAseq_Annotated_Matrix, Composite_Z_Score, matrix_features, module_list) {
-  
-  no_annotation <- which(names((table(RNAseq_Annotated_Matrix$KO)))=="")
-  All_KOs<- names(table(RNAseq_Annotated_Matrix$KO))[-no_annotation] #list of all KOs which apear greater than 5 times **
-  
 
   if (is.list(module_list)) {
     newList <- list()
+    All_KOs<-unlist(module_list, use.names=FALSE)
+    
     for (i in 1:length(module_list)) {
     Jaccard_Distance <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix, 
                                                   matrix_features, 
@@ -51,7 +49,7 @@ cluster_func<-function(RNAseq_Annotated_Matrix, Composite_Z_Score, matrix_featur
       Jaccard_Distance <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix, 
                                                     matrix_features, 
                                                     module_list)
-      ave_Z_score_matrix <- ave_Z_score_Func(all_pairwise_KO_distances$Composite_Z_Score[,,which(All_KOs%in%module_list)])
+      ave_Z_score_matrix <- ave_Z_score_Func(all_pairwise_KO_distances$Composite_Z_Score[,,which(matrix_features@All_KOs%in%module_list)])
       JPE_distance<-ave_Z_score_matrix*(1-Jaccard_Distance)
       rownames(JPE_distance)<-colnames(JPE_distance)
       JPE_distance_Table <- subset(melt(JPE_distance), value!=0)

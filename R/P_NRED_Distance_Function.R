@@ -5,14 +5,14 @@
 #' score with the maximum similarity.
 #'
 #' @param RNAseq_Annotated_Matrix The normalized count data with annotations
+#' @param Z_scores The Zscores obtained from the background distributions
 #' @param matrix_features The matrix features associated with the annoated normalized count data
-#' @param Z_scores A list of KOs that form a module
-#' @param Subset_KOs A list of KOs that form a module
+#' @param Subset_KOs A vector of the KOs that form a module
 #'
 #' @export
 #' @return a list of arrays including pairwise PC ($pearsons), NRED ($nred), the row for genome A and B
 #' used in the calculation ($positionA and $positionB), the Z-scores ($Zscore_pearson and $Zscore_nred)
-#' and a composite Z-score ($Zscore). Each array has the dimensions #bins x #bins x #KOs.
+#' and a composite Z-score ($combined). Each array has the dimensions #bins x #bins x #KOs.
 #'
 #' @examples
 #' PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B, PHA_module)
@@ -64,10 +64,10 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
           # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances, converting to Z scores
 
           # First define two empty matrices and then fill them with the PCC and NRED distances (This could be moved to improve speed)
-          max_pairwise_gene_correlation<-matrix(NA,
+          max_pairwise_gene_correlation<- matrix(NA,
                                                 nrow=length(position_of_kegg_enzyme_A),
                                                 ncol=length(position_of_kegg_enzyme_B))
-          max_pairwise_gene_euclidean<-max_pairwise_gene_correlation
+          max_pairwise_gene_euclidean<- max_pairwise_gene_correlation
 
             # loop through the possible KO pairs
             for (m in 1:length(position_of_kegg_enzyme_A)){
@@ -86,6 +86,7 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
                                                              matrix_features@RS:matrix_features@RE] -
                                      RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],
                                                              matrix_features@RS:matrix_features@RE]
+                  
                   max_pairwise_gene_euclidean[m,n]<-sqrt(sum(subtracted_lists * subtracted_lists))
                 } else {
                   # If there is no standard deviation, the correlation is NA
@@ -129,12 +130,12 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
   Combined_Pairwise_Z_Score_Array<- ((-Zscore_pairwise_gene_correlation) + Zscore_pairwise_gene_euclidean)
 
   newList <- list("pearsons" = Pairwise_Bin_Array_Pearson,
-                  "nred" = Pairwise_Bin_Array_Euclidean,
-                  "combined"=Combined_Pairwise_Z_Score_Array,
+                  "nred" =  Pairwise_Bin_Array_Euclidean,
+                  "combined" = Combined_Pairwise_Z_Score_Array,
                   "Zscore_pearson" = Zscore_pairwise_gene_correlation,
                   "Zscore_nred" = Zscore_pairwise_gene_euclidean,
-                  "positionsA"=Pairwise_PositionsA,
-                  "positionsB"=Pairwise_PositionsB)
+                  "positionsA" = Pairwise_PositionsA,
+                  "positionsB" = Pairwise_PositionsB)
 
   return(newList)
 }
