@@ -21,13 +21,14 @@ cluster_func<-function(RNAseq_Annotated_Matrix, Composite_Z_Score, matrix_featur
 
   if (is.list(module_list)) {
     newList <- list()
-    All_KOs<-unlist(module_list, use.names=FALSE)
+    All_KOs<-unique(unlist(module_list, use.names=FALSE))
     
     for (i in 1:length(module_list)) {
     Jaccard_Distance <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix, 
                                                   matrix_features, 
                                                   module_list[[i]])
-    ave_Z_score_matrix <- ave_Z_score_Func(Composite_Z_Score[, ,which(All_KOs%in%module_list[[i]])])
+    if (sum(All_KOs%in%CCM_module_list[[i]])==1) {next} else { 
+    ave_Z_score_matrix <- ave_Z_score_Func(Composite_Z_Score[, , which(All_KOs%in%module_list[[i]])])
     JPE_distance<-ave_Z_score_matrix*(1-Jaccard_Distance)
     rownames(JPE_distance)<-colnames(JPE_distance)
     JPE_distance_Table <- subset(melt(JPE_distance), value!=0)
@@ -43,6 +44,7 @@ cluster_func<-function(RNAseq_Annotated_Matrix, Composite_Z_Score, matrix_featur
                        "JPE_distance_Table" = JPE_distance_Table,
                        "cl" = cl)
     newList[[i]] <- minilist   
+    }
     }
     
     } else {

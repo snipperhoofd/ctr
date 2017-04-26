@@ -152,7 +152,7 @@ for (i in 1:length(CCM_module_list)) {
 # vector of all KOs in module_list
 M_I_KOs<-unlist(M_I_module_list, use.names=FALSE)
 polymer_KOs<-unlist(polymers, use.names=FALSE)
-CCM_KOs<-unlist(CCM_module_list, use.names=FALSE)
+CCM_KOs<-unique(unlist(CCM_module_list, use.names=FALSE))
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
@@ -390,7 +390,7 @@ polymers_association_matrix<-fill_association_matrix(polymers_clustering_results
 
 
 CCM_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, matrix_features_B, CCM_KOs)
-CCM_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_B_default_bin, CCM_pairwise_KO_distances$combined, matrix_features_B, CCM_module_list)
+CCM_clustering_results_P_NRED <- cluster_func(RNAseq_Annotated_Matrix_B_default_bin, CCM_pairwise_KO_distances$combined, matrix_features_B, CCM_module_list)
 CCM_association_matrix<-fill_association_matrix(CCM_clustering_results_P_NRED,matrix_features_BR,names(CCM_module_list))
 
 # all_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR)
