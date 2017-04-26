@@ -11,6 +11,9 @@
 
 
 Calc_Jaccard <- function(vector1, vector2){
-  Jaccard_Distance<-1-(sum(which(vector1==1)%in%which(vector2==1)) / (sum(which(vector1==0)%in%which(vector2==1)) + sum(which(vector1==1)%in%which(vector2==0)) + sum(which(vector1==1)%in%which(vector2==1))))
+  Jaccard_Distance<-1-(sum(which(vector1==1)%in%which(vector2==1)) / 
+                         (sum(which(vector1==0)%in%which(vector2==1)) + 
+                            sum(which(vector1==1)%in%which(vector2==0)) + 
+                            sum(which(vector1==1)%in%which(vector2==1))))
   return(Jaccard_Distance)
 }
