@@ -102,22 +102,6 @@ setwd('/path/to/directory/ctr')
 KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
 KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
 
-
-
-# "Mineral and organic ion transport system" modules
-names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")]))
-
-# Build a module list based on a pathway module name
-M_I_module_list<- as.list(names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")])))
-names(M_I_module_list)<-names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")]))
-
-for (i in 1:length(M_I_module_list)) {
-  M_I_module_list[[i]]<-KO_modules_table2$V4[which(KO_modules_table2$V2==M_I_module_list[i])]
-}
-
-M_I_KOs<-unlist(module_list, use.names=FALSE)
-
-
 # Barplot of pathway modules
 par(mar=c(10,3,3,3))
 x <- barplot(sort(table(KO_modules_table2$V1)), xaxt="n")
@@ -136,10 +120,26 @@ RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matri
 
 Modules are defined based on their KEGG Orthology (KO) annotations
 
-```{r manually pre-defined modules, echo = TRUE}
+```{r manually defined modules, echo = TRUE}
 PHA_module <- c("K01895","K00925","K00625","K00626","K00023", "K03821")
 polyP_module <- c("K00937","K02040","K02037","K02038","K02036","K07636","K07657","K03306")
 Glycogen_module<- c("K00700","K00688","K00703","K01214","K15778","K00975","K00845")
+```
+
+```{r pre-defined modules, echo = TRUE}
+
+# Build a list of modules based on the 'pathway module' "Mineral and organic ion transport system" modules
+names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")]))
+M_I_module_list<- as.list(names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")])))
+names(M_I_module_list)<-names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")]))
+
+for (i in 1:length(M_I_module_list)) {
+  M_I_module_list[[i]]<-KO_modules_table2$V4[which(KO_modules_table2$V2==M_I_module_list[i])]
+}
+
+# vector of all KOs in module_list
+M_I_KOs<-unlist(module_list, use.names=FALSE)
+
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
@@ -379,7 +379,8 @@ legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(
 ```{r plotting the groups PHA, echo=FALSE}
 # all_pairwise_KO_distances<-all_pairwise_genes(RNAseq_Annotated_Matrix_BR_default_bin,Z_scores_BR,matrix_features_BR)
 
-all_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR)
+M_I_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR, M_I_module_list)
+# all_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR)
 
 All_KO_composite_mean<-rep(NA,dim(all_pairwise_KO_distances$Composite_Z_Score)[3])
 quantile_matrix<-matrix(NA,ncol=5,nrow=dim(all_pairwise_KO_distances$Composite_Z_Score)[3])
