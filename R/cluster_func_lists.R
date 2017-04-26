@@ -22,8 +22,7 @@ cluster_func<-function(RNAseq_Annotated_Matrix, Composite_Z_Score, matrix_featur
   no_annotation <- which(names((table(RNAseq_Annotated_Matrix$KO)))=="")
   All_KOs<- names(table(RNAseq_Annotated_Matrix$KO))[-no_annotation] #list of all KOs which apear greater than 5 times **
   
-  
-  
+
   if (is.list(module_list)) {
     newList <- list()
     for (i in 1:length(module_list)) {
@@ -42,9 +41,9 @@ cluster_func<-function(RNAseq_Annotated_Matrix, Composite_Z_Score, matrix_featur
     cl<-cluster_louvain(graph, weights=E(graph)$Score)
     
     minilist <- list("ave_Z_score_matrix" = ave_Z_score_matrix,
-                       "JPE_distance"=JPE_distance,
-                       "JPE_distance_Table"=JPE_distance_Table,
-                       "cl"=cl)
+                       "JPE_distance"= JPE_distance,
+                       "JPE_distance_Table" = JPE_distance_Table,
+                       "cl" = cl)
     newList[[i]] <- minilist   
     }
     
@@ -63,7 +62,10 @@ cluster_func<-function(RNAseq_Annotated_Matrix, Composite_Z_Score, matrix_featur
       graph<-graph_from_data_frame(edge_frame_reduced,directed=FALSE)
       cl<-cluster_louvain(graph,weights=E(graph)$Score)
 
-      newList <- list("ave_Z_score_matrix" = ave_Z_score_matrix,"JPE_distance"=JPE_distance,"JPE_distance_Table"=JPE_distance_Table,"cl"=cl)
+      newList <- list("ave_Z_score_matrix" = ave_Z_score_matrix,
+                      "JPE_distance" = JPE_distance,
+                      "JPE_distance_Table" = JPE_distance_Table,
+                      "cl" = cl)
       }
   
   return(newList)  

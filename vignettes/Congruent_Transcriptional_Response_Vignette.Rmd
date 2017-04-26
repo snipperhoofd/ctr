@@ -124,6 +124,7 @@ Modules are defined based on their KEGG Orthology (KO) annotations
 PHA_module <- c("K01895","K00925","K00625","K00626","K00023", "K03821")
 polyP_module <- c("K00937","K02040","K02037","K02038","K02036","K07636","K07657","K03306")
 Glycogen_module<- c("K00700","K00688","K00703","K01214","K15778","K00975","K00845")
+polymers <- list(PHA_module,polyP_module,Glycogen_module)
 ```
 
 ```{r pre-defined modules, echo = TRUE}
@@ -208,8 +209,8 @@ matrix_features_BR <- new("General_features",
                        not_aligned = c(0, 0, 0, 0, 0, 0),
                        library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
                        Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_BR),
-                       no_annotation <- which(names((table(RNAseq_Annotated_Matrix_BR$KO)))==""),
-                       All_KOs<- names(table(RNAseq_Annotated_Matrix_BR$KO))[-no_annotation]
+                       no_annotation = which(names((table(RNAseq_Annotated_Matrix_BR$KO)))==""),
+                       All_KOs = names(table(RNAseq_Annotated_Matrix_BR$KO))[-no_annotation]
                        )
 ```
 
@@ -386,6 +387,10 @@ legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(
 # all_pairwise_KO_distances<-all_pairwise_genes(RNAseq_Annotated_Matrix_BR_default_bin,Z_scores_BR,matrix_features_BR)
 
 M_I_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR, M_I_module_list)
+M_I_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_BR_default_bin, all_pairwise_KO_distances$Composite_Z_Score, matrix_features_BR, M_I_module_list)
+
+polymers_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR, polymers)
+polymers_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_BR_default_bin, all_pairwise_KO_distances$Composite_Z_Score, matrix_features_BR, polymers)
 # all_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR)
 
 All_KO_composite_mean<-rep(NA,dim(all_pairwise_KO_distances$Composite_Z_Score)[3])
