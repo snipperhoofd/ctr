@@ -188,7 +188,10 @@ matrix_features_B <- new("General_features",
                        no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
                        ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
                        not_aligned = c(0, 19317660, 0, 0, 0, 0),
-                       library_size =c(234232896,183166236,228746720,198024002,231567992,259156166)
+                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
+                       Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_B),
+                       no_annotation = which(names((table(RNAseq_Annotated_Matrix_B$KO)))==""),
+                       All_KOs = names(table(RNAseq_Annotated_Matrix_B$KO))[-no_annotation]
                        )
 
 matrix_features_BR <- new("General_features",
@@ -200,10 +203,13 @@ matrix_features_BR <- new("General_features",
                        SE = length(sample_names) + 1,
                        RS = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + 1,
                        RE = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + length(sample_names),
-                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
-                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
+                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313), # This must be updated!
+                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543), # This must be updated!
                        not_aligned = c(0, 0, 0, 0, 0, 0),
-                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166)
+                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
+                       Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_BR),
+                       no_annotation <- which(names((table(RNAseq_Annotated_Matrix_BR$KO)))==""),
+                       All_KOs<- names(table(RNAseq_Annotated_Matrix_BR$KO))[-no_annotation]
                        )
 ```
 
