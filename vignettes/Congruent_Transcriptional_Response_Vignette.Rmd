@@ -139,9 +139,20 @@ for (i in 1:length(M_I_module_list)) {
   M_I_module_list[[i]]<-KO_modules_table2$V4[which(KO_modules_table2$V2==M_I_module_list[i])]
 }
 
+# Build a list of modules based on the 'pathway module' "Central carbohydrate metabolism" modules
+names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")]))
+CCM_module_list<- as.list(names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")])))
+names(CCM_module_list)<-names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")]))
+
+for (i in 1:length(CCM_module_list)) {
+  CCM_module_list[[i]]<-KO_modules_table2$V4[which(KO_modules_table2$V2==CCM_module_list[i])]
+}
+
+
 # vector of all KOs in module_list
 M_I_KOs<-unlist(M_I_module_list, use.names=FALSE)
 polymer_KOs<-unlist(polymers, use.names=FALSE)
+CCM_KOs<-unlist(CCM_module_list, use.names=FALSE)
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
@@ -365,7 +376,7 @@ legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(
 ## Section 5) Calculating statsitics for each module
 
 #### Statistics for the modules
-```{r plotting the groups PHA, echo=FALSE}
+```{r distances clustering and association matrix, echo=FALSE}
 # all_pairwise_KO_distances<-all_pairwise_genes(RNAseq_Annotated_Matrix_BR_default_bin,Z_scores_BR,matrix_features_BR)
 # M_I_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_BR_default_bin, all_pairwise_KO_distances$Composite_Z_Score, matrix_features_BR, M_I_module_list)
 
@@ -377,8 +388,17 @@ polymers_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matr
 polymers_clustering_results_P_NRED <- cluster_func(RNAseq_Annotated_Matrix_B_default_bin, polymers_pairwise_KO_distances$combined, matrix_features_B, polymers)
 polymers_association_matrix<-fill_association_matrix(polymers_clustering_results_P_NRED, matrix_features_B, names(polymers))
 
+
+CCM_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, matrix_features_B, CCM_KOs)
+CCM_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_B_default_bin, CCM_pairwise_KO_distances$combined, matrix_features_B, CCM_module_list)
+CCM_association_matrix<-fill_association_matrix(CCM_clustering_results_P_NRED,matrix_features_BR,names(CCM_module_list))
+
 # all_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR)
 
+```
+
+
+```{r Backround Distributions for Modules, echo=FALSE} 
 All_KO_composite_mean<-rep(NA,dim(all_pairwise_KO_distances$Composite_Z_Score)[3])
 quantile_matrix<-matrix(NA,ncol=5,nrow=dim(all_pairwise_KO_distances$Composite_Z_Score)[3])
 for (i in 1:dim(all_pairwise_KO_distances$Composite_Z_Score)[3]) {
@@ -387,9 +407,6 @@ quantile_matrix[i,]<-quantile(all_pairwise_KO_distances$Composite_Z_Score[,,i],n
 }
 
 harmonic_mean<-1/((1/all_pairwise_KO_distances$pearsons)+(1/all_pairwise_KO_distances$nred)/2)
-
-
-
 
 
 Zscore_pearson_all_pairwise_genes_BR<- ((all_pairwise_genes_BR$pearson-Z_scores$mu[2])/Z_scores$sd[2]) # need to inverse PCC
