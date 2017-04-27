@@ -2,7 +2,7 @@
 #include "statistics.h"
 
 using namespace Rcpp;
-
+// [[Rcpp::plugins(cpp11)]]
 
 
 class Offset {
@@ -89,20 +89,31 @@ std::set<int> MatchingPositions(String KO, StringVector subsetKOS)
   return out;
 }
 
-std::set<int> Intersection(std::set<int> a, std::set<int> b)
+std::vector<int> Intersection(std::set<int> a, std::set<int> b)
 {
     std::set<int> intersect;
     std::set_intersection(a.begin(), a.end(),
                           b.begin(), b.end(),
                           std::inserter(intersect, intersect.begin()));
-    return intersect;
+    std::vector<int> output;
+
+    std::copy(intersect.begin(), intersect.end(), std::back_inserter(output));
+    return output;
 }
 
 // [[Rcpp::export]]
-NumericVector P_NRED_Distance_C(int dim_matrix, StringVector subsetKOS,
-                      NumericVector binNames, NumericVector allBins,
-                      StringVector allKOs, NumericMatrix expression,
-                      NumericMatrix ranks, List Z_scores) {
+List P_NRED_Distance_C(int dim_matrix,
+                                StringVector subsetKOS,
+                                NumericVector binNames,
+                                NumericVector allBins,
+                                StringVector allKOs,
+                                NumericMatrix expression,
+                                NumericMatrix ranks,
+                                List Z_scores) {
+
+
+
+
     Offset offset(dim_matrix, dim_matrix, subsetKOS.size());
 
     NumericVector PairwiseBinArrayPearson = NumericVector(Dimension(dim_matrix,
@@ -121,22 +132,23 @@ NumericVector P_NRED_Distance_C(int dim_matrix, StringVector subsetKOS,
                                                                dim_matrix,
                                                                subsetKOS.size()));
 
-
+    NumericVector v1_exp(6);
+    NumericVector v2_exp(6);
     for(int x = 0; x < dim_matrix; x++)
     {
         std::set<int> positionsGenomeA = MatchingPositions(binNames[x],
                                                          allBins);
         for(int y = 0; y < dim_matrix; y++)
         {
-            std::set<int> positionsGenomeB = MatchingPositions(binNames[x],
+            std::set<int> positionsGenomeB = MatchingPositions(binNames[y],
                                                              allBins);
             for(int z = 0; z <subsetKOS.size(); z++)
             {
               std::set<int> allPositionsKegg = MatchingPositions(
                                                           subsetKOS[z], allKOs);
-              std::set<int> positionKeggA = Intersection(allPositionsKegg,
+              std::vector<int> positionKeggA = Intersection(allPositionsKegg,
                                                     positionsGenomeA);
-              std::set<int> positionKeggB = Intersection(allPositionsKegg,
+              std::vector<int> positionKeggB = Intersection(allPositionsKegg,
                                                     positionsGenomeB);
 
               if (positionKeggA.size() != 0 && positionKeggB.size() != 0){
@@ -147,17 +159,20 @@ NumericVector P_NRED_Distance_C(int dim_matrix, StringVector subsetKOS,
 
                 for(int m = 0; m < positionKeggA.size(); m++)
                 {
-
+                  int positionKeggA_current = positionKeggA[m];
                   for(int n = 0; n < positionKeggB.size(); n++)
                   {
-                    NumericVector v1_exp = expression(m, _);
-                    NumericVector v2_exp = expression(n, _);
+                    int positionKeggB_current = positionKeggB[n];
+                    printf("posA: %d\n", positionKeggA_current);
+                    printf("PosB: %d\n", positionKeggB_current);
+                    v1_exp = expression(positionKeggA_current, _);
+                    v2_exp = expression(positionKeggB_current, _);
                     maxPairwiseCorrelation(m,n) = CalcNormPearson(v1_exp.begin(),
                                                  v2_exp.begin(),
                                                  v1_exp.size());
 
-                    NumericVector v1_rank = ranks(m, _);
-                    NumericVector v2_rank = ranks(n, _);
+                    NumericVector v1_rank = ranks(positionKeggA_current, _);
+                    NumericVector v2_rank = ranks(positionKeggB_current, _);
                     maxPairwiseEuclidean(m,n) = CalcNormEuclidean(v1_rank.begin(),
                                                    v2_rank.begin(),
                                                    v1_rank.size());
@@ -174,6 +189,8 @@ NumericVector P_NRED_Distance_C(int dim_matrix, StringVector subsetKOS,
 
                 PairwiseBinArrayPearson[offset(x,y,z)] = maxPairwiseCorrelation[bestScoring];
                 PairwiseBinArrayEuclidean[offset(x,y,z)] = maxPairwiseEuclidean[bestScoring];
+               // printf("best scoring correlation: %f\t", maxPairwiseCorrelation[bestScoring]);
+                //printf("best scoring euclidean: %f\n", maxPairwiseEuclidean[bestScoring]);
 
               }
           }
@@ -182,9 +199,11 @@ NumericVector P_NRED_Distance_C(int dim_matrix, StringVector subsetKOS,
 
 
   return List::create(
-    _['pearsons'] = PairwiseBinArrayPearson,
-    _['nred'] = ZscoreEuclidean
-  );
+   _["test"] = v1_exp,
+   _["test2"] = v2_exp);
+//   _['pearsons'] = PairwiseBinArrayPearson,
+//   _['nred'] = ZscoreEuclidean
+// );
 }
 
 
