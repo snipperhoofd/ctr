@@ -98,14 +98,10 @@ Next, the necessary files are uploaded including
 
 ```{r uploading the matrix}
 # First set working directory setwd("/path/to/directory/ctr")
-setwd('/path/to/directory/ctr')
+# setwd('/path/to/directory/ctr')
+# sourceDirectory("/path/to/directory/ctr/R/");
 KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
 KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
-
-# There are 780 modules 
-length(table(KO_modules_table2$V2))
-# "Cell signaling" modules
-names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Cell signaling")]))
 
 # Barplot of pathway modules
 par(mar=c(10,3,3,3))
@@ -125,10 +121,38 @@ RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matri
 
 Modules are defined based on their KEGG Orthology (KO) annotations
 
-```{r manually pre-defined modules, echo = TRUE}
+```{r manually defined modules, echo = TRUE}
 PHA_module <- c("K01895","K00925","K00625","K00626","K00023", "K03821")
 polyP_module <- c("K00937","K02040","K02037","K02038","K02036","K07636","K07657","K03306")
 Glycogen_module<- c("K00700","K00688","K00703","K01214","K15778","K00975","K00845")
+polymers <- list(PHA_module,polyP_module,Glycogen_module,)
+```
+
+```{r pre-defined modules, echo = TRUE}
+
+# Build a list of modules based on the 'pathway module' "Mineral and organic ion transport system" modules
+names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")]))
+M_I_module_list<- as.list(names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")])))
+names(M_I_module_list)<-names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")]))
+
+for (i in 1:length(M_I_module_list)) {
+  M_I_module_list[[i]]<-KO_modules_table2$V4[which(KO_modules_table2$V2==M_I_module_list[i])]
+}
+
+# Build a list of modules based on the 'pathway module' "Central carbohydrate metabolism" modules
+names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")]))
+CCM_module_list<- as.list(names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")])))
+names(CCM_module_list)<-names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")]))
+
+for (i in 1:length(CCM_module_list)) {
+  CCM_module_list[[i]]<-KO_modules_table2$V4[which(KO_modules_table2$V2==CCM_module_list[i])]
+}
+
+
+# vector of all KOs in module_list
+M_I_KOs<-unlist(M_I_module_list, use.names=FALSE)
+polymer_KOs<-unlist(polymers, use.names=FALSE)
+CCM_KOs<-unique(unlist(CCM_module_list, use.names=FALSE))
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes <80 % complete and with >5% contamination. It is also possible to use reference genomes.
@@ -177,7 +201,10 @@ matrix_features_B <- new("General_features",
                        no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
                        ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
                        not_aligned = c(0, 19317660, 0, 0, 0, 0),
-                       library_size =c(234232896,183166236,228746720,198024002,231567992,259156166)
+                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
+                       Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_B),
+                       no_annotation = which(names((table(RNAseq_Annotated_Matrix_B$KO)))==""),
+                       All_KOs = names(table(RNAseq_Annotated_Matrix_B$KO))[-no_annotation]
                        )
 
 matrix_features_BR <- new("General_features",
@@ -189,10 +216,13 @@ matrix_features_BR <- new("General_features",
                        SE = length(sample_names) + 1,
                        RS = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + 1,
                        RE = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + length(sample_names),
-                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
-                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
+                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313), # This must be updated!
+                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543), # This must be updated!
                        not_aligned = c(0, 0, 0, 0, 0, 0),
-                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166)
+                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
+                       Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_BR),
+                       no_annotation = which(names((table(RNAseq_Annotated_Matrix_BR$KO)))==""),
+                       All_KOs = names(table(RNAseq_Annotated_Matrix_BR$KO))[-no_annotation]
                        )
 ```
 
@@ -250,7 +280,7 @@ Here we calculate the background distribution of the individual KOs, and test wh
 
 ```{r, Calculates background distributions for individual KOs, echo=TRUE, results = 'asis' }
 
-I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000)
+I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'R')
 I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,matrix_features_BR,10000)
 
 # What would a background distribution look like if there were no ties (e.g. genes with the same counts)?
@@ -321,33 +351,14 @@ mtext(paste("p-value = ",signif(t_test_KO_random_euclidean_BR$p.value,2)),side=3
 # RNAseq_Annotated_Matrix_BR_default_by_bin
 # RNAseq_Annotated_Matrix_default_by_bin
 
-ptm <- proc.time()
-Presence_Absence_Matrix(RNAseq_Annotated_Matrix_B,5)
-proc.time() - ptm
 
-# its faster to take the sd than look if there is just one value in a table
-ptm <- proc.time()
-for (i in 1:1000) {
-!length(table(test_matrix[4,]))==1
-}
-proc.time() - ptm
+Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotation_Matrix_no_sd_of_zero_BR, matrix_features_BR, Z_scores_BR, 6, 10000)
+Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotation_Matrix_no_sd_of_zero_BR, matrix_features_BR, Z_scores_BR, 7, 10000)
+Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotation_Matrix_no_sd_of_zero_BR, matrix_features_BR, Z_scores_BR, 8, 10000)
 
-ptm <- proc.time()
-for (i in 1:1000) {
-!sd(test_matrix[4,])==0
-}
-proc.time() - ptm
-
-ptm <- proc.time()
-Random_Background_Module_Distances_6_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 6, 10000)
-proc.time() - ptm
-
-Random_Background_Module_Distances_7_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 7, 10000)
-Random_Background_Module_Distances_8_BR<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, Z_scores_BR, 8, 10000)
-
-Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 6, 10000)
-Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 7, 10000)
-Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotated_Matrix_B_default_bin, matrix_features_B, Z_scores_B, 8, 10000)
+Random_Background_Module_Distances_6_B<-Background_Distribution_Modules(RNAseq_Annotation_Matrix_no_sd_of_zero_B, matrix_features_B, Z_scores_B, 6, 10000)
+Random_Background_Module_Distances_7_B<-Background_Distribution_Modules(RNAseq_Annotation_Matrix_no_sd_of_zero_B, matrix_features_B, Z_scores_B, 7, 10000)
+Random_Background_Module_Distances_8_B<-Background_Distribution_Modules(RNAseq_Annotation_Matrix_no_sd_of_zero_B, matrix_features_B, Z_scores_B, 8, 10000)
 
 par(mfrow=c(1,2))
 plot(density(Random_Background_Module_Distances_6_B,na.rm=TRUE),col="red",main="Background distributions of \nmodules of size \"N\"\nB",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
@@ -365,11 +376,29 @@ legend("topright",legend=c("N=6","N=7","N=8"),col=c("red","blue","green"),lty=c(
 ## Section 5) Calculating statsitics for each module
 
 #### Statistics for the modules
-```{r plotting the groups PHA, echo=FALSE}
+```{r distances clustering and association matrix, echo=FALSE}
 # all_pairwise_KO_distances<-all_pairwise_genes(RNAseq_Annotated_Matrix_BR_default_bin,Z_scores_BR,matrix_features_BR)
+# M_I_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_BR_default_bin, all_pairwise_KO_distances$Composite_Z_Score, matrix_features_BR, M_I_module_list)
 
-all_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR)
+M_I_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, matrix_features_B, M_I_KOs)
+M_I_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_B_default_bin, M_I_pairwise_KO_distances$combined, matrix_features_B, M_I_module_list)
+M_I_association_matrix<-fill_association_matrix(M_I_clustering_results_P_NRED,matrix_features_BR,names(M_I_module_list))
 
+polymers_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, matrix_features_B, polymer_KOs)
+polymers_clustering_results_P_NRED <- cluster_func(RNAseq_Annotated_Matrix_B_default_bin, polymers_pairwise_KO_distances$combined, matrix_features_B, polymers)
+polymers_association_matrix<-fill_association_matrix(polymers_clustering_results_P_NRED, matrix_features_B, names(polymers))
+
+
+CCM_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B_default_bin, Z_scores_B, matrix_features_B, CCM_KOs)
+CCM_clustering_results_P_NRED <- cluster_func(RNAseq_Annotated_Matrix_B_default_bin, CCM_pairwise_KO_distances$combined, matrix_features_B, CCM_module_list)
+CCM_association_matrix<-fill_association_matrix(CCM_clustering_results_P_NRED,matrix_features_BR,names(CCM_module_list))
+
+# all_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, matrix_features_BR)
+
+```
+
+
+```{r Backround Distributions for Modules, echo=FALSE} 
 All_KO_composite_mean<-rep(NA,dim(all_pairwise_KO_distances$Composite_Z_Score)[3])
 quantile_matrix<-matrix(NA,ncol=5,nrow=dim(all_pairwise_KO_distances$Composite_Z_Score)[3])
 for (i in 1:dim(all_pairwise_KO_distances$Composite_Z_Score)[3]) {
@@ -378,9 +407,6 @@ quantile_matrix[i,]<-quantile(all_pairwise_KO_distances$Composite_Z_Score[,,i],n
 }
 
 harmonic_mean<-1/((1/all_pairwise_KO_distances$pearsons)+(1/all_pairwise_KO_distances$nred)/2)
-
-
-
 
 
 Zscore_pearson_all_pairwise_genes_BR<- ((all_pairwise_genes_BR$pearson-Z_scores$mu[2])/Z_scores$sd[2]) # need to inverse PCC

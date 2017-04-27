@@ -16,7 +16,9 @@
 #' @export
 #' @return A list containting eight vectors of N distances: pearson and euclidean distances for
 #' random, multiple comparison corrected random, random KO, highest scoring pair KO.
-#' @examples 	Jaccard_Distance_Function(PHA_Module)
+#' @examples I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'R')
+#' @examples I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'C')
+
 # first remove rows with standard deviations of 0
 
 

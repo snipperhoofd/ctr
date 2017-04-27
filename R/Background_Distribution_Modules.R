@@ -64,8 +64,7 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_featu
         # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances
         for (m in 1:l_position_of_kegg_enzyme_A){
           for (n in 1:l_position_of_kegg_enzyme_B){
-            # make sure there is always a standard deviation, or else cor gives an error. If there is a sd, proceed with calculations
-
+            # use the no_sd dataset so that calculating a Pearson correlation never gives an error
               max_pairwise_gene_correlation[m,n]<- cor(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],
                                                                                           matrix_features@SS:matrix_features@SE]),
                                                        as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],
