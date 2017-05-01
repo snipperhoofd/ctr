@@ -38,8 +38,7 @@ Conviction
   conv(X -> Y) = (1-supp(Y)) / (1-conf(X -> Y))
 "
 Apriori <- setRefClass("AssociationRules",
-                        fields = list(dataset = "data.frame",
-                                     flatdata = "matrix",
+                        fields = list(dataset = "matrix",
                                      ruleset = "list"),
                         methods = list(
                           run_apriori = function(){
@@ -64,13 +63,13 @@ Apriori <- setRefClass("AssociationRules",
                               return(rule[-redundant_line_nums])
                             }
                             
-                            rule = apriori(flatdata, parameter=list(support=0.25, confidence=0.5))
+                            rule = apriori(dataset, parameter=list(support=0.25, confidence=0.5))
                             original_size = length(rule)
                             rule = filter_general_redundancy(rule)
                             rule = filter_mirrored_redundancy(rule)
                             
                             if(original_size > length(rule)){
-                              print(paste("Removed",(original_size - length(rule)), "redundant rows"))
+                              print(paste("Removed", (original_size - length(rule)), "redundant rows"))
                             }
                             ruleset <<- list("rules" = rule)
                           },
@@ -101,9 +100,9 @@ Apriori <- setRefClass("AssociationRules",
                               for(i in 1:ncol(dataset)){
                                 starting_matrix <- extendCollumns(dataset[,i], starting_matrix, COLUMNS[i])
                               }
-                              flatdata <<- starting_matrix[,2: ncol(starting_matrix)]
+                              dataset <<- starting_matrix[,2: ncol(starting_matrix)]
                             }else #this else is for testing purposes with pre-formatted data
-                              flatdata <<- as.matrix(dataset)
+                              dataset <<- as.matrix(dataset)
                           }
                        )
 )
@@ -114,11 +113,9 @@ dat <- read.csv("/home/joris/Downloads/Wide_Association_Matrix.csv")
 rownames(dat) <- dat[,1]
 dat[,1] <- NULL
 
-associationSearch <- Apriori$new(dataset = dat)
-
-associationSearch$Data_clean("")
+associationSearch <- Apriori$new(dataset = as.matrix(dat))
 associationSearch$run_apriori()
-associationSearch$get_topN(60)
+associationSearch$get_topN(20)
 
 associationSearch$plot_graph(20)
 
