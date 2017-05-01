@@ -2,19 +2,45 @@
 library(arules)
 library(arulesViz)
 
+
+"
+Antecedent 	Consequent
+A 	          0
+A           	0
+A 	          1
+A  	          0
+B 	          1
+B 	          0
+B 	          1
+                  Support      Confidence     Lift
+rule 1: A -> 0      3/7           3/4       (3/4)/(4/7)
+rule 2: B -> 1      2/7           2/3       (2/3)/(3/7)
+
+Support:
+ How frequent an itemset appears in the dataset.
+ The proportion of transactions wich contains itemset X
+
+Confidence:
+ How often the rule has been found to be true
+ The confidence value of a rule, X -> Y is the proportion of transactions that contains X
+ which also contains Y.
+
+Lift:
+ the ratio of the observed support to the expcted support if X and Y are independent.
+"
 Apriori <- setRefClass("AssociationRules",
                         fields = list(dataset = "data.frame",
                                      flatdata = "matrix",
                                      ruleset = "list"),
                         methods = list(
                           run_apriori = function(){
-                            ruleset <<- list("rules" = apriori(flatdata, parameter=list(support=0.01, confidence=0.5)))
+                            ruleset <<- list("rules" = apriori(flatdata, parameter=list(support=0.25, confidence=0.5)))
                           },
-                          plot_graph = function(n = 50){
+                          plot_graph = function(n = 20){
                             plot(head(sort(ruleset$rules, by = "lift"), n), method = "graph", control=list(cex=.8), interactive=T)
                           },
-                          get_top10 = function(){
-                            return(inspect(head(sort(ruleset$rules), n=10)))
+                          get_topN = function(n=20){
+                            return(inspect(head(sort(ruleset$rules), n)))
                         },
                           Data_clean = function(split="sbs"){
                             if(split == "sbs"){
@@ -51,13 +77,13 @@ test <- Apriori$new(dataset = dat)
 
 test$Data_clean("")
 test$run_apriori()
-test$get_top10()
+test$get_topN(20)
 test$plot_graph(20)
 
 
 
 #load a table
-#dat <- read.csv("/home/joris/Downloads/module_cluster_matrix2.csv")
+dat <- read.csv("/home/joris/Downloads/Wide_Association_Matrix.csv")
 dat <- read.csv("/home/joris/Downloads/testmatrix.csv")
 rownames(dat) <- dat[,1]
 dat[,1] <- NULL
