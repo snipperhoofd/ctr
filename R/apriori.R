@@ -4,6 +4,9 @@ library(arulesViz)
 
 
 "
+Example: 
+
+
 Antecedent 	Consequent
 A 	          0
 A           	0
@@ -26,7 +29,14 @@ Confidence:
  which also contains Y.
 
 Lift:
- the ratio of the observed support to the expcted support if X and Y are independent.
+  The ratio of the observed support to the expcted support if X and Y are independent.
+  If the lift is > 1, like it is here for Rules 1 and 2, 
+    that lets us know the degree to which those two occurrences are dependent on one another, 
+    and makes those rules potentially useful for predicting the consequent in future data sets
+
+Conviction
+  The frequency the rule makes an incorrect prediction.
+  conv(X -> Y) = (1-supp(Y)) / (1-conf(X -> Y))
 "
 Apriori <- setRefClass("AssociationRules",
                         fields = list(dataset = "data.frame",
