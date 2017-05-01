@@ -6,7 +6,6 @@ library(arulesViz)
 "
 Example: 
 
-
 Antecedent 	Consequent
 A 	          0
 A           	0
@@ -44,14 +43,43 @@ Apriori <- setRefClass("AssociationRules",
                                      ruleset = "list"),
                         methods = list(
                           run_apriori = function(){
-                            ruleset <<- list("rules" = apriori(flatdata, parameter=list(support=0.25, confidence=0.5)))
+                            #testing
+                            getLineNumbers = function(vec){
+                              out = c()
+                              for(i in 1:length(vec)){
+                                if(vec[i]){
+                                  out = c(out,i)
+                                }
+                              }
+                              return(out)
+                            }
+                            filter_general_redundancy = function(rule){
+                              redundant <- is.redundant(rule)
+                              redundant_line_nums <- getLineNumbers(redundant)
+                              return(rule[-redundant_line_nums])
+                            }
+                            filter_mirrored_redundancy = function(rule){
+                              redundant <- duplicated(generatingItemsets(rules))
+                              redundant_line_nums <- getLineNumbers(redundant)
+                              return(rule[-redundant_line_nums])
+                            }
+                            
+                            rule = apriori(flatdata, parameter=list(support=0.25, confidence=0.5))
+                            original_size = length(rule)
+                            rule = filter_general_redundancy(rule)
+                            rule = filter_mirrored_redundancy(rule)
+                            
+                            if(original_size > length(rule)){
+                              print(paste("Removed",(original_size - length(rule)), "redundant rows"))
+                            }
+                            ruleset <<- list("rules" = rule)
                           },
                           plot_graph = function(n = 20){
-                            plot(head(sort(ruleset$rules, by = "lift"), n), method = "graph", control=list(cex=.8), interactive=T)
+                            plot(head(sort(ruleset$rules, by = "support"), n), method = "graph", control=list(cex=.8), interactive=T)
                           },
                           get_topN = function(n=20){
-                            return(inspect(head(sort(ruleset$rules), n)))
-                        },
+                            return(inspect(head(sort(ruleset$rules, by="support"), n)))
+                          },
                           Data_clean = function(split="sbs"){
                             if(split == "sbs"){
                               extendCollumns <- function(column, starting_matrix, column_name){
@@ -81,22 +109,21 @@ Apriori <- setRefClass("AssociationRules",
 )
 
 
-
-
-test <- Apriori$new(dataset = dat)
-
-test$Data_clean("")
-test$run_apriori()
-test$get_topN(20)
-test$plot_graph(20)
-
-
-
 #load a table
 dat <- read.csv("/home/joris/Downloads/Wide_Association_Matrix.csv")
-dat <- read.csv("/home/joris/Downloads/testmatrix.csv")
 rownames(dat) <- dat[,1]
 dat[,1] <- NULL
+
+associationSearch <- Apriori$new(dataset = dat)
+
+associationSearch$Data_clean("")
+associationSearch$run_apriori()
+associationSearch$get_topN(60)
+
+associationSearch$plot_graph(20)
+
+
+
 
 
 
