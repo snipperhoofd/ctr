@@ -1,0 +1,28 @@
+#!/usr/bin/env python
+import requests
+import re
+
+
+def parseModule(module):
+    module_specific = "http://www.genome.jp/kegg-bin/show_module?{}" 
+    r = requests.get(module_specific.format(module))
+    r = r.text 
+    KOterms = re.findall(r'>K[0-9]{5}', r)
+    KOterms = list(set([x.strip(">") for x in KOterms]))
+    return KOterms
+
+
+
+initial_URL = "http://www.genome.jp/kegg/docs/module_statistics.html"
+r = requests.get(initial_URL)
+r = r.text
+
+
+modules = re.findall(r'\?M[0-9]{5}\'', r)
+modules = [x.strip("?").strip("'") for x in modules]
+
+with open("sample_data/updated_KO_modules.tsv", "w") as outfile:
+    for module in modules:
+        KOterms = parseModule(module)
+        for term in KOterms:
+            outfile.write("{}\t{}\n".format(module, term))
