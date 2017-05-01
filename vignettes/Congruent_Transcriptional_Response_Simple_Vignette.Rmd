@@ -20,7 +20,7 @@ Transcriptomics data may aid in making these ecological inferences by providing 
 
 In this package we present a statistical framework to identify CTRs of (pre-defined) metabolic modules in microbial communties. In this manner, genomic bins may be clustered into sub-networks that share responses for particular modules, thereby facilitating inferences on functional redundancy (e.g. intra-cluster), niche partitioning (inter-cluster), and the emergence of complex traits (integrating infromation about multiple modules). 
 
-To demonstrate the utility of this approach, we identify CTRs in polymer storage (polyphosphate, glycogen, and polyhydroxyalkanoates) and amino acid biosynthesis modules of 38 genome bins recovered from a bioreactor operated under conditions that select for organisms capable of storing polymers. We compare different normalization techniques, and look at the role of genomic bin completeness in interpretating results.
+To demonstrate the utility of this approach, we identify CTRs in polymer storage (polyphosphate, glycogen, and polyhydroxyalkanoates) and amino acid biosynthesis modules of 38 genome bins recovered from a bioreactor operated under conditions that select for organisms capable of storing polymers.
 
 ![](/Users/benoyserman/Desktop/ctr/CTR_workflow.png)
 
@@ -112,10 +112,7 @@ text(cex=.5, x=x+1.25, y=-1.25, labs, xpd=TRUE, srt=45, pos=2)
 # Barplot of  modules
 barplot(table(as.numeric(table(KO_modules_table2$V2))),ylim=c(0,200))
 
-# Load example data set one. Bins obtained from metagenomic assembly -> binning with metabat
-RNAseq_Annotated_Matrix_B<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE, col.names=c("Locus_Tag","Sample1","Sample2","Sample3","Sample4","Sample5","Sample6","KO"))
-
-# Load example data set one. Bins obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome 
+# Load data set, Bins obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome 
 RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",sep=" ",quote = "", row.names = NULL, stringsAsFactors = FALSE, fill = TRUE, col.names=c("Locus_Tag","Sample1","Sample2","Sample3","Sample4","Sample5","Sample6","KO"))
 ```
 
@@ -130,27 +127,14 @@ polymers <- list(PHA_module,polyP_module,Glycogen_module)
 
 ```{r pre-defined modules, echo = TRUE}
 
-make_module_lists<- function(KO_modules_table) {
-  
-  for (i in 1:length(table(KO_modules_table$V1))) {
-  module_list<-as.list(names(table(KO_modules_table$V2[which(KO_modules_table$V1%in%names(table(KO_modules_table$V1)))])))
-  names(module_list)<-names(table(KO_modules_table$V2[which(KO_modules_table$V1%in%names(table(KO_modules_table$V1)))]))
-  }
-  for (j in 1:length(module_list)) {
-    module_list[[j]]<-KO_modules_table$V4[which(KO_modules_table$V2==module_list[j])]
-  }
-  return(module_list)
-}
-
-
+# Make a list of all the modules
+list_of_all_modules <- make_module_lists(KO_modules_table)
 
 # Build a list of modules based on the 'pathway modules'
 M_I_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")])))]
 CCM_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")])))]
 
-
 # Amino Acids
-
 Arg_Pro_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Arginine and proline metabolism")])))]
 Aromatic_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Aromatic amino acid metabolism")])))]
 Branched_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Branched-chain amino acid metabolism")])))]
@@ -161,10 +145,6 @@ Other_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%name
 Ser_Thr_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Serine and threonine metabolism")])))]
 
 Amino_Acid_Metabolism_module_list<-c(Arg_Pro_module_list,Aromatic_module_list,Branched_module_list,Cys_Meth_module_list,Hist_module_list,Lysine_module_list,Other_module_list,Ser_Thr_module_list)
-
-
-
-
 
 # vector of all KOs in module_list
 M_I_KOs<- unique(unlist(M_I_module_list, use.names=FALSE))
@@ -178,7 +158,6 @@ In this example, the matrix includes all the bins identified. However, because t
 ```{r modifying the matrix if necessary, echo = TRUE}
 # add a column with the bin number ($Bin). This one-liner parses out the Bin number from the Locus ID
 # This is unnecessary if y
-RNAseq_Annotated_Matrix_B$Bin<-gsub(".*\\.(.*)\\..*", "\\1", RNAseq_Annotated_Matrix_B[,1])
 RNAseq_Annotated_Matrix_BR$Bin<-gsub(".*\\.(.*)\\..*", "\\1", RNAseq_Annotated_Matrix_BR[,1])
 
 # Rename Clade IIA reference to be consistent with bin number
@@ -188,7 +167,6 @@ RNAseq_Annotated_Matrix_BR$Bin[grep("CAP2UW1*",RNAseq_Annotated_Matrix_BR$Bin)]<
 high_quality_bins<-c(8,28,25,7,46,39,22,38,54,53,48,45,31,42,16,33,26,40,36,21,27,17,19,32,14,11,30,43,35,29,23,58,41,20,15,37,49,50)
 
 # Keep only high-quality bins
-RNAseq_Annotated_Matrix_B<-RNAseq_Annotated_Matrix_B[which(RNAseq_Annotated_Matrix_B$Bin %in% high_quality_bins),]
 RNAseq_Annotated_Matrix_BR<-RNAseq_Annotated_Matrix_BR[which(RNAseq_Annotated_Matrix_BR$Bin %in% high_quality_bins),]
 ```
 
@@ -207,24 +185,6 @@ Data will be normalized by the depth of sequencing and the number of reads mappe
 
 ### Define inputs
 ```{r input variables for background distributions, echo=TRUE, results = 'asis'}
-matrix_features_B <- new("General_features",
-                       high_quality_bins = high_quality_bins,
-                       Bin_Column = which(colnames(RNAseq_Annotated_Matrix_B) == "Bin"),
-                       sample_names = sample_names,
-                       sample_size = length(sample_names),
-                       SS = 2,
-                       SE = length(sample_names) + 1,
-                       RS = which(colnames(RNAseq_Annotated_Matrix_B) == "Bin") + 1,
-                       RE = which(colnames(RNAseq_Annotated_Matrix_B) == "Bin") + length(sample_names),
-                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313),
-                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543),
-                       not_aligned = c(0, 19317660, 0, 0, 0, 0),
-                       library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
-                       Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_B),
-                       no_annotation = which(names((table(RNAseq_Annotated_Matrix_B$KO)))==""),
-                       All_KOs = names(table(RNAseq_Annotated_Matrix_B$KO))[-no_annotation]
-                       )
-
 matrix_features_BR <- new("General_features",
                        high_quality_bins = high_quality_bins,
                        Bin_Column = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin"),
@@ -249,10 +209,6 @@ matrix_features_BR <- new("General_features",
 # RNAseq_Annotated_Matrix_TMM<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="RLE")
 # RNAseq_Annotated_Matrix_RLE<-RNAseq_Normalize(RNAseq_Annotated_Matrix,method="TMM")
 # RNAseq_Annotated_Matrix_RLE_by_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_RLE)
-
-RNAseq_Annotated_Matrix_B_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_B, matrix_features_B,
-                                                    method = "default")
-RNAseq_Annotated_Matrix_B_default_bin<-Normalize_by_bin(RNAseq_Annotated_Matrix_B_default, matrix_features_B)
 
 RNAseq_Annotated_Matrix_BR_default<-RNAseq_Normalize(RNAseq_Annotated_Matrix_BR, matrix_features_BR,
                                                      method = "default")
@@ -416,13 +372,22 @@ CCM_association_matrix<-fill_association_matrix(CCM_clustering_results_P_NRED,ma
 
 
 
+all_association_matrix<-rbind(CCM_association_matrix,polymers_association_matrix,M_I_association_matrix,AA_association_matrix)
+all_association_matrix_trimmed<-all_association_matrix[,-which(colSums(all_association_matrix,na.rm=TRUE)==0)]
 
 
-
-
-
-
-
+## Needs to be converted into a function
+new_column_names<-NULL
+expanded_matrix<-NULL
+for (i in 1:dim(all_association_matrix_trimmed)[2]) {
+new_column_names<- c(new_column_names,paste(colnames(all_association_matrix_trimmed)[i],names(table(all_association_matrix_trimmed[,i])),sep="_"))
+  for(j in 1:length(table(all_association_matrix_trimmed[,i]))) {
+    column_numbers<-rep(0,dim(all_association_matrix_trimmed)[1])
+    column_numbers[which(all_association_matrix_trimmed[,i]==j)]<-1
+    expanded_matrix<-cbind(expanded_matrix,column_numbers)col
+  }
+}
+colnames(expanded_matrix)<-new_column_names
 
 
 
