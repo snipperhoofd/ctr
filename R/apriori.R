@@ -109,15 +109,15 @@ Apriori <- setRefClass("AssociationRules",
 
 
 #load a table
-dat <- read.csv("/home/joris/Downloads/Wide_Association_Matrix.csv")
-rownames(dat) <- dat[,1]
-dat[,1] <- NULL
+#dat <- read.csv("/home/joris/Downloads/Wide_Association_Matrix.csv")
+#rownames(dat) <- dat[,1]
+#dat[,1] <- NULL
 
-associationSearch <- Apriori$new(dataset = as.matrix(dat))
-associationSearch$run_apriori()
-associationSearch$get_topN(20)
+#associationSearch <- Apriori$new(dataset = as.matrix(dat))
+#associationSearch$run_apriori()
+#associationSearch$get_topN(20)
 
-associationSearch$plot_graph(20)
+#associationSearch$plot_graph(20)
 
 
 
