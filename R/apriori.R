@@ -37,7 +37,7 @@ Apriori <- setRefClass("AssociationRules",
                                      ruleset = "list",
                                      rules_dataframe = "data.frame"),
                         methods = list(
-                          run_apriori = function(support, confidence,
+                          run_apriori = function(supp, conf,
                                                  targets = NA){
                             #testing
                             getLineNumbers = function(vec){
@@ -62,13 +62,13 @@ Apriori <- setRefClass("AssociationRules",
                             rule = NULL
                             if(is.na(targets)){
                               rule = apriori(dataset,
-                                             parameter=list(support=support,
-                                                            confidence=confidence))
+                                             parameter=list(support=supp,
+                                                            confidence=conf))
                             }else{
                               rule = apriori(dataset,
-                                             parameter=list(support=support,
-                                                            confidence=confidence),
-                                             appearance = list(lhs=targets))
+                                             parameter=list(support=supp,
+                                                            confidence=conf),
+                                             appearance = list(lhs=targets, default= 'rhs'))
                             }
                             original_size = length(rule)
                             #rule = filter_general_redundancy(rule)
@@ -83,7 +83,7 @@ Apriori <- setRefClass("AssociationRules",
                             plot(head(sort(ruleset$rules, by = "support"), n), method = "graph", control=list(cex=.8), interactive=F)
                           },
                           get_topN = function(n=20){
-                            return(inspect(head(sort(ruleset$rules, by="support"), n)))
+                            return(inspect(head(sort(ruleset$rules, by="confidence"), n)))
                           },
                           Data_clean = function(split="sbs"){
                             if(split == "sbs"){
@@ -117,14 +117,14 @@ library(arulesViz)
 
 
 #load a table
-dat <- read.csv("/home/steen176/data/Wide_Association_Matrix.csv")
+dat <- read.csv("/home/joris/Downloads/expanded_matrix_all_modules.csv")
 rownames(dat) <- dat[,1]
 dat[,1] <- NULL
 
 associationSearch <- Apriori$new(dataset = as.matrix(dat))
-associationSearch$run_apriori(support = 0.1, confidence = 0.9)
-associationSearch$get_topN(20)
+associationSearch$run_apriori(supp = 0, conf = 0.5, targets = c('M00580_1'))
 
+associationSearch$get_topN(20)
 associationSearch$plot_graph(20)
 
 
