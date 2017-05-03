@@ -32,7 +32,7 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
 
   dim_matrix<- length(matrix_features@high_quality_bins)
   # Pearson
-  Pairwise_Bin_Array_Pearson<-array(data=NA, 
+  Pairwise_Bin_Array_Pearson<-array(data=NA,
                                     dim = c(dim_matrix, dim_matrix, length(Subset_KOs)),
                                     dimnames = list(sort(matrix_features@high_quality_bins),
                                                     sort(matrix_features@high_quality_bins)))
@@ -87,7 +87,7 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
                                                              matrix_features@RS:matrix_features@RE] -
                                      RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],
                                                              matrix_features@RS:matrix_features@RE]
-                  
+
                   max_pairwise_gene_euclidean[m,n]<-sqrt(sum(subtracted_lists * subtracted_lists))
                 } else {
                   # If there is no standard deviation, the correlation is NA
@@ -140,32 +140,4 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
                   "positionsB" = Pairwise_PositionsB)
 
   return(newList)
-}
-
-
-P_NRED_Distance_Function2 <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_features, Subset_KOs){
-  dim_matrix<- length(matrix_features@high_quality_bins)
-  bin_names<- sapply(names(table(RNAseq_Annotated_Matrix$Bin))[order(as.numeric(names(table(RNAseq_Annotated_Matrix$Bin))))], as.numeric)
-
-  if(missing(Subset_KOs)) {
-    no_annotation <- which(names((table(RNAseq_Annotated_Matrix$KO)))=="")
-    Subset_KOs<- names((table(RNAseq_Annotated_Matrix$KO)))[-no_annotation]
-  }
-
-  allBins <- sapply(RNAseq_Annotated_Matrix[, matrix_features@Bin_Column], as.numeric)
-
-  sample_cols <- matrix_features@SS:matrix_features@SE
-  expression <- matrix(apply(RNAseq_Annotated_Matrix[, sample_cols], 2, as.numeric), ncol = length(sample_cols))
-
-  rank_cols <- matrix_features@RS:matrix_features@RE
-  ranks <- matrix(apply(RNAseq_Annotated_Matrix[, rank_cols], 2, as.numeric), ncol = length(rank_cols))
-  #C++ function call
-  P_NRED_Distance_C(dim_matrix,
-                    Subset_KOs,
-                    bin_names,
-                    allBins,
-                    RNAseq_Annotated_Matrix$KO,
-                    expression,
-                    ranks,
-                    Z_scores)
 }
