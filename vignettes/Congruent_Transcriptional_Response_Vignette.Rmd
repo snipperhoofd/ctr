@@ -98,7 +98,7 @@ Next, the necessary files are uploaded including
 
 ```{r uploading the matrix}
 # First set working directory setwd("/path/to/directory/ctr")
-# setwd('/path/to/directory/ctr')
+setwd('/home/steen176/ctr')
 # sourceDirectory("/path/to/directory/ctr/R/");
 KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
 KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",sep="\t",quote = "", row.names = NULL, stringsAsFactors = FALSE)
@@ -130,20 +130,8 @@ polymers <- list(PHA_module,polyP_module,Glycogen_module)
 
 ```{r pre-defined modules, echo = TRUE}
 
-make_module_lists<- function(KO_modules_table) {
-  
-  for (i in 1:length(table(KO_modules_table$V1))) {
-  module_list<-as.list(names(table(KO_modules_table$V2[which(KO_modules_table$V1%in%names(table(KO_modules_table$V1)))])))
-  names(module_list)<-names(table(KO_modules_table$V2[which(KO_modules_table$V1%in%names(table(KO_modules_table$V1)))]))
-  }
-  for (j in 1:length(module_list)) {
-    module_list[[j]]<-KO_modules_table$V4[which(KO_modules_table$V2==module_list[j])]
-  }
-  return(module_list)
-}
 
-
-
+list_of_all_modules <- make_module_lists(KO_modules_table2)
 # Build a list of modules based on the 'pathway modules'
 M_I_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Mineral and organic ion transport system")])))]
 CCM_module_list<- list_of_all_modules[which(names(list_of_all_modules)%in%names(table(KO_modules_table2$V2[which(KO_modules_table2$V1=="Central carbohydrate metabolism")])))]
@@ -222,7 +210,7 @@ matrix_features_B <- new("General_features",
                        library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
                        Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_B),
                        no_annotation = which(names((table(RNAseq_Annotated_Matrix_B$KO)))==""),
-                       All_KOs = names(table(RNAseq_Annotated_Matrix_B$KO))[-no_annotation]
+                       All_KOs = names(table(RNAseq_Annotated_Matrix_B$KO))[-which(names((table(RNAseq_Annotated_Matrix_B$KO)))=="")]
                        )
 
 matrix_features_BR <- new("General_features",
@@ -240,7 +228,7 @@ matrix_features_BR <- new("General_features",
                        library_size = c(234232896,183166236,228746720,198024002,231567992,259156166),
                        Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_BR),
                        no_annotation = which(names((table(RNAseq_Annotated_Matrix_BR$KO)))==""),
-                       All_KOs = names(table(RNAseq_Annotated_Matrix_BR$KO))[-no_annotation]
+                       All_KOs = names(table(RNAseq_Annotated_Matrix_BR$KO))[-which(names((table(RNAseq_Annotated_Matrix_BR$KO)))=="")]
                        )
 ```
 
@@ -298,8 +286,12 @@ Here we calculate the background distribution of the individual KOs, and test wh
 
 ```{r, Calculates background distributions for individual KOs, echo=TRUE, results = 'asis' }
 
-I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'R')
-I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,matrix_features_BR,10000, language = 'R')
+I_KOs_Background_B <-  Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B, matrix_features_B, 10000, language = 'C')
+I_KOs_Background_BR <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_BR,matrix_features_BR,10000, language = 'C')
+
+#benchmarks3 <- rbenchmark::benchmark(replications = 2,
+ #                     Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'C'),
+  #                    Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'R'))
 
 # What would a background distribution look like if there were no ties (e.g. genes with the same counts)?
 # random_euclidean_distances<-rep(NA,10000)
