@@ -4,7 +4,7 @@
 \alias{Jaccard_Distance_Function}
 \title{Calculte the Jaccard Distance}
 \usage{
-Jaccard_Distance_Function(RNAseq_Annotated_Matrix, Module)
+Jaccard_Distance_Function(RNAseq_Annotated_Matrix, matrix_features, Module)
 }
 \value{
 A matrix of pairwise Jaccard distnces
@@ -13,5 +13,5 @@ A matrix of pairwise Jaccard distnces
 This function calculates the Jaccard Distances between all bins for a given module
 }
 \examples{
-	Jaccard_Distance_Function(RNAseq_Annotated_Matrix,PHA_Module)
+	J_PHA <-Jaccard_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, matrix_features_BR, PHA_module)
 }

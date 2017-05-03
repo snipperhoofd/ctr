@@ -8,19 +8,25 @@ P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Z_scores, matrix_features,
   Subset_KOs)
 }
 \arguments{
-\item{Subset_KOs}{A list of KOs that form a module}
+\item{RNAseq_Annotated_Matrix}{The normalized count data with annotations}
+
+\item{Z_scores}{The Zscores obtained from the background distributions}
+
+\item{matrix_features}{The matrix features associated with the annoated normalized count data}
+
+\item{Subset_KOs}{A vector of the KOs that form a module}
 }
 \value{
-a list of vectors containing pairwise PC (pearsons), NRED (nred) and their composite Z-scores (Zscore),
-and the position in the matrix for the highest scoring pair between genomes A and B
-(positionA & positionB respectively)
+a list of arrays including pairwise PC ($pearsons), NRED ($nred), the row for genome A and B
+used in the calculation ($positionA and $positionB), the Z-scores ($Zscore_pearson and $Zscore_nred)
+and a composite Z-score ($combined). Each array has the dimensions #bins x #bins x #KOs.
 }
 \description{
-This function calculates all pairwise NRED & PC for a given module. When two genomes contain multiple
-elements for comparison, this is handled either by takng a random pairwise comparison,
-or by taking the score with the maximum similarity. A background distribution using each method
-is provided for comparison. (Currently it only provides the score that minimizes the distances)
+This function calculates all pairwise NRED & PC for all genes, or a subset of of genes in a given module.
+When two genomes contain multiple elements for comparison, this is handled either by takng the
+score with the maximum similarity.
 }
 \examples{
-PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_B,Z_scores_B,PHA_module)
+PHA_module_P_NRED <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B, PHA_module)
+All_KO_module_P_NRED_test <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_B, matrix_features_B)
 }

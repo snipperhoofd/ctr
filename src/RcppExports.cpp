@@ -19,6 +19,24 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+// P_NRED_Distance_C
+List P_NRED_Distance_C(int dim_matrix, StringVector subsetKOS, NumericVector binNames, NumericVector allBins, StringVector allKOs, NumericMatrix expression, NumericMatrix ranks, List Z_scores);
+RcppExport SEXP ctr_P_NRED_Distance_C(SEXP dim_matrixSEXP, SEXP subsetKOSSEXP, SEXP binNamesSEXP, SEXP allBinsSEXP, SEXP allKOsSEXP, SEXP expressionSEXP, SEXP ranksSEXP, SEXP Z_scoresSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< int >::type dim_matrix(dim_matrixSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type subsetKOS(subsetKOSSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type binNames(binNamesSEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type allBins(allBinsSEXP);
+    Rcpp::traits::input_parameter< StringVector >::type allKOs(allKOsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type expression(expressionSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type ranks(ranksSEXP);
+    Rcpp::traits::input_parameter< List >::type Z_scores(Z_scoresSEXP);
+    rcpp_result_gen = Rcpp::wrap(P_NRED_Distance_C(dim_matrix, subsetKOS, binNames, allBins, allKOs, expression, ranks, Z_scores));
+    return rcpp_result_gen;
+END_RCPP
+}
 // which_rows_with_no_sd_cpp
 NumericVector which_rows_with_no_sd_cpp(NumericMatrix x);
 RcppExport SEXP ctr_which_rows_with_no_sd_cpp(SEXP xSEXP) {

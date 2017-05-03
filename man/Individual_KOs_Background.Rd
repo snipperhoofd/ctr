@@ -28,5 +28,6 @@ the random background distibution is recalculed to include an equal number of mu
 comparisons.
 }
 \examples{
-	Jaccard_Distance_Function(PHA_Module)
+I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'R')
+I_KOs_Background_B <- Individual_KOs_Background(RNAseq_Annotation_Matrix_no_sd_of_zero_B,matrix_features_B,10000, language = 'C')
 }
