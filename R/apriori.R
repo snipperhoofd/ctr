@@ -1,10 +1,5 @@
-#apriori
-library(arules)
-library(arulesViz)
-
-
 "
-Example: 
+Example:
 
 Antecedent 	Consequent
 A 	          0
@@ -29,8 +24,8 @@ Confidence:
 
 Lift:
   The ratio of the observed support to the expcted support if X and Y are independent.
-  If the lift is > 1, like it is here for Rules 1 and 2, 
-    that lets us know the degree to which those two occurrences are dependent on one another, 
+  If the lift is > 1, like it is here for Rules 1 and 2,
+    that lets us know the degree to which those two occurrences are dependent on one another,
     and makes those rules potentially useful for predicting the consequent in future data sets
 
 Conviction
@@ -39,9 +34,11 @@ Conviction
 "
 Apriori <- setRefClass("AssociationRules",
                         fields = list(dataset = "matrix",
-                                     ruleset = "list"),
+                                     ruleset = "list",
+                                     rules_dataframe = "data.frame"),
                         methods = list(
-                          run_apriori = function(){
+                          run_apriori = function(support, confidence,
+                                                 targets = NA){
                             #testing
                             getLineNumbers = function(vec){
                               out = c()
@@ -58,23 +55,32 @@ Apriori <- setRefClass("AssociationRules",
                               return(rule[-redundant_line_nums])
                             }
                             filter_mirrored_redundancy = function(rule){
-                              redundant <- duplicated(generatingItemsets(rules))
+                              redundant <- duplicated(generatingItemsets(rule))
                               redundant_line_nums <- getLineNumbers(redundant)
                               return(rule[-redundant_line_nums])
                             }
-                            
-                            rule = apriori(dataset, parameter=list(support=0.25, confidence=0.5))
+                            rule = NULL
+                            if(is.na(targets)){
+                              rule = apriori(dataset,
+                                             parameter=list(support=support,
+                                                            confidence=confidence))
+                            }else{
+                              rule = apriori(dataset,
+                                             parameter=list(support=support,
+                                                            confidence=confidence),
+                                             appearance = list(lhs=targets))
+                            }
                             original_size = length(rule)
-                            rule = filter_general_redundancy(rule)
-                            rule = filter_mirrored_redundancy(rule)
-                            
+                            #rule = filter_general_redundancy(rule)
+                            #rule = filter_mirrored_redundancy(rule)
+
                             if(original_size > length(rule)){
                               print(paste("Removed", (original_size - length(rule)), "redundant rows"))
                             }
                             ruleset <<- list("rules" = rule)
                           },
                           plot_graph = function(n = 20){
-                            plot(head(sort(ruleset$rules, by = "support"), n), method = "graph", control=list(cex=.8), interactive=T)
+                            plot(head(sort(ruleset$rules, by = "support"), n), method = "graph", control=list(cex=.8), interactive=F)
                           },
                           get_topN = function(n=20){
                             return(inspect(head(sort(ruleset$rules, by="support"), n)))
@@ -106,19 +112,20 @@ Apriori <- setRefClass("AssociationRules",
                           }
                        )
 )
+library(arules)
+library(arulesViz)
 
 
 #load a table
-#dat <- read.csv("/home/joris/Downloads/Wide_Association_Matrix.csv")
-#rownames(dat) <- dat[,1]
-#dat[,1] <- NULL
+dat <- read.csv("/home/steen176/data/Wide_Association_Matrix.csv")
+rownames(dat) <- dat[,1]
+dat[,1] <- NULL
 
-#associationSearch <- Apriori$new(dataset = as.matrix(dat))
-#associationSearch$run_apriori()
-#associationSearch$get_topN(20)
+associationSearch <- Apriori$new(dataset = as.matrix(dat))
+associationSearch$run_apriori(support = 0.1, confidence = 0.9)
+associationSearch$get_topN(20)
 
-#associationSearch$plot_graph(20)
-
+associationSearch$plot_graph(20)
 
 
 
