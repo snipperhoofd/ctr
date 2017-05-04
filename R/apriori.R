@@ -38,8 +38,14 @@ Apriori <- setRefClass("AssociationRules",
                                      rules_dataframe = "data.frame"),
                         methods = list(
                           run_apriori = function(supp, conf,
-                                                 targets = NA){
-                            #testing
+                                                 antecedents = NA,
+                                                 consequents = NA){
+
+                            support = supp
+                            confidence = conf
+
+                            #Convert avector with true and false into line numbers
+                            #for values that are true
                             getLineNumbers = function(vec){
                               out = c()
                               for(i in 1:length(vec)){
@@ -49,31 +55,40 @@ Apriori <- setRefClass("AssociationRules",
                               }
                               return(out)
                             }
+
+                            #Filter redundancy in the rulset (experimental)
                             filter_general_redundancy = function(rule){
                               redundant <- is.redundant(rule)
                               redundant_line_nums <- getLineNumbers(redundant)
                               return(rule[-redundant_line_nums])
                             }
-                            filter_mirrored_redundancy = function(rule){
-                              redundant <- duplicated(generatingItemsets(rule))
-                              redundant_line_nums <- getLineNumbers(redundant)
-                              return(rule[-redundant_line_nums])
-                            }
+                            #Filter redundancy in the rulset (experimental)
+
                             rule = NULL
-                            if(is.na(targets)){
+                            #Check if there are antecedents or consequents queried
+                            if(is.na(antecedents) && is.na(consequents)){
                               rule = apriori(dataset,
-                                             parameter=list(support=supp,
-                                                            confidence=conf))
-                            }else{
+                                             parameter=list(support=support,
+                                                            confidence=confidence))
+                            }else if(! (is.na(antecedents)) && ! (is.na(consequents))){
+                              return("Currently, querying both the antecedents and consequents at the same time is not supported")
+
+                            }
+                            else if(!is.na(antecedents)){
                               rule = apriori(dataset,
-                                             parameter=list(support=supp,
-                                                            confidence=conf),
-                                             appearance = list(lhs=targets, default= 'rhs'))
+                                             parameter=list(support=support,
+                                                            confidence=confidence),
+                                             appearance = list(lhs=antecedents, default= 'rhs'))
+                            } else if(!is.na(consequents)){
+                              rule = apriori(dataset,
+                                             parameter=list(support=support,
+                                                            confidence=confidence),
+                                             appearance = list(rhs=consequents, default= 'lhs'))
                             }
                             original_size = length(rule)
                             #rule = filter_general_redundancy(rule)
-                            #rule = filter_mirrored_redundancy(rule)
 
+                            #Display how many rules were left out (redundancy filter)
                             if(original_size > length(rule)){
                               print(paste("Removed", (original_size - length(rule)), "redundant rows"))
                             }
@@ -117,12 +132,14 @@ library(arulesViz)
 
 
 #load a table
-dat <- read.csv("/home/joris/Downloads/expanded_matrix_all_modules.csv")
+dat <- read.csv("/home/steen176/data/Wide_Association_Matrix.csv")
 rownames(dat) <- dat[,1]
 dat[,1] <- NULL
 
 associationSearch <- Apriori$new(dataset = as.matrix(dat))
-associationSearch$run_apriori(supp = 0.2, conf = 0.5)#, targets = c('M00580_1'))
+associationSearch$run_apriori(supp = 0.05, conf = 0.5, antecedents = c("Glycogen_4",
+                                                                       "M00185_1"))
+                             # consequents = c('M00190_1') )
 
 associationSearch$get_topN(20)
 associationSearch$plot_graph(20)
