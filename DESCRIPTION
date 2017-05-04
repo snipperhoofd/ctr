@@ -14,6 +14,8 @@ Imports: plyr,
     igraph,
     knitr,
     hexbin,
-    RColorBrewer
+    RColorBrewer,
+    arules,
+    arulesViz
 RoxygenNote: 6.0.1
 LinkingTo: Rcpp
