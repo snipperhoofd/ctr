@@ -80,7 +80,7 @@ Apriori <- setRefClass("AssociationRules",
                             ruleset <<- list("rules" = rule)
                           },
                           plot_graph = function(n = 20){
-                            plot(head(sort(ruleset$rules, by = "support"), n), method = "graph", control=list(cex=.8), interactive=F)
+                            plot(head(sort(ruleset$rules, by = "support"), n), method = "graph", control=list(cex=.8), interactive=T)
                           },
                           get_topN = function(n=20){
                             return(inspect(head(sort(ruleset$rules, by="confidence"), n)))
@@ -122,7 +122,7 @@ rownames(dat) <- dat[,1]
 dat[,1] <- NULL
 
 associationSearch <- Apriori$new(dataset = as.matrix(dat))
-associationSearch$run_apriori(supp = 0, conf = 0.5, targets = c('M00580_1'))
+associationSearch$run_apriori(supp = 0.2, conf = 0.5)#, targets = c('M00580_1'))
 
 associationSearch$get_topN(20)
 associationSearch$plot_graph(20)
