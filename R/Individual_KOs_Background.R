@@ -82,7 +82,7 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
     # m1.1
     Array_Pearson_Euclidean<-NULL
     if(language == 'R'){
-      Array_Pearson_Euclidean <-   Cor_Matrix(sample_KO_positions$KO_positions_of_A,
+      Array_Pearson_Euclidean <-Cor_Matrix(sample_KO_positions$KO_positions_of_A,
                                               sample_KO_positions$KO_positions_of_B,
                                               RNAseq_Annotation_Matrix_no_sd_of_zero,
                                               matrix_features)
