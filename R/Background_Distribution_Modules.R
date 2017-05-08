@@ -17,7 +17,7 @@
 #' @examples Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
 
 Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_features,
-                                            Z_scores, N, Z) {
+                                            Z_scores, N, Z, P = 2) {
   library(doParallel)
 
 
@@ -30,7 +30,7 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
 
   print("Initializing Cluster")
   #make cluster
-  cl <-makeCluster(2)#change this in the future
+  cl <-makeCluster(P)#change this in the future
   registerDoParallel(cl)
 
   functionNames <- c("GetFeatures","RandomDistances", "comparePairwise", "Pairwise_Bin_Array_Presence",
@@ -222,7 +222,7 @@ original_background <- function(RNAseq_Annotated_Matrix,matrix_features,Z_scores
 
   # iterate Z times
   for (i in 1:Z) {
-
+    set.seed(20)
 
     random_genomes<- sample(length(matrix_features@high_quality_bins), 2)
     Random_Module<- Generate_Random_Module(All_KOs,N)
