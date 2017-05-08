@@ -5,6 +5,20 @@
 
 using namespace Rcpp;
 
+// comparePairwise_C
+List comparePairwise_C(NumericVector position_of_kegg_enzyme_A, NumericVector position_of_kegg_enzyme_B, NumericMatrix expressions, NumericMatrix ranks);
+RcppExport SEXP ctr_comparePairwise_C(SEXP position_of_kegg_enzyme_ASEXP, SEXP position_of_kegg_enzyme_BSEXP, SEXP expressionsSEXP, SEXP ranksSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject rcpp_result_gen;
+    Rcpp::RNGScope rcpp_rngScope_gen;
+    Rcpp::traits::input_parameter< NumericVector >::type position_of_kegg_enzyme_A(position_of_kegg_enzyme_ASEXP);
+    Rcpp::traits::input_parameter< NumericVector >::type position_of_kegg_enzyme_B(position_of_kegg_enzyme_BSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type expressions(expressionsSEXP);
+    Rcpp::traits::input_parameter< NumericMatrix >::type ranks(ranksSEXP);
+    rcpp_result_gen = Rcpp::wrap(comparePairwise_C(position_of_kegg_enzyme_A, position_of_kegg_enzyme_B, expressions, ranks));
+    return rcpp_result_gen;
+END_RCPP
+}
 // Cor_Matrix_C
 List Cor_Matrix_C(NumericVector v1, NumericVector v2, NumericMatrix expression, NumericMatrix ranks);
 RcppExport SEXP ctr_Cor_Matrix_C(SEXP v1SEXP, SEXP v2SEXP, SEXP expressionSEXP, SEXP ranksSEXP) {
