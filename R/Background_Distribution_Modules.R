@@ -9,12 +9,12 @@
 #'
 #' @param RNAseq_Annotated_Matrix The annotated matrix
 #' @param N The number of elements to be included in the randomly generated module
-#' @param Z The number of iterations used to calculatea background distribution
+#' @param Z The number of iterations used to calculate background distribution
 
 
 #' @export
 #' @return a list of vectors containing XXX & YYY
-#' @examples Random_Background_Module_Distances_6<-Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
+#' @examples Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
 
 Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_features,
                                             Z_scores, N, Z) {
@@ -22,14 +22,14 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
   Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5) # This should probably only be calculated once per dataset. Currently it is calculated in numerous functions. add another variable to replace 5 (e.g. The minimum number of times a KO term must be present to be included in the matrix)
   Random_Jaccard_Distances<-rep(NA,Z)
   Random_Composite_Distances<-rep(NA,Z)
-  Random_Zscore_Pearson_Distances<-rep(NA,N)
-  Random_Zscore_Euclidean_Distances<-rep(NA,N)
-
-
   All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
+
 
   # iterate Z times
   for (i in 1:Z) {
+    Random_Zscore_Pearson_Distances<-rep(NA,N)
+    Random_Zscore_Euclidean_Distances<-rep(NA,N)
+
     random_genomes <- sample(length(matrix_features@high_quality_bins), 2)
     random_module <- Generate_Random_Module(All_KOs, N)
     All_position_KOs <- which(All_KOs %in% random_module)
@@ -66,11 +66,6 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
         dist <- RandomDistances(pairwiseDistances, Z_scores)
         Random_Pearson_Distances <- dist$Random_Pearson_Distances
         Random_Euclidean_Distances <- dist$Random_Euclidean_Distances
-
-        # if one genomes does not contain the KO (as checked by multiplication above)
-      } else {
-        Random_Pearson_Distances <- NA
-        Random_Euclidean_Distances <- NA
       }
 
       Random_Zscore_Pearson_Distances[j] <- ((Random_Pearson_Distances-Z_scores$mu[2]) /
