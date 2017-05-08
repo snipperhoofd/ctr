@@ -9,7 +9,7 @@
 #'
 #' @param RNAseq_Annotated_Matrix The annotated matrix
 #' @param N The number of elements to be included in the randomly generated module
-#' @param Z The number of iterations used to calculate background distribution
+#' @param Z The number of iterations used to calculate  background distribution
 
 
 #' @export
@@ -46,7 +46,9 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
                                                                           All_position_KOs])
 
     # Next calculate Pearson and NRED
-    for (j in 1:N) {
+    #for (j in 1:N) {
+    RandomDistsList <- foreach(j=1:N, .combine = 'comb', .multicombine = TRUE,
+                   .init=list(list(), list())) %dopar% {
       Random_Pearson_Distances <- NA
       Random_Euclidean_Distances <- NA
 
@@ -68,12 +70,14 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
         Random_Euclidean_Distances <- dist$Random_Euclidean_Distances
       }
 
-      Random_Zscore_Pearson_Distances[j] <- ((Random_Pearson_Distances-Z_scores$mu[2]) /
+      pearson <- ((Random_Pearson_Distances-Z_scores$mu[2]) /
                                              Z_scores$sd[2]) # Need to input the Z_scores matrix
-      Random_Zscore_Euclidean_Distances[j] <- ((Random_Euclidean_Distances-Z_scores$mu[6]) /
+      euclidean <- ((Random_Euclidean_Distances-Z_scores$mu[6]) /
                                                  Z_scores$sd[6])
-
+      list(pearson, euclidean)
     }
+    Random_Zscore_Pearson_Distances <- unlist(RandomDistsList[[1]])
+    Random_Zscore_Euclidean_Distances <-unlist(RandomDistsList[[2]])
     Random_Composite_Distances[i]<-mean((-Random_Zscore_Pearson_Distances) +
                                           Random_Zscore_Euclidean_Distances,
                                         na.rm=TRUE)[1]
@@ -163,7 +167,10 @@ RandomDistances <- function(pairwiseDistances, Z_scores){
 }
 
 
-
+comb <- function(x, ...){
+  lapply(seq_along(x),
+         function(i) c(x[[i]], lapply(list(...), function(y) y[[i]])))
+}
 
 
 
