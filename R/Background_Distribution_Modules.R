@@ -16,7 +16,8 @@
 #' @return a list of vectors containing XXX & YYY
 #' @examples Random_Background_Module_Distances_6<-Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
 
-Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_features,Z_scores,N,Z) {
+Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_features,
+                                            Z_scores, N, Z) {
 
   Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5) # This should probably only be calculated once per dataset. Currently it is calculated in numerous functions. add another variable to replace 5 (e.g. The minimum number of times a KO term must be present to be included in the matrix)
   Random_Jaccard_Distances<-rep(NA,Z)
@@ -25,6 +26,172 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_featu
   Random_Zscore_Euclidean_Distances<-rep(NA,N)
 
 
+  All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
+
+  # iterate Z times
+  for (i in 1:Z) {
+    random_genomes <- sample(length(matrix_features@high_quality_bins), 2)
+    random_module <- Generate_Random_Module(All_KOs, N)
+    All_position_KOs <- which(All_KOs %in% random_module)
+
+    # Calculate Jaccard Distance
+    PA_position_of_genome_A <- which(rownames(Pairwise_Bin_Array_Presence)==
+                                     matrix_features@high_quality_bins[random_genomes[1]])
+    PA_position_of_genome_B <- which(rownames(Pairwise_Bin_Array_Presence)==
+                                     matrix_features@high_quality_bins[random_genomes[2]])
+
+    Random_Jaccard_Distances[i] <- Calc_Jaccard(Pairwise_Bin_Array_Presence[PA_position_of_genome_A,
+                                                                          All_position_KOs],
+                                              Pairwise_Bin_Array_Presence[PA_position_of_genome_B,
+                                                                          All_position_KOs])
+
+    # Next calculate Pearson and NRED
+    for (j in 1:N) {
+      Random_Pearson_Distances <- NA
+      Random_Euclidean_Distances <- NA
+
+      features <- GetFeatures(RNAseq_Annotated_Matrix, matrix_features,
+                              random_genomes, random_module, j)
+
+      # check if both are zero by multiplication
+      if (!(features$l_position_of_kegg_enzyme_A * features$l_position_of_kegg_enzyme_B) == 0) { # may be
+
+
+        # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances
+        pairwiseDistances <- comparePairwise(features$position_of_kegg_enzyme_A,
+                                             features$position_of_kegg_enzyme_B,
+                                             RNAseq_Annotated_Matrix,
+                                             matrix_features)
+
+        dist <- RandomDistances(pairwiseDistances, Z_scores)
+        Random_Pearson_Distances <- dist$Random_Pearson_Distances
+        Random_Euclidean_Distances <- dist$Random_Euclidean_Distances
+
+        # if one genomes does not contain the KO (as checked by multiplication above)
+      } else {
+        Random_Pearson_Distances <- NA
+        Random_Euclidean_Distances <- NA
+      }
+
+      Random_Zscore_Pearson_Distances[j] <- ((Random_Pearson_Distances-Z_scores$mu[2]) /
+                                             Z_scores$sd[2]) # Need to input the Z_scores matrix
+      Random_Zscore_Euclidean_Distances[j] <- ((Random_Euclidean_Distances-Z_scores$mu[6]) /
+                                                 Z_scores$sd[6])
+
+    }
+    Random_Composite_Distances[i]<-mean((-Random_Zscore_Pearson_Distances) +
+                                          Random_Zscore_Euclidean_Distances,
+                                        na.rm=TRUE)[1]
+  }
+  Random_Background_Module_Distances <- Random_Composite_Distances *
+                                        (1 - Random_Jaccard_Distances)
+  return(Random_Background_Module_Distances)
+}
+
+comparePairwise <- function(position_of_kegg_enzyme_A, position_of_kegg_enzyme_B,
+                            RNAseq_Annotated_Matrix, matrix_features, language = 'R'){
+  #C version doesn't work well yet
+  if(language == 'C'){
+    return(comparePairwise_C(position_of_kegg_enzyme_A, position_of_kegg_enzyme_B,
+                      as.matrix(RNAseq_Annotated_Matrix[, matrix_features@SS:matrix_features@SE]),
+                      as.matrix(RNAseq_Annotated_Matrix[, matrix_features@RS:matrix_features@RE]))
+    )
+  }else{
+      l_position_of_kegg_enzyme_A <- length(position_of_kegg_enzyme_A)
+      l_position_of_kegg_enzyme_B <- length(position_of_kegg_enzyme_B)
+      max_pairwise_gene_correlation <- matrix(NA, nrow = l_position_of_kegg_enzyme_A,
+                                                  ncol = l_position_of_kegg_enzyme_B)
+      max_pairwise_gene_euclidean <-max_pairwise_gene_correlation
+      for (m in 1:l_position_of_kegg_enzyme_A){
+        for (n in 1:l_position_of_kegg_enzyme_B){
+
+          # use the no_sd dataset so that calculating a Pearson correlation never gives an error
+          correlation <- cor(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],
+                                                            matrix_features@SS:matrix_features@SE]),
+                             as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],
+                                                            matrix_features@SS:matrix_features@SE]))
+
+          max_pairwise_gene_correlation[m, n]<- correlation
+
+          subtracted_lists <- RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m], matrix_features@RS:matrix_features@RE] -
+          RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n], matrix_features@RS:matrix_features@RE]
+          max_pairwise_gene_euclidean[m, n] <- sqrt(sum(subtracted_lists * subtracted_lists))
+        }
+      }
+      return(list("pairwise_correlation" = max_pairwise_gene_correlation,
+                  "pairwise_euclidean" = max_pairwise_gene_euclidean))
+    }
+}
+
+GetFeatures <- function(RNAseq_Annotated_Matrix, matrix_features,
+                        random_genomes, random_module, j){
+  # Identify the rows in the original matrix corresponding to each genome
+  position_of_genome_A <- which(RNAseq_Annotated_Matrix$Bin == matrix_features@high_quality_bins[random_genomes[1]])
+  position_of_genome_B <- which(RNAseq_Annotated_Matrix$Bin == matrix_features@high_quality_bins[random_genomes[2]])
+
+  # Identify the rows in the original matrix corresponding to a KO
+  KO_positions <- which(RNAseq_Annotated_Matrix$KO == random_module[j])
+
+  # Find intersection between the genome lists and the KO list
+  position_of_kegg_enzyme_A <- intersect(KO_positions, position_of_genome_A)
+  position_of_kegg_enzyme_B <- intersect(KO_positions, position_of_genome_B)
+
+  # Make sure the KO is present in both genomes
+  l_position_of_kegg_enzyme_A <- length(position_of_kegg_enzyme_A)
+  l_position_of_kegg_enzyme_B <- length(position_of_kegg_enzyme_B)
+  return(list("position_of_genome_A" = position_of_genome_A,
+              "position_of_genome_B" = position_of_genome_B,
+              "position_of_kegg_enzyme_A" = position_of_kegg_enzyme_A,
+              "position_of_kegg_enzyme_B" = position_of_kegg_enzyme_B,
+              "l_position_of_kegg_enzyme_A" = l_position_of_kegg_enzyme_A,
+              "l_position_of_kegg_enzyme_B" = l_position_of_kegg_enzyme_B))
+}
+
+RandomDistances <- function(pairwiseDistances, Z_scores){
+  # Convert to Z scores
+  Zscore_pairwise_gene_correlation <- (pairwiseDistances$pairwise_correlation-Z_scores$mu[2])/Z_scores$sd[2] # need to inverse PCC
+  Zscore_pairwise_gene_euclidean <- (pairwiseDistances$pairwise_euclidean-Z_scores$mu[6])/Z_scores$sd[6]
+  best_scoring_pair<- which.min((1-Zscore_pairwise_gene_correlation)+(Zscore_pairwise_gene_euclidean))
+
+
+  if (length(best_scoring_pair) == 1) {
+    Random_Pearson_Distances <- pairwiseDistances$pairwise_correlation[best_scoring_pair]
+    Random_Euclidean_Distances <- pairwiseDistances$pairwise_euclidean[best_scoring_pair]
+  } else {
+    scoring_pair <- which.min(Zscore_pairwise_gene_euclidean)
+    Random_Pearson_Distances <- pairwiseDistances$pairwise_correlation[scoring_pair]
+    Random_Euclidean_Distances <- pairwiseDistances$pairwise_euclidean[scoring_pair]
+  }
+
+  return(list("Random_Pearson_Distances" = Random_Pearson_Distances,
+              "Random_Euclidean_Distances" = Random_Euclidean_Distances))
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+original_background <- function(RNAseq_Annotated_Matrix,matrix_features,Z_scores,N,Z) {
+
+  Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix,5) # This should probably only be calculated once per dataset. Currently it is calculated in numerous functions. add another variable to replace 5 (e.g. The minimum number of times a KO term must be present to be included in the matrix)
+  Random_Jaccard_Distances<-rep(NA,Z)
+  Random_Composite_Distances<-rep(NA,Z)
+  Random_Pearson_Distances<-rep(NA,N)
+  Random_Euclidean_Distances<-rep(NA,N)
+  Random_Zscore_Pearson_Distances<-rep(NA,N)
+  Random_Zscore_Euclidean_Distances<-rep(NA,N)
   All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
 
   # iterate Z times
@@ -45,9 +212,6 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_featu
 
     # Next calculate Pearson and NRED
     for (j in 1:N) {
-      Random_Pearson_Distances <- NA
-      Random_Euclidean_Distances <- NA
-
       # Identify the rows in the original matrix corresponding to each genome
       position_of_genome_A = which(RNAseq_Annotated_Matrix$Bin==matrix_features@high_quality_bins[random_genomes[1]])
       position_of_genome_B = which(RNAseq_Annotated_Matrix$Bin==matrix_features@high_quality_bins[random_genomes[2]])
@@ -65,73 +229,43 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,matrix_featu
         max_pairwise_gene_correlation<-matrix(NA,nrow=l_position_of_kegg_enzyme_A,ncol=l_position_of_kegg_enzyme_B)
         max_pairwise_gene_euclidean<-max_pairwise_gene_correlation
         # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances
-        pairwiseDistances <- comparePairwise(position_of_kegg_enzyme_A,
-                                             position_of_kegg_enzyme_B,
-                                             RNAseq_Annotated_Matrix,
-                                             matrix_features)
+        for (m in 1:l_position_of_kegg_enzyme_A){
+          for (n in 1:l_position_of_kegg_enzyme_B){
+            # use the no_sd dataset so that calculating a Pearson correlation never gives an error
+            max_pairwise_gene_correlation[m,n]<- cor(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],
+                                                                                        matrix_features@SS:matrix_features@SE]),
+                                                     as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],
+                                                                                        matrix_features@SS:matrix_features@SE]))
+
+            subtracted_lists<- RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m], matrix_features@RS:matrix_features@RE] -
+              RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n], matrix_features@RS:matrix_features@RE]
+            max_pairwise_gene_euclidean[m, n]<- sqrt(sum(subtracted_lists * subtracted_lists))
+          }
+        } # End Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances
 
         # Convert to Z scores
-        Zscore_pairwise_gene_correlation<- (pairwiseDistances$pairwise_correlation-Z_scores$mu[2])/Z_scores$sd[2] # need to inverse PCC
-        Zscore_pairwise_gene_euclidean<- (pairwiseDistances$pairwise_euclidean-Z_scores$mu[6])/Z_scores$sd[6]
+        Zscore_pairwise_gene_correlation<- (max_pairwise_gene_correlation-Z_scores$mu[2])/Z_scores$sd[2] # need to inverse PCC
+        Zscore_pairwise_gene_euclidean<- (max_pairwise_gene_euclidean-Z_scores$mu[6])/Z_scores$sd[6]
         best_scoring_pair<- which.min((1-Zscore_pairwise_gene_correlation)+(Zscore_pairwise_gene_euclidean))
         if (length(best_scoring_pair)>0) {
-          Random_Pearson_Distances<-pairwiseDistances$pairwise_correlation[best_scoring_pair]
-          Random_Euclidean_Distances<-pairwiseDistances$pairwise_euclidean[best_scoring_pair]
+          Random_Pearson_Distances<-max_pairwise_gene_correlation[best_scoring_pair]
+          Random_Euclidean_Distances<-max_pairwise_gene_euclidean[best_scoring_pair]
         } else {
           scoring_pair<-which.min(Zscore_pairwise_gene_euclidean)
-          Random_Pearson_Distances<-pairwiseDistances$pairwise_correlation[scoring_pair]
-          Random_Euclidean_Distances<-pairwiseDistances$pairwise_euclidean[scoring_pair]
+          Random_Pearson_Distances<-max_pairwise_gene_correlation[scoring_pair]
+          Random_Euclidean_Distances<-max_pairwise_gene_euclidean[scoring_pair]
         }
         # if one genomes does not contain the KO (as checked by multiplication above)
       } else {
-        Random_Pearson_Distances <- NA
+        Random_Pearson_Distances<- NA
         Random_Euclidean_Distances<- NA
       }
-
       Random_Zscore_Pearson_Distances[j]<-((Random_Pearson_Distances-Z_scores$mu[2])/Z_scores$sd[2]) # Need to input the Z_scores matrix
       Random_Zscore_Euclidean_Distances[j]<-((Random_Euclidean_Distances-Z_scores$mu[6])/Z_scores$sd[6])
 
     }
     Random_Composite_Distances[i]<-mean((-Random_Zscore_Pearson_Distances)+Random_Zscore_Euclidean_Distances,na.rm=TRUE)[1]
+    Random_Background_Module_Distances<-Random_Composite_Distances*(1-Random_Jaccard_Distances)
   }
-  Random_Background_Module_Distances<-Random_Composite_Distances*(1-Random_Jaccard_Distances)
   return(Random_Background_Module_Distances)
 }
-
-bgModule_parModule <- function(RNAseq_Annotated_Matrix, matrix_features, Z_scores, N, Z) {
-  return(NA)
-}
-
-comparePairwise <- function(position_of_kegg_enzyme_A, position_of_kegg_enzyme_B,
-                            RNAseq_Annotated_Matrix, matrix_features, language = 'R'){
-  if(language == 'C'){
-    return(comparePairwise_C(position_of_kegg_enzyme_A, position_of_kegg_enzyme_B,
-                      as.matrix(RNAseq_Annotated_Matrix[,matrix_features@SS:matrix_features@SE]),
-                      as.matrix(RNAseq_Annotated_Matrix[,matrix_features@RS:matrix_features@RE]))
-    )
-  }else{
-  l_position_of_kegg_enzyme_A <- length(position_of_kegg_enzyme_A)
-  l_position_of_kegg_enzyme_B <- length(position_of_kegg_enzyme_B)
-  max_pairwise_gene_correlation<-matrix(NA,nrow=l_position_of_kegg_enzyme_A,ncol=l_position_of_kegg_enzyme_B)
-  max_pairwise_gene_euclidean<-max_pairwise_gene_correlation
-  for (m in 1:l_position_of_kegg_enzyme_A){
-    for (n in 1:l_position_of_kegg_enzyme_B){
-      # use the no_sd dataset so that calculating a Pearson correlation never gives an error
-      correlation <- cor(as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m],
-                                                            matrix_features@SS:matrix_features@SE]),
-                         as.numeric(RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n],
-                                                            matrix_features@SS:matrix_features@SE]))
-      print("correlation")
-      print(correlation)
-      max_pairwise_gene_correlation[m,n]<- correlation
-
-      subtracted_lists<- RNAseq_Annotated_Matrix[position_of_kegg_enzyme_A[m], matrix_features@RS:matrix_features@RE] -
-        RNAseq_Annotated_Matrix[position_of_kegg_enzyme_B[n], matrix_features@RS:matrix_features@RE]
-      max_pairwise_gene_euclidean[m, n]<- sqrt(sum(subtracted_lists * subtracted_lists))
-    }
-  }
-  return(list("pairwise_correlation" = max_pairwise_gene_correlation,
-              "pairwise_euclidean" = max_pairwise_gene_euclidean))
-  }
-}
-#bgModule_parRep
