@@ -1,5 +1,7 @@
 #include <Rcpp.h>
+#include <stdio.h>
 #include "statistics.h"
+
 using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
 
@@ -26,9 +28,14 @@ List comparePairwise_C(NumericVector position_of_kegg_enzyme_A,
             NumericVector expr_B = expressions(position_of_kegg_enzyme_A[n], _);
             NumericVector rank_B = ranks(position_of_kegg_enzyme_A[n], _);
 
-            pairwisePearson(m,n) = CalcNormPearson(expr_A.begin(),
-                                                   expr_B.begin(),
-                                                   expr_A.size());
+
+
+            double pearson = CalcNormPearson(expr_A.begin(),
+                                             expr_B.begin(),
+                                             expr_A.size());
+            pairwisePearson(m,n) = pearson;
+            printf("pearson: %f\n", pearson);
+
             pairwiseEuclidean(m,n) = CalcNormEuclidean(rank_A.begin(),
                                                        rank_B.begin(),
                                                        rank_A.size());
