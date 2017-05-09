@@ -127,22 +127,22 @@ Apriori <- setRefClass("AssociationRules",
                           }
                        )
 )
-library(arules)
-library(arulesViz)
+#library(arules)
+#library(arulesViz)
 
 
 #load a table
-dat <- read.csv("/home/steen176/data/Wide_Association_Matrix.csv")
-rownames(dat) <- dat[,1]
-dat[,1] <- NULL
+#dat <- read.csv("/home/steen176/data/Wide_Association_Matrix.csv")
+#rownames(dat) <- dat[,1]
+#dat[,1] <- NULL
 
-associationSearch <- Apriori$new(dataset = as.matrix(dat))
-associationSearch$run_apriori(supp = 0.05, conf = 0.5, antecedents = c("Glycogen_4",
-                                                                       "M00185_1"))
+#associationSearch <- Apriori$new(dataset = as.matrix(dat))
+#associationSearch$run_apriori(supp = 0.05, conf = 0.5, antecedents = c("Glycogen_4",
+#                                                                       "M00185_1"))
                              # consequents = c('M00190_1') )
 
-associationSearch$get_topN(20)
-associationSearch$plot_graph(20)
+#associationSearch$get_topN(20)
+#associationSearch$plot_graph(20)
 
 
 
