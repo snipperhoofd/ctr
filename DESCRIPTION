@@ -18,8 +18,6 @@ Imports: plyr,
     arules,
     arulesViz,
     doParallel,
-    foreach
-Suggests: rmarkdown
-    
+    foreach    
 RoxygenNote: 6.0.1
 LinkingTo: Rcpp
