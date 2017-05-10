@@ -5,14 +5,14 @@
 \title{Generate a background distibution of composite Z scores}
 \usage{
 Background_Distribution_Modules(RNAseq_Annotated_Matrix, matrix_features,
-  Z_scores, N, Z)
+  Z_scores, N, Z, P = 2)
 }
 \arguments{
 \item{RNAseq_Annotated_Matrix}{The annotated matrix}
 
 \item{N}{The number of elements to be included in the randomly generated module}
 
-\item{Z}{The number of iterations used to calculatea background distribution}
+\item{Z}{The number of iterations used to calculate  background distribution}
 }
 \value{
 a list of vectors containing XXX & YYY
@@ -26,5 +26,5 @@ or by taking the score with the maximum similarity. A background distribution us
 is provided for comparison. (Currently it only provides the score that minimizes the distances)
 }
 \examples{
-Random_Background_Module_Distances_6<-Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
+Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
 }
