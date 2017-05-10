@@ -5,11 +5,13 @@ CTR <- setRefClass("CTR",
                      RNAseq_Annotated_Matrix = "data.frame",
                      matrix_features = "General_features",
                      I_KOs_Background = "vector",
-                     bg_distance_modules = "vector",
+                     bg_distance_modules = "list",
                      Z_scores = "list"
                     ),
                     methods = list(
-                      Run = function(show_plots = TRUE){
+                      Run = function(iterations = 10000,
+                                     random_module_sizes = c(6,7),
+                                     parallel_cores = 2){
                         print("Steps indicated with an asterisk(*) are relatively slow")
 
                         print("__Normalizing RNAseq data__")
@@ -30,31 +32,30 @@ CTR <- setRefClass("CTR",
                         RNAseq_Annotated_Matrix <<- which_rows_with_no_sd(RNAseq_Annotated_Matrix,
                                                                           matrix_features)
 
-
+                        parallel_cores
                         print("__*Calculating background distribution for random individual KOs*__")
                         I_KOs_Background <<- Individual_KOs_Background(RNAseq_Annotated_Matrix,
-                                                                       matrix_features,10000)
+                                                                       matrix_features,iterations)
 
                         print("Calculating Z scores of individual KO background distributions")
                         Z_scores <<- calc_Z_scores(I_KOs_Background)
 
-                        print("__*Calculating Backround Distributions for random Modules of sizes 7*__")
-                        #bg_distance_modules_6 <- Background_Distribution_Modules(RNAseq_Annotated_Matrix,
-                         #                                                        matrix_features,
-                          #                                                       Z_scores,
-                           #                                                      6, 10000, 4)
-                        bg_distance_modules_7 <- Background_Distribution_Modules(RNAseq_Annotated_Matrix,
-                                                                                 matrix_features,
-                                                                                 Z_scores,
-                                                                                 7, 10000, 4)
-                        #bg_distance_modules_8 <- Background_Distribution_Modules(RNAseq_Annotated_Matrix,
-                         #                                                        matrix_features,
-                          #                                                       Z_scores,
-                           #                                                      8, 10000, 4)
 
+                        bg_distance_modules <<- list()
 
+                        for(i in 1:length(random_module_sizes)){
+                          m_size = random_module_sizes[i]
+                          distance <-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
+                                                                       matrix_features,
+                                                                       Z_scores,
+                                                                       m_size,
+                                                                       iterations,
+                                                                       parallel_cores
+                                                                       )
+                          m_char = as.character(m_size)
+                          bg_distance_modules[[m_char]] <<- distance
+                        }
 
-                        bg_distance_modules <<- bg_distance_modules_7
                       },
                       AssociationMatrix_perModule = function(module, module_list){
                       pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix,
@@ -115,10 +116,17 @@ CTR <- setRefClass("CTR",
                         mtext(paste("p-value = ",signif(t_test_KO_random_euclidean$p.value,2)),side=3,col="red",padj=2,cex=.75)
                       },
                       plotModuleBackgroundDist = function(){
-                        plot(density(bg_distance_modules,na.rm=TRUE),col="red",main="Background distributions of modules \nof size \"N\"\nBR",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
-                        points(density(bg_distance_modules,na.rm=TRUE),main="N=7",col="blue",type="l")
-                        points(density(bg_distance_modules,na.rm=TRUE),main="N=8",col="green",type="l")
-                        legend("topright",legend=c("N=6","N=6","N=6"),col=c("red","blue","green"),lty=c(1,1,1))
+                        bg_distance_names <- names(bg_distance_modules)
+                        legend <- sapply(bg_distance_names, function(x) paste('N=', x, sep=""))
+                        colours <- c("red", "blue", "green", "pink", "black")
+                        plot(density(bg_distance_modules[[bg_distance_names[1]]],na.rm=TRUE),col = colours[1],
+                             main="Background distributions of modules \nof size \"N\"\nBR",ylim=c(0,1),xlim=c(-4,4),cex.main=.75)
+                        for(i in 2:length(bg_distance_names)){
+                          points(density(bg_distance_modules[[bg_distance_names[i]]],na.rm=TRUE),
+                                 col=colours[i], type="l")
+                        }
+
+                        legend("topright",legend=legend,col=colours[1:length(bg_distance_names)],lty=c(1,1,1))
                       }
                     )
                    )
