@@ -44,6 +44,7 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
                             .options.multicore=list(set.seed=c(20,10)),
                            .init = list(list(), list())) %dopar% {
     library(ctr)
+    set.seed(20)
     Random_Zscore_Pearson_Distances<-rep(NA,N)
     Random_Zscore_Euclidean_Distances<-rep(NA,N)
 
@@ -166,7 +167,7 @@ comb <- function(x, ...){
 
 
 comparePairwise <- function(position_of_kegg_enzyme_A, position_of_kegg_enzyme_B,
-                            RNAseq_Annotated_Matrix, matrix_features, language = 'R'){
+                            RNAseq_Annotated_Matrix, matrix_features, language = 'C'){
   #C version doesn't work well yet
   if(language == 'C'){
     return(comparePairwise_C(position_of_kegg_enzyme_A, position_of_kegg_enzyme_B,

@@ -6,6 +6,7 @@ using namespace Rcpp;
 // [[Rcpp::plugins(cpp11)]]
 
 
+//'@export
 // [[Rcpp::export]]
 List comparePairwise_C(NumericVector position_of_kegg_enzyme_A,
                        NumericVector position_of_kegg_enzyme_B,
@@ -21,12 +22,14 @@ List comparePairwise_C(NumericVector position_of_kegg_enzyme_A,
 
     for(int m = 0; m < posAlength; m++)
     {
-        NumericVector expr_A = expressions(position_of_kegg_enzyme_A[m], _);
-        NumericVector rank_A = ranks(position_of_kegg_enzyme_A[m], _);
+        int pos_m = position_of_kegg_enzyme_A[m] - 1;
+        NumericVector expr_A = expressions(pos_m, _);
+        NumericVector rank_A = ranks(pos_m, _);
         for(int n = 0; n < posBlength; n++)
         {
-            NumericVector expr_B = expressions(position_of_kegg_enzyme_A[n], _);
-            NumericVector rank_B = ranks(position_of_kegg_enzyme_A[n], _);
+            int pos_n = position_of_kegg_enzyme_B[n] - 1;
+            NumericVector expr_B = expressions(pos_n, _);
+            NumericVector rank_B = ranks(pos_n, _);
 
 
 
@@ -34,7 +37,6 @@ List comparePairwise_C(NumericVector position_of_kegg_enzyme_A,
                                              expr_B.begin(),
                                              expr_A.size());
             pairwisePearson(m,n) = pearson;
-            printf("pearson: %f\n", pearson);
 
             pairwiseEuclidean(m,n) = CalcNormEuclidean(rank_A.begin(),
                                                        rank_B.begin(),
