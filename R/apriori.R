@@ -32,6 +32,8 @@ Conviction
   The frequency the rule makes an incorrect prediction.
   conv(X -> Y) = (1-supp(Y)) / (1-conf(X -> Y))
 "
+#' @export Apriori
+#' @exportClass AssociationRules
 Apriori <- setRefClass("AssociationRules",
                         fields = list(dataset = "matrix",
                                      ruleset = "list",

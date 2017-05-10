@@ -1,4 +1,6 @@
-CTR <- setRefClass("CongruentTranscriptionalResponse",
+#' @export CTR
+#' @exportClass CTR
+CTR <- setRefClass("CTR",
                    fields = list(
                      RNAseq_Annotated_Matrix = "data.frame",
                      matrix_features = "General_features",
