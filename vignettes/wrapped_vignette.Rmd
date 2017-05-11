@@ -172,6 +172,8 @@ matrix_features_BR <- new("General_features",
                        All_KOs = names(table(RNAseq_Annotated_Matrix_BR$KO))[
                          -which(names((table(RNAseq_Annotated_Matrix_BR$KO))) == "")]
                       )
+list_of_all_modules <- make_module_lists(KO_modules_table2)
+list_of_all_modules_KOs<-unique(unlist(list_of_all_modules, use.names=FALSE))
 ```
 
 ### Minimal Usage
@@ -197,52 +199,18 @@ transcriptional_responses$plotModuleBackgroundDist()
 ```
 
 
-### Calculate distances between modules
-First two lists can be created. The first one containing all the KO modules and the second one containing all unique KO terms
+### Association rule mining
+In the previous steps the variable `transcriptional_responses$All_association_matrix` was automatically created.
+All_association_matrix contains information of what genomes/bins have a certain KO module activated and what transcriptional profile .
 ```{r}
-list_of_all_modules <- make_module_lists(KO_modules_table2)
-list_of_all_modules_KOs<-unique(unlist(list_of_all_modules, use.names=FALSE))
 
-RNAseq_Annotated_Matrix_BR_default_bin <- transcriptional_responses$RNAseq_Annotated_Matrix
-matrix_features_BR <- transcriptional_responses$matrix_features
-Z_scores_BR <- transcriptional_responses$Z_scores
+apri <-  Apriori$new(dataset = transcriptional_responses$All_association_matrix)
+
+apri$run_apriori(supp = 0.2, conf = 0.9)
+apri$plot_graph()
 
 ```
 
 ```{r}
-start <- Sys.time()
-  All_modules_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, 
-                                                                matrix_features_BR, list_of_all_modules_KOs)
-end <- Sys.time() - start
-print("PNRED time")
-print(end)
-
-start <- Sys.time()
-  All_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_BR_default_bin, All_modules_pairwise_KO_distances$combined, matrix_features_BR, list_of_all_modules)
-end <- Sys.time() - start
-print("cluster_func time")
-print(end)
-
-start <-  Sys.time()
-  All_association_matrix<-fill_association_matrix(All_clustering_results_P_NRED,matrix_features_BR,names(list_of_all_modules))
-end <- Sys.time() - start
-print("fill_matrix time")
-print(end)
-
-## Needs to be converted into a function
-new_column_names<-NULL
-expanded_matrix<-NULL
-for (i in 1:dim(All_association_matrix)[2]) {
-  new_column_names<- c(new_column_names,paste(colnames(All_association_matrix)[i],names(table(All_association_matrix[,i])),
-                                              sep = "_"))
-  for(j in 1:length(table(All_association_matrix[, i]))) {
-    column_numbers <- rep(0,dim(All_association_matrix)[1])
-    column_numbers[which(All_association_matrix[,i] == j)] <- 1
-    
-    expanded_matrix <- cbind(expanded_matrix,column_numbers)
-  }
-}
-colnames(expanded_matrix) <- new_column_names
-rownames(expanded_matrix) <- rownames(All_association_matrix)
 
 ```
