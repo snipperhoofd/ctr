@@ -20,7 +20,7 @@ a list of Z score matrices for each module (ave_Z_score_matrix),
 a list of of matrices with distances after noralization by Jaccard Distances (JPE_distance),
 }
 \description{
-This function identifies clusters of bins with CTR based on the composite Z-scores 
+This function identifies clusters of bins with CTR based on the composite Z-scores
 normalized by the Jaccard distances of a cluster.
 }
 \examples{

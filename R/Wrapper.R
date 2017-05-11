@@ -33,7 +33,7 @@ CTR <- setRefClass("CTR",
                         RNAseq_Annotated_Matrix <<- which_rows_with_no_sd(RNAseq_Annotated_Matrix,
                                                                           matrix_features)
 
-                        parallel_cores
+
                         print("__*Calculating background distribution for random individual KOs*__")
                         I_KOs_Background <<- Individual_KOs_Background(RNAseq_Annotated_Matrix,
                                                                        matrix_features,iterations)
@@ -142,7 +142,7 @@ CTR <- setRefClass("CTR",
                         }
 
                         legend("topright",legend=legend,col=colours[1:length(bg_distance_names)],lty=c(1,1,1))
-                      },
+                      }
 
                     )
                    )
