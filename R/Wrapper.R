@@ -6,7 +6,8 @@ CTR <- setRefClass("CTR",
                      matrix_features = "General_features",
                      I_KOs_Background = "vector",
                      bg_distance_modules = "list",
-                     Z_scores = "list"
+                     Z_scores = "list",
+                     All_association_matrix = 'matrix'
                     ),
                     methods = list(
                       Run = function(iterations = 10000,
@@ -55,6 +56,20 @@ CTR <- setRefClass("CTR",
                           m_char = as.character(m_size)
                           bg_distance_modules[[m_char]] <<- distance
                         }
+
+
+                        ##Create association matrix
+                        All_modules_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Z_scores,
+                                                                                      matrix_features, list_of_all_modules_KOs)
+
+                        All_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix,
+                                                                     All_modules_pairwise_KO_distances$combined,
+                                                                     matrix_features, list_of_all_modules)
+
+                        All_association_matrix <<- fill_association_matrix(All_clustering_results_P_NRED,
+                                                                        matrix_features,
+                                                                        names(list_of_all_modules))
+
 
                       },
                       AssociationMatrix_perModule = function(module, module_list){
@@ -127,7 +142,8 @@ CTR <- setRefClass("CTR",
                         }
 
                         legend("topright",legend=legend,col=colours[1:length(bg_distance_names)],lty=c(1,1,1))
-                      }
+                      },
+
                     )
                    )
 

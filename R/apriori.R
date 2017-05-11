@@ -42,11 +42,14 @@ Apriori <- setRefClass("AssociationRules",
                           run_apriori = function(supp, conf,
                                                  antecedents = NA,
                                                  consequents = NA){
+                            library(arules)
+                            library(arulesViz)
 
+                            Data_clean()
                             support = supp
                             confidence = conf
 
-                            #Convert avector with true and false into line numbers
+                            #Convert a vector with true and false into line numbers
                             #for values that are true
                             getLineNumbers = function(vec){
                               out = c()

@@ -1,0 +1,248 @@
+---
+title: "Congruent Transcriptional Responses"
+author: "Ben Oyserman, Joris van Steenbrugge, Victoria Pascal Andreu"
+date: "2/15/2017"
+output:
+  html_document: default
+  css: custom.css
+  toc: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# **An R-package to facilitate high-throughput ecological inferences of time-series RNAseq data.** 
+## Introduction:
+Micrbiobial Ecologists often use genomic content to infer the biogeochemical processes and interactions within a microbial community. When organisms overlap in their genomic content, they are often inferred to possess similar traits. Conversely, divergent genomic content is indicative of niche differentiation. 
+
+Transcriptomics data may aid in making these ecological inferences by providing information on the regulation of this genetic content. Congruent transcriptional responses (CTRs) of particular metabolic modules in disparate organisms within a community may be indicative of common metabolic features shared by many organisms. Together, organisms with shared metabolic features may contribute to functional redundancy within an community, with important ecological implications.   Conversely, when divergent transcriptional responses are observed across numerous lineages, this is indicative of the disparate niches in the community.
+
+In this package we present a statistical framework to identify CTRs of (pre-defined) metabolic modules in microbial communties. In this manner, genomic bins may be clustered into sub-networks that share responses for particular modules, thereby facilitating inferences on functional redundancy (e.g. intra-cluster), niche partitioning (inter-cluster), and the emergence of complex traits (integrating infromation about multiple modules). 
+
+To demonstrate the utility of this approach, we identify CTRs in polymer storage (polyphosphate, glycogen, and polyhydroxyalkanoates) and amino acid biosynthesis modules of 38 genome bins recovered from a bioreactor operated under conditions that select for organisms capable of storing polymers.
+
+![](/home/joris/tools/ctr/CTR_workflow.png)
+
+<center>
+
+Function  | Name              | Description
+--------  | ----------------- | -------------  
+1         | RNAseq_Normalize  | A function used to normalize raw counts based on various inputs.  
+2         | Create_Rank_Columns | Calculate the ranks of each transcript
+3         | which_rows_with_no_sd | Identify rows with a SD of 0
+4         | Calc_Norm_Euc | Calculates the Euclidean Distance between the normalized ranks
+5         | Calc_Jaccard | Calculates the Jaccard Distance between to vectors (Presence/Absence)
+6         | Presence_Absence_Matrix | Calculates P/A matrix for all KOs represented >N times in the dataset
+7         | Jaccard_Distance_Function | Calculates all pairwise Jaccard Distances for a module
+8         | Individual_KOs_Background | Calculates the background distribution for pairwise comparisons of transcripts across bins
+9         | Generate_Random_Module | Generates a random module of size N
+10        | Background_Distribution_Modules | Calculates a distribution for a random module of size N
+11        | NRED_Distance_Function | Calculating normalized rank euclidean distances between modules
+12        | P_Distance_Function | Calculating Pearson Correlations between modules
+13        | P_NRED_Distance_Function | Calculating composite distances between modules
+14        | Cor_Matrix | Output Distance Matrix for both Pearson and Euclidean Distances (implemented in Function F13)
+15        | ave_Z_score_Func | Convert array into matrix of average scores (may be used on outputs for F11-F13)
+16        | cluster_func | Define clusters using the louvain algorithm
+17        | array_fig | Make figure from array
+
+</center>
+
+### A) Importing raw data
+
+  - Structure (Tab deliminated)
+    - Locus Tag, Raw Counts, Annotations
+  - Import KEGG Orthology Table  
+  - Statistics for normalize: Total reads per sample, total reads mapped per genome, edgeR
+
+### B) Calculate background distributions for individual KOs and modules of 'N' KOs
+
+### C) Calculate pairwise distances in the data sets
+
+  - All pairwise Pearson Correlations (PC), Normalized Rank Euclidean Distances (NRED) for each KO<sub>n</sub> in each module, across all bins ($N*\# genomes^2$)
+  - Jaccard Distances between Genome A and B ($J_{AB}$)
+  - Calculate composite score (CS)  
+$$\begin{align*}
+CS_{AB}
+&=Average(KO_{1},\cdots,KO_{n})/J_{AB}
+\end{align*}$$
+
+The number of calculations is equal to $\# genomes^{2* \# KOs}$  
+
+### D) Calculating statistics for each module
+
+The distribution of pairwise distances within each cluster may be compared to a background distribution to calculate a p-value. A small p-value indicates a strong intra-cluster CTR.
+
+In a similar manner, the KOs forming each module (each KO), may be organized based on the distribution of pairwise distances.
+
+
+# Section A) Importing Raw Data & Data structure
+
+First the necessary librarys are imported, and the random seed is set so that the results are reproducible.
+
+```{r set seet and library upload, results='hide', message=FALSE}
+library("plyr")
+library("reshape")
+library("igraph")
+library('knitr')
+library("hexbin")
+library("RColorBrewer")
+library("ctr")
+```
+
+Next, the necessary files are uploaded including
+
+  - 1) the KEGG database 
+  - 2) The matrix with transcrtipt abundance and annotations. The format of this matrix is tab delimited: Locus Tag, raw counts, the KO annotation and the Bin.
+
+```{r uploading the matrix}
+# First set working directory setwd("/path/to/directory/ctr")
+ setwd('/home/joris/tools/ctr')
+# sourceDirectory("/path/to/directory/ctr/R/");
+KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep = "\t",
+                              quote = "", row.names = NULL, stringsAsFactors = FALSE)
+
+KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",
+                              sep = "\t",quote = "", row.names = NULL, 
+                              stringsAsFactors = FALSE)
+
+# Barplot of pathway modules
+par(mar = c(10,3,3,3))
+x <- barplot(sort(table(KO_modules_table2$V1)), xaxt = "n")
+labs <- names(sort(table(KO_modules_table2$V1)))
+text(cex = .5, x = x + 1.25, y = -1.25, labs, xpd = TRUE, srt = 45, pos = 2)
+
+# Barplot of  modules
+barplot(table(as.numeric(table(KO_modules_table2$V2))), ylim = c(0, 200))
+
+# Load data set, Bins obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome 
+RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",
+                                       sep = " ", quote = "", row.names = NULL, 
+                                       stringsAsFactors = FALSE, fill = TRUE, 
+                                       
+col.names=c("Locus_Tag","Sample1","Sample2","Sample3","Sample4","Sample5","Sample6","KO"))
+```
+
+In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes < 80 % complete and with > 5% contamination. It is also possible to use reference genomes.
+
+```{r modifying the matrix if necessary, echo = TRUE}
+# add a column with the bin number ($Bin). This one-liner parses out the Bin number from the Locus ID
+# This is unnecessary if y
+RNAseq_Annotated_Matrix_BR$Bin <- gsub(".*\\.(.*)\\..*", "\\1", 
+                                       RNAseq_Annotated_Matrix_BR[, 1])
+
+# Rename Clade IIA reference to be consistent with bin number
+RNAseq_Annotated_Matrix_BR$Bin[grep("CAP2UW1*", 
+                                    RNAseq_Annotated_Matrix_BR$Bin)] <- 39
+
+# These are genomes that are  >80% complete <5% contaminated, define a subset matrix with only these genomes
+high_quality_bins <- c(8,28,25,7,46,39,22,38,54,53,48,45,31,42,16,33,26,40,36,21,
+                       27,17,19,32,14,11,30,43,35,29,23,58,41,20,15,37,49,50)
+
+# Keep only high-quality bins
+RNAseq_Annotated_Matrix_BR <- RNAseq_Annotated_Matrix_BR[which(
+                                RNAseq_Annotated_Matrix_BR$Bin %in% high_quality_bins),]
+
+sample_names <- sapply(seq((dim(RNAseq_Annotated_Matrix_BR)[2] - 3)), 
+                       function(x) return(paste("Sample", x, sep="")))
+```
+
+
+# Section C) Normalize and calculate background distributions for individual KOs and modules of 'N' KOs
+
+Data will be normalized by the depth of sequencing and the number of reads mapped per genome. It will then be converted to $log_{2}$ scale
+
+### Define inputs
+```{r input variables for background distributions, echo=TRUE, results = 'asis'}
+matrix_features_BR <- new("General_features",
+                       high_quality_bins = high_quality_bins,
+                       Bin_Column = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin"),
+                       sample_names = sample_names,
+                       sample_size = length(sample_names),
+                       SS = 2,
+                       SE = length(sample_names) + 1,
+                       RS = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + 1,
+                       RE = which(colnames(RNAseq_Annotated_Matrix_BR) == "Bin") + length(sample_names),
+                       no_feature = c(9159700, 4459877, 9826273, 8171512, 9542765, 10522313), # This must be updated!
+                       ambiguous = c(3940698, 2023389, 4675033, 3308789, 6446272, 5966543), # This must be updated!
+                       not_aligned = c(0, 0, 0, 0, 0, 0),
+                       library_size = c(234232896, 183166236, 228746720, 198024002, 231567992, 259156166),
+                       Pairwise_Bin_Array_Presence = Presence_Absence_Matrix(RNAseq_Annotated_Matrix_BR),
+                       no_annotation = which(names((table(RNAseq_Annotated_Matrix_BR$KO))) == ""),
+                       All_KOs = names(table(RNAseq_Annotated_Matrix_BR$KO))[
+                         -which(names((table(RNAseq_Annotated_Matrix_BR$KO))) == "")]
+                      )
+```
+
+### Minimal Usage
+Different data processing steps such as normalization and the random background generation
+of Individual KO terms and of modules will be calculated to do further analysis with
+```{r message=FALSE, results='hide'}
+transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_Matrix_BR,
+                                     matrix_features = matrix_features_BR)
+#Run all analyses
+transcriptional_responses$Run(iterations = 1000,
+                              random_module_sizes = c(6,7),
+                              parallel_cores = 2)
+```
+
+### Random Background for individual KO terms
+```{r}
+transcriptional_responses$plotIndividualBackgroundDist()
+``` 
+
+### Random Background for KO modules
+```{r}
+transcriptional_responses$plotModuleBackgroundDist()
+```
+
+
+### Calculate distances between modules
+First two lists can be created. The first one containing all the KO modules and the second one containing all unique KO terms
+```{r}
+list_of_all_modules <- make_module_lists(KO_modules_table2)
+list_of_all_modules_KOs<-unique(unlist(list_of_all_modules, use.names=FALSE))
+
+RNAseq_Annotated_Matrix_BR_default_bin <- transcriptional_responses$RNAseq_Annotated_Matrix
+matrix_features_BR <- transcriptional_responses$matrix_features
+Z_scores_BR <- transcriptional_responses$Z_scores
+
+```
+
+```{r}
+start <- Sys.time()
+  All_modules_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix_BR_default_bin, Z_scores_BR, 
+                                                                matrix_features_BR, list_of_all_modules_KOs)
+end <- Sys.time() - start
+print("PNRED time")
+print(end)
+
+start <- Sys.time()
+  All_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix_BR_default_bin, All_modules_pairwise_KO_distances$combined, matrix_features_BR, list_of_all_modules)
+end <- Sys.time() - start
+print("cluster_func time")
+print(end)
+
+start <-  Sys.time()
+  All_association_matrix<-fill_association_matrix(All_clustering_results_P_NRED,matrix_features_BR,names(list_of_all_modules))
+end <- Sys.time() - start
+print("fill_matrix time")
+print(end)
+
+## Needs to be converted into a function
+new_column_names<-NULL
+expanded_matrix<-NULL
+for (i in 1:dim(All_association_matrix)[2]) {
+  new_column_names<- c(new_column_names,paste(colnames(All_association_matrix)[i],names(table(All_association_matrix[,i])),
+                                              sep = "_"))
+  for(j in 1:length(table(All_association_matrix[, i]))) {
+    column_numbers <- rep(0,dim(All_association_matrix)[1])
+    column_numbers[which(All_association_matrix[,i] == j)] <- 1
+    
+    expanded_matrix <- cbind(expanded_matrix,column_numbers)
+  }
+}
+colnames(expanded_matrix) <- new_column_names
+rownames(expanded_matrix) <- rownames(All_association_matrix)
+
+```

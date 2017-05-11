@@ -136,6 +136,7 @@ List P_NRED_Distance_C(int dim_matrix,
     NumericVector v2_exp(6);
     for(int x = 0; x < dim_matrix; x++)
     {
+      printf("x");
         std::set<int> positionsGenomeA = MatchingPositions(binNames[x],
                                                          allBins);
         for(int y = 0; y < dim_matrix; y++)
@@ -163,8 +164,6 @@ List P_NRED_Distance_C(int dim_matrix,
                   for(int n = 0; n < positionKeggB.size(); n++)
                   {
                     int positionKeggB_current = positionKeggB[n];
-                    printf("posA: %d\n", positionKeggA_current);
-                    printf("PosB: %d\n", positionKeggB_current);
                     v1_exp = expression(positionKeggA_current, _);
                     v2_exp = expression(positionKeggB_current, _);
                     maxPairwiseCorrelation(m,n) = CalcNormPearson(v1_exp.begin(),
@@ -189,18 +188,21 @@ List P_NRED_Distance_C(int dim_matrix,
 
                 PairwiseBinArrayPearson[offset(x,y,z)] = maxPairwiseCorrelation[bestScoring];
                 PairwiseBinArrayEuclidean[offset(x,y,z)] = maxPairwiseEuclidean[bestScoring];
-               // printf("best scoring correlation: %f\t", maxPairwiseCorrelation[bestScoring]);
-                //printf("best scoring euclidean: %f\n", maxPairwiseEuclidean[bestScoring]);
+
+
 
               }
           }
         }
     }
 
+   // NumericMatrix Zscore_pairwise_gene_correlation = Calc_ZscoreCorrelation(PairwiseBinArrayPearson,
+    //                                                                        Z_scores);
+
 
   return List::create(
-   _["test"] = v1_exp,
-   _["test2"] = v2_exp);
+   _["Pairwise Euclidean"] = PairwiseBinArrayEuclidean,
+   _["Pairwise Pearson"] = PairwiseBinArrayPearson);
 //   _['pearsons'] = PairwiseBinArrayPearson,
 //   _['nred'] = ZscoreEuclidean
 // );
