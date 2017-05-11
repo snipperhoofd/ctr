@@ -44,7 +44,6 @@ Apriori <- setRefClass("AssociationRules",
                                                  consequents = NA){
                             library(arules)
                             library(arulesViz)
-
                             Data_clean()
                             support = supp
                             confidence = conf
@@ -99,11 +98,29 @@ Apriori <- setRefClass("AssociationRules",
                             }
                             ruleset <<- list("rules" = rule)
                           },
-                          plot_graph = function(n = 20){
-                            plot(head(sort(ruleset$rules, by = "support"), n), method = "graph", control=list(cex=.8), interactive=T)
+                          plot_graph = function(n = 20, by = 'support'){
+                            subrules <- head(sort(ruleset$rules, by = by), n)
+                            ig <- plot(subrules, method = 'graph', control=list(
+                              type='items'), interactive=T)
+
+                            #tf <- tempfile()
+                            #saveAsGraph(subrules, file = tf, format = 'dot')
+
+                            ig_df <- get.data.frame( ig, what = "both" )
+                            # visNetwork(
+                            #   nodes = data.frame(
+                            #     id = ig_df$vertices$name
+                            #     ,value = ig_df$vertices$support # could change to lift or confidence
+                            #     ,title = ifelse(ig_df$vertices$label == "",ig_df$vertices$name, ig_df$vertices$label)
+                            #     ,ig_df$vertices
+                            #   )
+                            #   , edges = ig_df$edges
+                            # ) %>%
+                            #   visEdges(arrows = 'to' ) %>%
+                            #   visOptions( highlightNearest = T )
                           },
-                          get_topN = function(n=20){
-                            return(inspect(head(sort(ruleset$rules, by="confidence"), n)))
+                          get_topN = function(n=20, by = 'support'){
+                            return(inspect(head(sort(ruleset$rules, by=by), n)))
                           },
                           Data_clean = function(split="sbs"){
                             if(split == "sbs"){

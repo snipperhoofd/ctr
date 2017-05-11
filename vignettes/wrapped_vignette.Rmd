@@ -81,12 +81,8 @@ In a similar manner, the KOs forming each module (each KO), may be organized bas
 First the necessary librarys are imported, and the random seed is set so that the results are reproducible.
 
 ```{r set seet and library upload, results='hide', message=FALSE}
-library("plyr")
 library("reshape")
-library("igraph")
 library('knitr')
-library("hexbin")
-library("RColorBrewer")
 library("ctr")
 ```
 
@@ -106,14 +102,6 @@ KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited
                               sep = "\t",quote = "", row.names = NULL, 
                               stringsAsFactors = FALSE)
 
-# Barplot of pathway modules
-par(mar = c(10,3,3,3))
-x <- barplot(sort(table(KO_modules_table2$V1)), xaxt = "n")
-labs <- names(sort(table(KO_modules_table2$V1)))
-text(cex = .5, x = x + 1.25, y = -1.25, labs, xpd = TRUE, srt = 45, pos = 2)
-
-# Barplot of  modules
-barplot(table(as.numeric(table(KO_modules_table2$V2))), ylim = c(0, 200))
 
 # Load data set, Bins obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome 
 RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",
@@ -183,9 +171,9 @@ of Individual KO terms and of modules will be calculated to do further analysis 
 transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_Matrix_BR,
                                      matrix_features = matrix_features_BR)
 #Run all analyses
-transcriptional_responses$Run(iterations = 1000,
+transcriptional_responses$Run(iterations = 10000,
                               random_module_sizes = c(6,7),
-                              parallel_cores = 2)
+                              parallel_cores = 4)
 ```
 
 ### Random Background for individual KO terms
@@ -204,13 +192,13 @@ In the previous steps the variable `transcriptional_responses$All_association_ma
 All_association_matrix contains information of what genomes/bins have a certain KO module activated and what transcriptional profile .
 ```{r}
 
-apri <-  Apriori$new(dataset = transcriptional_responses$All_association_matrix)
 
-apri$run_apriori(supp = 0.2, conf = 0.9)
-apri$plot_graph()
+apri <-  Apriori$new(dataset = All_association_matrix)
 
-```
-
-```{r}
+apri$run_apriori(supp = 0.3, conf = 1 )
+apri$plot_graph(400, by = "support")
+apri$get_topN(10)
 
 ```
+
+

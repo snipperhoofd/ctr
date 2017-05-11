@@ -59,16 +59,16 @@ CTR <- setRefClass("CTR",
 
 
                         ##Create association matrix
-                        All_modules_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Z_scores,
-                                                                                      matrix_features, list_of_all_modules_KOs)
-
-                        All_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix,
-                                                                     All_modules_pairwise_KO_distances$combined,
-                                                                     matrix_features, list_of_all_modules)
-
-                        All_association_matrix <<- fill_association_matrix(All_clustering_results_P_NRED,
-                                                                        matrix_features,
-                                                                        names(list_of_all_modules))
+                        # All_modules_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Z_scores,
+                        #                                                               matrix_features, list_of_all_modules_KOs)
+                        #
+                        # All_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix,
+                        #                                              All_modules_pairwise_KO_distances$combined,
+                        #                                              matrix_features, list_of_all_modules)
+                        #
+                        # All_association_matrix <<- fill_association_matrix(All_clustering_results_P_NRED,
+                        #                                                 matrix_features,
+                        #                                                 names(list_of_all_modules))
 
 
                       },
@@ -89,6 +89,7 @@ CTR <- setRefClass("CTR",
 
                                         },
                       plotIndividualBackgroundDist = function(){
+                        library("hexbin")
                         rf <- colorRampPalette(rev(brewer.pal(11,'Spectral')))
 
 
