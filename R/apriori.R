@@ -100,13 +100,12 @@ Apriori <- setRefClass("AssociationRules",
                           },
                           plot_graph = function(n = 20, by = 'support'){
                             subrules <- head(sort(ruleset$rules, by = by), n)
-                            ig <- plot(subrules, method = 'graph', control=list(
-                              type='items'), interactive=T)
+                            plot(subrules, method = 'graph', interactive=T)
 
                             #tf <- tempfile()
                             #saveAsGraph(subrules, file = tf, format = 'dot')
 
-                            ig_df <- get.data.frame( ig, what = "both" )
+                            #ig_df <- get.data.frame( ig, what = "both" )
                             # visNetwork(
                             #   nodes = data.frame(
                             #     id = ig_df$vertices$name
