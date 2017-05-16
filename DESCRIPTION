@@ -2,8 +2,9 @@ Package: ctr
 Type: Package
 Title: Congruent Transcriptional Response
 Version: 0.0.0.9000
-Authors@R: c(person("Ben", "Oyserman", email="ben.oyserman@wur.nl", role = c("cre", "aut"),
-             person("Joris", "van Steenbrugge", email="joris.vansteenbrugge@wur.nl", role = c("aut")
+Authors@R: c(person("Ben", "Oyserman", email="ben.oyserman@wur.nl", role = c("cre", "aut")),
+             person("Joris", "van Steenbrugge", email="joris.vansteenbrugge@wur.nl", role = c("aut"))
+             )
 
 Description: Micrbiobial Ecologists often use genomic content to infer the biogeochemical processes and interactions within a microbial community. When organisms overlap in their genomic content, they are often inferred to possess similar traits. Conversely, divergent genomic content is indicative of niche differentiation. 
     Transcriptomics data may aid in making these ecological inferences by providing information on the regulation of this genetic content. Congruent transcriptional responses (CTRs) of particular metabolic modules in disparate organisms within a community may be indicative of common metabolic features shared by many organisms. Conversely, when divergent transcriptional responses are observed across numerous lineages, this is indicative of the disparate niches in the community.
