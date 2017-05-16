@@ -11,10 +11,6 @@ Cor_Matrix_C <- function(v1, v2, expression, ranks) {
     .Call('ctr_Cor_Matrix_C', PACKAGE = 'ctr', v1, v2, expression, ranks)
 }
 
-P_NRED_Distance_C <- function(dim_matrix, subsetKOS, binNames, allBins, allKOs, expression, ranks, Z_scores) {
-    .Call('ctr_P_NRED_Distance_C', PACKAGE = 'ctr', dim_matrix, subsetKOS, binNames, allBins, allKOs, expression, ranks, Z_scores)
-}
-
 #'@export
 which_rows_with_no_sd_cpp <- function(x) {
     .Call('ctr_which_rows_with_no_sd_cpp', PACKAGE = 'ctr', x)

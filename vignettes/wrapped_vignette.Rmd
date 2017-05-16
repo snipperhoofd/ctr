@@ -24,66 +24,16 @@ To demonstrate the utility of this approach, we identify CTRs in polymer storage
 
 ![](/home/joris/tools/ctr/CTR_workflow.png)
 
-<center>
-
-Function  | Name              | Description
---------  | ----------------- | -------------  
-1         | RNAseq_Normalize  | A function used to normalize raw counts based on various inputs.  
-2         | Create_Rank_Columns | Calculate the ranks of each transcript
-3         | which_rows_with_no_sd | Identify rows with a SD of 0
-4         | Calc_Norm_Euc | Calculates the Euclidean Distance between the normalized ranks
-5         | Calc_Jaccard | Calculates the Jaccard Distance between to vectors (Presence/Absence)
-6         | Presence_Absence_Matrix | Calculates P/A matrix for all KOs represented >N times in the dataset
-7         | Jaccard_Distance_Function | Calculates all pairwise Jaccard Distances for a module
-8         | Individual_KOs_Background | Calculates the background distribution for pairwise comparisons of transcripts across bins
-9         | Generate_Random_Module | Generates a random module of size N
-10        | Background_Distribution_Modules | Calculates a distribution for a random module of size N
-11        | NRED_Distance_Function | Calculating normalized rank euclidean distances between modules
-12        | P_Distance_Function | Calculating Pearson Correlations between modules
-13        | P_NRED_Distance_Function | Calculating composite distances between modules
-14        | Cor_Matrix | Output Distance Matrix for both Pearson and Euclidean Distances (implemented in Function F13)
-15        | ave_Z_score_Func | Convert array into matrix of average scores (may be used on outputs for F11-F13)
-16        | cluster_func | Define clusters using the louvain algorithm
-17        | array_fig | Make figure from array
-
-</center>
-
-### A) Importing raw data
-
-  - Structure (Tab deliminated)
-    - Locus Tag, Raw Counts, Annotations
-  - Import KEGG Orthology Table  
-  - Statistics for normalize: Total reads per sample, total reads mapped per genome, edgeR
-
-### B) Calculate background distributions for individual KOs and modules of 'N' KOs
-
-### C) Calculate pairwise distances in the data sets
-
-  - All pairwise Pearson Correlations (PC), Normalized Rank Euclidean Distances (NRED) for each KO<sub>n</sub> in each module, across all bins ($N*\# genomes^2$)
-  - Jaccard Distances between Genome A and B ($J_{AB}$)
-  - Calculate composite score (CS)  
-$$\begin{align*}
-CS_{AB}
-&=Average(KO_{1},\cdots,KO_{n})/J_{AB}
-\end{align*}$$
-
-The number of calculations is equal to $\# genomes^{2* \# KOs}$  
-
-### D) Calculating statistics for each module
-
-The distribution of pairwise distances within each cluster may be compared to a background distribution to calculate a p-value. A small p-value indicates a strong intra-cluster CTR.
-
-In a similar manner, the KOs forming each module (each KO), may be organized based on the distribution of pairwise distances.
-
 
 # Section A) Importing Raw Data & Data structure
 
-First the necessary librarys are imported, and the random seed is set so that the results are reproducible.
+First the necessary librarys are imported.
 
 ```{r set seet and library upload, results='hide', message=FALSE}
 library("reshape")
 library('knitr')
 library("ctr")
+library("RColorBrewer")
 ```
 
 Next, the necessary files are uploaded including
@@ -95,20 +45,22 @@ Next, the necessary files are uploaded including
 # First set working directory setwd("/path/to/directory/ctr")
  setwd('/home/joris/tools/ctr')
 # sourceDirectory("/path/to/directory/ctr/R/");
-KO_pathways_table<-read.table("sample_data/ko00001.keg_tab_delimited",sep = "\t",
+KO_pathways_table <- read.table("sample_data/ko00001.keg_tab_delimited",sep = "\t",
                               quote = "", row.names = NULL, stringsAsFactors = FALSE)
 
-KO_modules_table2<-read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",
+KO_modules_table2 <- read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimited.txt",
                               sep = "\t",quote = "", row.names = NULL, 
                               stringsAsFactors = FALSE)
 
 
 # Load data set, Bins obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome 
-RNAseq_Annotated_Matrix_BR<-read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",
+RNAseq_Annotated_Matrix_BR <- read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",
                                        sep = " ", quote = "", row.names = NULL, 
                                        stringsAsFactors = FALSE, fill = TRUE, 
-                                       
-col.names=c("Locus_Tag","Sample1","Sample2","Sample3","Sample4","Sample5","Sample6","KO"))
+                                       col.names = c("Locus_Tag", "Sample1", 
+                                                     "Sample2", "Sample3", 
+                                                     "Sample4", "Sample5",
+                                                     "Sample6", "KO"))
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes < 80 % complete and with > 5% contamination. It is also possible to use reference genomes.
@@ -136,11 +88,9 @@ sample_names <- sapply(seq((dim(RNAseq_Annotated_Matrix_BR)[2] - 3)),
 ```
 
 
-# Section C) Normalize and calculate background distributions for individual KOs and modules of 'N' KOs
 
-Data will be normalized by the depth of sequencing and the number of reads mapped per genome. It will then be converted to $log_{2}$ scale
 
-### Define inputs
+### Define meta-data
 ```{r input variables for background distributions, echo=TRUE, results = 'asis'}
 matrix_features_BR <- new("General_features",
                        high_quality_bins = high_quality_bins,
@@ -161,19 +111,30 @@ matrix_features_BR <- new("General_features",
                          -which(names((table(RNAseq_Annotated_Matrix_BR$KO))) == "")]
                       )
 list_of_all_modules <- make_module_lists(KO_modules_table2)
-list_of_all_modules_KOs<-unique(unlist(list_of_all_modules, use.names=FALSE))
+list_of_all_modules_KOs <-unique(unlist(list_of_all_modules, use.names=FALSE))
 ```
 
 ### Minimal Usage
 Different data processing steps such as normalization and the random background generation
-of Individual KO terms and of modules will be calculated to do further analysis with
+of Individual KO terms and of modules will be calculated to do further analysis with.
+
+This step partially is able to run in parallel on multiple processing (CPU) cores. In general more cores means shorter running times.
+The parallel_cores parameter in the transcriptional_responses$Run() function can be set to the number of cores you want to use.
+
+If you are not sure how many CPU cores your machine has:  
+On Linux:    
+  Enter in a terminal: `nproc`   
+On Mac:    
+  Enter in a terminal: `sysctl hw.ncpu`
+
 ```{r message=FALSE, results='hide'}
 transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_Matrix_BR,
                                      matrix_features = matrix_features_BR)
 #Run all analyses
-transcriptional_responses$Run(iterations = 10000,
+transcriptional_responses$Run(iterations = 1000,
                               random_module_sizes = c(6,7),
                               parallel_cores = 4)
+#All_association_matrix <- transcriptional_responses$AssociationMatrix_perModule()
 ```
 
 ### Random Background for individual KO terms
@@ -188,17 +149,20 @@ transcriptional_responses$plotModuleBackgroundDist()
 
 
 ### Association rule mining
-In the previous steps the variable `transcriptional_responses$All_association_matrix` was automatically created.
-All_association_matrix contains information of what genomes/bins have a certain KO module activated and what transcriptional profile .
-```{r}
+In the previous steps the variable `All_association_matrix` was created.
+All_association_matrix contains information of what genomes/bins have a certain KO module activated and what transcriptional profile. This information is used to determine association rules.
+```{r, eval=FALSE}
+association_rules <-  Apriori$new(dataset = All_association_matrix)
 
-
-apri <-  Apriori$new(dataset = All_association_matrix)
-
-apri$run_apriori(supp = 0.3, conf = 1 )
-apri$plot_graph(400, by = "support")
-apri$get_topN(10)
-
+association_rules$run_apriori(supp = 0.3, conf = 1 )
+association_rules$plot_graph(400, by = "support")
 ```
 
-
+### Plot association rules in cytoscape
+This feature is currently experimental. It can only work with Cytoscape version 3.4 or higher running on Java 8 (Cytoscape must be running). Inside Cytoscape the `cyRest` app has to be installed (version 3.3 or higher).  
+`association_rules$rules_dataframe` corresponds to the rule set generated by `Apriori` in an R dataframe structure (calculated in the previous step).  
+`KO_modules_table2` is declared at the beginning of this document and contains the corresponding KO module for each KO term.
+`N` is the amount of rules (sorted on support or lift) to plot.
+```{r, eval=FALSE}
+Draw_Network(association_rules$rules_dataframe, KO_modules_table2, N = 200)
+```
