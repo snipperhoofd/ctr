@@ -2,6 +2,10 @@ Package: ctr
 Type: Package
 Title: Congruent Transcriptional Response
 Version: 0.0.0.9000
+Authors@R: c(person("Ben", "Oyserman", email="ben.oyserman@wur.nl", role = c("cre", "aut")),
+             person("Joris", "van Steenbrugge", email="joris.vansteenbrugge@wur.nl", role = c("aut"))
+             )
+
 Description: Micrbiobial Ecologists often use genomic content to infer the biogeochemical processes and interactions within a microbial community. When organisms overlap in their genomic content, they are often inferred to possess similar traits. Conversely, divergent genomic content is indicative of niche differentiation. 
     Transcriptomics data may aid in making these ecological inferences by providing information on the regulation of this genetic content. Congruent transcriptional responses (CTRs) of particular metabolic modules in disparate organisms within a community may be indicative of common metabolic features shared by many organisms. Conversely, when divergent transcriptional responses are observed across numerous lineages, this is indicative of the disparate niches in the community.
     In this package we present a statistical framework to identify CTRs of (pre-defined) metabolic modules in microbial communties. In this manner, genomic bins may be clustered into sub-networks that share responses for particular modules, thereby facilitating inferences on functional redundancy (e.g. intra-cluster), niche partitioning (inter-cluster), and the emergence of complex traits (integrating infromation about multiple modules)..
@@ -18,7 +22,8 @@ Imports: plyr,
     arules,
     arulesViz,
     doParallel,
-    foreach   
+    foreach,
+    RCy3
 Suggests: rmarkdown
 RoxygenNote: 6.0.1
 LinkingTo: Rcpp
