@@ -53,14 +53,15 @@ KO_modules_table2 <- read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimit
                               stringsAsFactors = FALSE)
 
 
-# Load data set, Bins obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome 
+# Load data set, the bins in the sample dataset are obtained from metagenomic assembly -> binning with metabat, and a bin replaced with a more complete reference genome.
+
+#Creates a vector with Sample1, Sample2, .., SampleN)
+#where N is the number of samples
+sample_col_names <- sapply(1:N, function(i) paste("Sample", i, sep=""))
 RNAseq_Annotated_Matrix_BR <- read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",
                                        sep = " ", quote = "", row.names = NULL, 
                                        stringsAsFactors = FALSE, fill = TRUE, 
-                                       col.names = c("Locus_Tag", "Sample1", 
-                                                     "Sample2", "Sample3", 
-                                                     "Sample4", "Sample5",
-                                                     "Sample6", "KO"))
+                                       col.names = c("Locus_Tag", sample_col_names , "KO"))
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes < 80 % complete and with > 5% contamination. It is also possible to use reference genomes.
