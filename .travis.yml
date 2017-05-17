@@ -3,6 +3,8 @@
 language: R
 sudo: false
 cache: packages
-r: bioc-release
+r: 
+  - 3.3.3
+  - bioc-release
 bioc_packages:
   - RCy3
