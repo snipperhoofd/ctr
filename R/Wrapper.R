@@ -79,9 +79,10 @@ CTR <- setRefClass("CTR",
                                                                           KO_terms_in_module_list)
 
                         clustering_results_P_NRED <- cluster_func(RNAseq_Annotated_Matrix_default_bin,
-                                                                  module_list$combined,
+                                                                  pairwise_KO_distances,
                                                                   matrix_features,
-                                                                  module_list)
+                                                                  module_list
+                                                                  )
 
                         All_association_matrix <<- fill_association_matrix(clustering_results_P_NRED,
                                                                       matrix_features,
