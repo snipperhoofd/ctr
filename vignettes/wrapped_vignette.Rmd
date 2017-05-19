@@ -114,6 +114,7 @@ matrix_features_BR <- new("General_features",
                       )
 list_of_all_modules <- make_module_lists(KO_modules_table2)
 list_of_all_modules_KOs <-unique(unlist(list_of_all_modules, use.names=FALSE))
+plot(table(lengths(list_of_all_modules)))
 ```
 
 ### Minimal Usage
