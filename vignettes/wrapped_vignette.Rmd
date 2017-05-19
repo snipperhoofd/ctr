@@ -141,7 +141,7 @@ transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_
 transcriptional_responses$Run(iterations = 10000,
                               random_module_sizes = c(4,5,6,7),
                               parallel_cores = 4)
-transcriptional_responses$AssociationMatrix(subset_of_all_modules_KOs, subset_of_all_modules)
+transcriptional_responses$AssociationMatrix(list_of_all_modules_KOs, list_of_all_modules)
 ```
 
 ### Random Background for individual KO terms
