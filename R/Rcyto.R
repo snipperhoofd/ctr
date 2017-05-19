@@ -33,6 +33,12 @@ Draw_Network <- function(rules_dataframe, KO_modules_table2, N = 100){
   g <-  initNodeAttribute(graph=g, attribute.name = 'pathway_module',
                           attribute.type = 'char',
                           default.value = 'undefined')
+  g <- initNodeAttribute(graph = g, attribute.name = 'support',
+                         attribute.type = 'char',
+                         default.value = 'undefined')
+  g <- initNodeAttribute(graph = g, attribute.name = 'lift',
+                         attribute.type = 'char',
+                         default.value = 'undefined')
   g <-  initEdgeAttribute(graph=g, attribute.name = 'edgeType',
                           attribute.type = 'char',
                           default.value = 'Arrow')
@@ -47,6 +53,8 @@ Draw_Network <- function(rules_dataframe, KO_modules_table2, N = 100){
       err = tryCatch({
         g <- graph::addNode(lhs, g)
         nodeData (g, lhs[i], 'pathway_module') <- name_per_module[[strsplit(lhs, "\\.")[[1]][1]]]
+        nodeData (g, lhs[i], 'support') <- expanded_rules[i, 3]
+        nodeData (g, lhs[i], 'lift') <- expanded_rules[i, 5]
         },
         error = function(err) {
           return(NA)
@@ -57,6 +65,8 @@ Draw_Network <- function(rules_dataframe, KO_modules_table2, N = 100){
         err = tryCatch({
           g <- graph::addNode(rhs, g)
           nodeData (g, rhs[j], 'pathway_module') <- name_per_module[[strsplit(rhs, "\\.")[[1]][1]]]
+          nodeData (g, rhs[j], 'support') <- expanded_rules[j, 3]
+          nodeData (g, rhs[j], 'lift') <- expanded_rules[j, 5]
         },
         error = function(err) {
           return(NA)
