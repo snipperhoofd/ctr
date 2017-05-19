@@ -15,7 +15,7 @@ CTR <- setRefClass("CTR",
                                      parallel_cores = 2){
                         print("Steps indicated with an asterisk(*) are relatively slow")
 
-                        print("__Normalizing RNAseq data__")
+                        print("Normalizing RNAseq data")
                         RNAseq_Annotated_Matrix <<- RNAseq_Normalize(RNAseq_Annotated_Matrix,
                                                                      matrix_features,
                                                                      method = "default")
@@ -23,18 +23,18 @@ CTR <- setRefClass("CTR",
                                                                      matrix_features)
 
 
-                        print("__Creating rank columns__")
+                        print("Creating rank columns")
                         set.seed(1396558)
                         RNAseq_Annotated_Matrix <<- Create_Rank_Columns(RNAseq_Annotated_Matrix,
                                                                         matrix_features)
 
 
-                        print("__Removing rows with a stdev of 0__")
+                        print("Removing rows with a stdev of 0")
                         RNAseq_Annotated_Matrix <<- which_rows_with_no_sd(RNAseq_Annotated_Matrix,
                                                                           matrix_features)
 
 
-                        print("__*Calculating background distribution for random individual KOs*__")
+                        print("*Calculating background distribution for random individual KOs*")
                         I_KOs_Background <<- Individual_KOs_Background(RNAseq_Annotated_Matrix,
                                                                        matrix_features,iterations)
 
@@ -43,7 +43,7 @@ CTR <- setRefClass("CTR",
 
 
                         bg_distance_modules <<- list()
-
+                        print("Calculating Background distributions for random modules")
                         for(i in 1:length(random_module_sizes)){
                           m_size = random_module_sizes[i]
                           distance <-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
