@@ -137,7 +137,7 @@ transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_
 transcriptional_responses$Run(iterations = 1000,
                               random_module_sizes = c(6,7),
                               parallel_cores = 4)
-#All_association_matrix <- transcriptional_responses$AssociationMatrix_perModule(list_of_all_modules, list_of_all_modules_KOs)
+transcriptional_responses$AssociationMatrix_perModule(list_of_all_modules, list_of_all_modules_KOs)
 ```
 
 ### Random Background for individual KO terms
@@ -155,7 +155,7 @@ transcriptional_responses$plotModuleBackgroundDist()
 In the previous steps the variable `All_association_matrix` was created.
 All_association_matrix contains information of what genomes/bins have a certain KO module activated and what transcriptional profile. This information is used to determine association rules.
 ```{r, eval=FALSE}
-association_rules <-  Apriori$new(dataset = All_association_matrix)
+association_rules <-  Apriori$new(dataset = transcriptional_responses$All_association_matrix)
 
 association_rules$run_apriori(supp = 0.3, conf = 1 )
 association_rules$plot_graph(400, by = "support")
