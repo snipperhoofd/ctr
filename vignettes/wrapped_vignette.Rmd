@@ -31,9 +31,10 @@ First the necessary librarys are imported.
 
 ```{r set seet and library upload, results='hide', message=FALSE}
 library("reshape")
-library('knitr')
+library("knitr")
 library("ctr")
 library("RColorBrewer")
+library("igraph")
 ```
 
 Next, the necessary files are uploaded including
@@ -58,11 +59,11 @@ KO_modules_table2 <- read.table("sample_data/KEGG_Modules_14_04_2017_tab_delimit
 # Creates a vector with Sample1, Sample2, .., SampleN)
 # where N is the number of samples
 N = 6 # in this case N = 6
-sample_col_names <- sapply(1:N, function(i) paste("Sample", i, sep=""))
+sample_names <- sapply(1:N, function(i) paste("Sample", i, sep=""))
 RNAseq_Annotated_Matrix_BR <- read.table("sample_data/EBPR_RNAseq_Annotation_Matrix_bins_and_reference_sorted",
                                        sep = " ", quote = "", row.names = NULL, 
                                        stringsAsFactors = FALSE, fill = TRUE, 
-                                       col.names = c("Locus_Tag", sample_col_names , "KO"))
+                                       col.names = c("Locus_Tag", sample_names , "KO"))
 ```
 
 In this example, the matrix includes all the bins identified. However, because this method is sensitive to incompleteness we will filter all genomes < 80 % complete and with > 5% contamination. It is also possible to use reference genomes.
@@ -113,7 +114,10 @@ matrix_features_BR <- new("General_features",
                          -which(names((table(RNAseq_Annotated_Matrix_BR$KO))) == "")]
                       )
 list_of_all_modules <- make_module_lists(KO_modules_table2)
-list_of_all_modules_KOs <-unique(unlist(list_of_all_modules, use.names=FALSE))
+list_of_all_modules_KOs <- unique(unlist(list_of_all_modules, use.names=FALSE))
+
+subset_of_all_modules <-  make_module_lists(KO_modules_table2)[1:2]
+subset_of_all_modules_KOs <- unique(unlist(subset_of_all_modules, use.names=FALSE))
 plot(table(lengths(list_of_all_modules)))
 ```
 
@@ -135,9 +139,9 @@ transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_
                                      matrix_features = matrix_features_BR)
 #Run all analyses
 transcriptional_responses$Run(iterations = 10000,
-                              random_module_sizes = c(6,7,8),
-                              parallel_cores = 4)
-transcriptional_responses$AssociationMatrix_perModule(list_of_all_modules, list_of_all_modules_KOs)
+                              random_module_sizes = c(4),
+                              parallel_cores = 8)
+transcriptional_responses$AssociationMatrix(list_of_all_modules_KOs, list_of_all_modules)
 ```
 
 ### Random Background for individual KO terms
