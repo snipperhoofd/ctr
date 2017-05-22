@@ -7,7 +7,9 @@ CTR <- setRefClass("CTR",
                      I_KOs_Background = "vector",
                      bg_distance_modules = "list",
                      Z_scores = "list",
-                     All_association_matrix = 'matrix'
+                     All_association_matrix = 'matrix',
+                     pairwise_KO_distances = 'array',
+                     clustering_results_P_NRED = 'array'
                     ),
                     methods = list(
                       Run = function(iterations = 10000,
