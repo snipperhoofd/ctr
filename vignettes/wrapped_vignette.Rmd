@@ -34,6 +34,9 @@ library("reshape")
 library('knitr')
 library("ctr")
 library("RColorBrewer")
+library('igraph')
+library('stringr')
+library('RCy3')
 ```
 
 Next, the necessary files are uploaded including
