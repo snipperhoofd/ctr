@@ -20,7 +20,7 @@
 
 P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_features, Subset_KOs) {
 
-  # if no subset of KOs is introduced, than by default, all calcuations are conducted
+  # if no subset of KOs is introduced, then by default, all calcuations are conducted
   if(missing(Subset_KOs)) {
     no_annotation <- which(names((table(RNAseq_Annotated_Matrix$KO))) == "")
     Subset_KOs<- names((table(RNAseq_Annotated_Matrix$KO)))[-no_annotation]
@@ -31,7 +31,7 @@ P_NRED_Distance_Function <- function(RNAseq_Annotated_Matrix, Z_scores, matrix_f
 
   dim_matrix<- length(matrix_features@high_quality_bins)
   # Pearson
-  Pairwise_Bin_Array_Pearson<-array(data=NA,
+  Pairwise_Bin_Array_Pearson <- array(data=NA,
                                     dim = c(dim_matrix, dim_matrix, length(Subset_KOs)),
                                     dimnames = list(sort(matrix_features@high_quality_bins),
                                                     sort(matrix_features@high_quality_bins)))
