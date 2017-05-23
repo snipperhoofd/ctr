@@ -35,7 +35,6 @@ CTR <- setRefClass("CTR",
                         RNAseq_Annotated_Matrix <<- which_rows_with_no_sd(RNAseq_Annotated_Matrix,
                                                                           matrix_features)
 
-
                         print("*Calculating background distribution for random individual KOs*")
                         I_KOs_Background <<- Individual_KOs_Background(RNAseq_Annotated_Matrix,
                                                                        matrix_features,iterations)
@@ -58,21 +57,6 @@ CTR <- setRefClass("CTR",
                           m_char = as.character(m_size)
                           bg_distance_modules[[m_char]] <<- distance
                         }
-
-
-                        ##Create association matrix
-                        # All_modules_pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix, Z_scores,
-                        #                                                               matrix_features, list_of_all_modules_KOs)
-                        #
-                        # All_clustering_results_P_NRED <-cluster_func(RNAseq_Annotated_Matrix,
-                        #                                              All_modules_pairwise_KO_distances$combined,
-                        #                                              matrix_features, list_of_all_modules)
-                        #
-                        # All_association_matrix <<- fill_association_matrix(All_clustering_results_P_NRED,
-                        #                                                 matrix_features,
-                        #                                                 names(list_of_all_modules))
-
-
                       },
                       AssociationMatrix = function(KO_terms_in_module_list, module_list){
                         pairwise_KO_distances <<- P_NRED_Distance_Function(RNAseq_Annotated_Matrix,
@@ -89,7 +73,10 @@ CTR <- setRefClass("CTR",
                         All_association_matrix <<- fill_association_matrix(clustering_results_P_NRED,
                                                                       matrix_features,
                                                                       names(module_list))
-
+                        # identify modules that are not represented in the dataset
+                        missing_modules <- which(colSums(All_association_matrix, na.rm = TRUE) == 0)
+                        # remove them from downstreamstream analysis
+                        All_association_matrix <<- All_association_matrix[, -as.numeric(missing_modules)]
                       },
                       plotIndividualBackgroundDist = function(){
                         library("hexbin")
@@ -147,7 +134,6 @@ CTR <- setRefClass("CTR",
 
                         legend("topright",legend=legend,col=colours[1:length(bg_distance_names)],lty=c(1,1,1))
                       }
-
                     )
                    )
 

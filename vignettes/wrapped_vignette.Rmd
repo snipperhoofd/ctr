@@ -146,10 +146,7 @@ transcriptional_responses$Run(iterations = 10000,
 transcriptional_responses$AssociationMatrix(list_of_all_modules_KOs, list_of_all_modules)
 
 
-# identify modules that are not represented in the dataset
-missing_modules<-which(colSums(transcriptional_responses$All_association_matrix,na.rm=TRUE)==0)
-# remove them from downstreamstream analysis
-transcriptional_responses$All_association_matrix<-transcriptional_responses$All_association_matrix[,-as.numeric(missing_modules)]
+
 ```
 
 ### Random Background for individual KO terms
@@ -169,8 +166,8 @@ All_association_matrix contains information of what genomes/bins have a certain 
 ```{r, eval=FALSE}
 association_rules <-  Apriori$new(dataset = transcriptional_responses$All_association_matrix)
 
-association_rules$run_apriori(supp = 0.3, conf = 1 )
-association_rules$plot_graph(400, by = "support")
+association_rules$run_apriori(supp = 0.25, conf = 1 )
+association_rules$get_topN(10)
 ```
 
 ### Plot association rules in cytoscape

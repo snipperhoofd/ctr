@@ -31,13 +31,12 @@ Draw_Network <-
       expanded_rules[order(expanded_rules[, 5]),][1:N, ]
     #create network
     g <- new ('graphNEL', edgemode = 'directed')
-    g <-
-      initNodeAttribute(
-        graph = g,
-        attribute.name = 'pathway_module',
-        attribute.type = 'char',
-        default.value = 'undefined'
-      )
+    g <- initNodeAttribute(
+      graph = g,
+      attribute.name = 'pathway_module',
+      attribute.type = 'char',
+      default.value = 'undefined'
+    )
     g <- initNodeAttribute(
       graph = g,
       attribute.name = 'support',
@@ -108,8 +107,7 @@ Draw_Network <-
 
 
 
-    top_10_modules <-
-      c(
+    top_10_modules <- c(
         "Biosynthesis_of_secondary metabolites",
         "Cell_signaling",
         "Two-component_regulatory_system",
@@ -130,10 +128,9 @@ Draw_Network <-
         "Saccharide, polyol, and lipid transport system",
         "Other amino acid metabolism",
         "Serine and threonine metabolism"
-
       )
-    colors <-
-      c(
+
+    colors <- c(
         "#070D00",
         "#00FF00",
         "#341D83",

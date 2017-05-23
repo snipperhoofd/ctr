@@ -36,10 +36,8 @@ conv(X -> Y) = (1-supp(Y)) / (1-conf(X -> Y))
 #' @exportClass AssociationRules
 Apriori <- setRefClass(
   "AssociationRules",
-  fields = list(
-    dataset = "matrix",
-    rules_dataframe = "data.frame"
-  ),
+  fields = list(dataset = "matrix",
+                rules_dataframe = "data.frame"),
   methods = list(
     run_apriori = function(supp,
                            conf,
@@ -47,70 +45,55 @@ Apriori <- setRefClass(
                            consequents = NA) {
       library(arules)
       Data_clean()
-      support = supp
-      confidence = conf
-
-      #Convert a vector with true and false into line numbers
-      #for values that are true
-      getLineNumbers = function(vec) {
-        out = c()
-        for (i in 1:length(vec)) {
-          if (vec[i]) {
-            out = c(out, i)
-          }
-        }
-        return(out)
-      }
-
-      #Filter redundancy in the rulset (experimental)
-      filter_general_redundancy = function(rule) {
-        redundant <- is.redundant(rule)
-        redundant_line_nums <-
-          getLineNumbers(redundant)
-        return(rule[-redundant_line_nums])
-      }
-
-
-
-
       rule = NULL
       #Check if there are antecedents or consequents queried
-      if (is.na(antecedents) &&
-          is.na(consequents)) {
-        rule = apriori(dataset,
-                       parameter = list(support =
-                                          support,
-                                        confidence =
-                                          confidence))
-      } else if (!is.na(antecedents)) {
-        rule = apriori(
-          dataset,
-          parameter = list(support =
-                             support,
-                           confidence =
-                             confidence),
-          appearance = list(lhs = antecedents, default = 'rhs')
-        )
-      } else if (!is.na(consequents)) {
-        rule = apriori(
-          dataset,
-          parameter = list(support =
-                             support,
-                           confidence =
-                             confidence),
-          appearance = list(rhs = consequents, default = 'lhs')
-        )
-      }
-      original_size = length(rule)
-      #rule = filter_general_redundancy(rule)
-
-      #Display how many rules were left out (redundancy filter)
-      if (original_size > length(rule)) {
-        print(paste("Removed", (original_size - length(rule)), "redundant rows"))
+      get_rules <- function(lhs = NA, rhs = NA) {
+        if (is.na(lhs) &&
+            is.na(rhs)) {
+          rule = apriori(dataset,
+                         parameter = list(support =
+                                            supp,
+                                          confidence =
+                                            conf))
+        } else if (!is.na(lhs)) {
+          rule = apriori(
+            dataset,
+            parameter = list(support =
+                               supp,
+                             confidence =
+                               conf),
+            appearance = list(lhs = lhs, default = 'rhs')
+          )
+        } else if (!is.na(rhs)) {
+          rule = apriori(
+            dataset,
+            parameter = list(support =
+                               supp,
+                             confidence =
+                               conf),
+            appearance = list(rhs = rhs, default = 'lhs')
+          )
+        }
+        return(rule)
       }
 
-      rules_dataframe <<-
-        as(rule, 'data.frame')
+      rules_dataframe <<- data.frame()
+      if(!is.na(consequents) && !is.na(antecedents)){
+        rules_dataframe <<- rbind(rules_dataframe,
+                                  as(get_rules(lhs = consequents),
+                                     'data.frame'))
+        print("FIRST")
+        rules_dataframe <<- rbind(rules_dataframe,
+                                 as(get_rules(rhs = antecedents),
+                                    'data.frame'))
+        print("SECOND")
+      }
+      else{
+        rules_dataframe <<-rbind(rules_dataframe,
+                                 as(get_rules(lhs = consequents,
+                                              rhs = antecedents),
+                                    'data.frame'))
+      }
     },
     get_topN = function(n = 20, by = 'support') {
       return("not implemented at this moment")
