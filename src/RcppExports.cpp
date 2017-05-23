@@ -44,3 +44,15 @@ BEGIN_RCPP
     return rcpp_result_gen;
 END_RCPP
 }
+
+static const R_CallMethodDef CallEntries[] = {
+    {"ctr_comparePairwise_C", (DL_FUNC) &ctr_comparePairwise_C, 4},
+    {"ctr_Cor_Matrix_C", (DL_FUNC) &ctr_Cor_Matrix_C, 4},
+    {"ctr_which_rows_with_no_sd_cpp", (DL_FUNC) &ctr_which_rows_with_no_sd_cpp, 1},
+    {NULL, NULL, 0}
+};
+
+RcppExport void R_init_ctr(DllInfo *dll) {
+    R_registerRoutines(dll, NULL, CallEntries, NULL, NULL);
+    R_useDynamicSymbols(dll, FALSE);
+}
