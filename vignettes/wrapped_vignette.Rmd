@@ -144,6 +144,12 @@ transcriptional_responses$Run(iterations = 10000,
                               random_module_sizes = c(4,5,6,7),
                               parallel_cores = 4)
 transcriptional_responses$AssociationMatrix(list_of_all_modules_KOs, list_of_all_modules)
+
+
+# identify modules that are not represented in the dataset
+missing_modules<-which(colSums(transcriptional_responses$All_association_matrix,na.rm=TRUE)==0)
+# remove them from downstreamstream analysis
+transcriptional_responses$All_association_matrix<-transcriptional_responses$All_association_matrix[,-as.numeric(missing_modules)]
 ```
 
 ### Random Background for individual KO terms

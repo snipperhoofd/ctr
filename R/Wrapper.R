@@ -7,7 +7,9 @@ CTR <- setRefClass("CTR",
                      I_KOs_Background = "vector",
                      bg_distance_modules = "list",
                      Z_scores = "list",
-                     All_association_matrix = 'matrix'
+                     All_association_matrix = 'matrix',
+                     pairwise_KO_distances = 'array',
+                     clustering_results_P_NRED = 'array'
                     ),
                     methods = list(
                       Run = function(iterations = 10000,
@@ -73,12 +75,12 @@ CTR <- setRefClass("CTR",
 
                       },
                       AssociationMatrix = function(KO_terms_in_module_list, module_list){
-                        pairwise_KO_distances <- P_NRED_Distance_Function(RNAseq_Annotated_Matrix,
+                        pairwise_KO_distances <<- P_NRED_Distance_Function(RNAseq_Annotated_Matrix,
                                                                           Z_scores,
                                                                           matrix_features,
                                                                           KO_terms_in_module_list)
 
-                        clustering_results_P_NRED <- cluster_func(RNAseq_Annotated_Matrix_default_bin,
+                        clustering_results_P_NRED <<- cluster_func(RNAseq_Annotated_Matrix_default_bin,
                                                                   pairwise_KO_distances,
                                                                   matrix_features,
                                                                   module_list
