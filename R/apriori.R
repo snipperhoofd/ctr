@@ -38,7 +38,6 @@ Apriori <- setRefClass(
   "AssociationRules",
   fields = list(
     dataset = "matrix",
-    ruleset = "list",
     rules_dataframe = "data.frame"
   ),
   methods = list(
@@ -46,6 +45,7 @@ Apriori <- setRefClass(
                            conf,
                            antecedents = NA,
                            consequents = NA) {
+      library(arules)
       Data_clean()
       support = supp
       confidence = conf
@@ -69,7 +69,9 @@ Apriori <- setRefClass(
           getLineNumbers(redundant)
         return(rule[-redundant_line_nums])
       }
-      #Filter redundancy in the rulset (experimental)
+
+
+
 
       rule = NULL
       #Check if there are antecedents or consequents queried
@@ -80,13 +82,7 @@ Apriori <- setRefClass(
                                           support,
                                         confidence =
                                           confidence))
-      } else if (!(is.na(antecedents)) &&
-                 !(is.na(consequents))) {
-        return(
-          "Currently, querying both the antecedents and consequents at the same time is not supported"
-        )
-      }
-      else if (!is.na(antecedents)) {
+      } else if (!is.na(antecedents)) {
         rule = apriori(
           dataset,
           parameter = list(support =
@@ -112,19 +108,15 @@ Apriori <- setRefClass(
       if (original_size > length(rule)) {
         print(paste("Removed", (original_size - length(rule)), "redundant rows"))
       }
-      ruleset <<- list("rules" = rule)
 
       rules_dataframe <<-
-        as(ruleset$rules, 'data.frame')
-    },
-    plot_graph = function(n = 20, by = 'support') {
-      subrules <- head(sort(ruleset$rules, by = by), n)
-      plot(subrules, method = 'graph', interactive = T)
+        as(rule, 'data.frame')
     },
     get_topN = function(n = 20, by = 'support') {
-      return(inspect(head(sort(
-        ruleset$rules, by = by
-      ), n)))
+      return("not implemented at this moment")
+      #return(head(sort(
+      #  rules_dataframe, by = by
+      #), n))
     },
     Data_clean = function(split = "sbs") {
       if (split == "sbs") {
