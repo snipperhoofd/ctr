@@ -42,8 +42,6 @@ Apriori <- setRefClass("AssociationRules",
                           run_apriori = function(supp, conf,
                                                  antecedents = NA,
                                                  consequents = NA){
-                            library(arules)
-                            library(arulesViz)
                             Data_clean()
                             support = supp
                             confidence = conf
