@@ -27,8 +27,6 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
   All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
 
 
-  print("Initializing Cluster")
-  #make cluster
   cl <-makeCluster(P)#change this in the future
   registerDoParallel(cl)
 
