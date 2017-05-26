@@ -13,6 +13,7 @@
 #'
 #' @param RNAseq_Annotation_Matrix_no_sd_of_zero, the original matrix with rows that have a standard deviation of zero removed.
 #' @param N the number of iterations (at least 10000 is suggested)
+#' @param range is a vector containing the minimum and maximum number of copies a KO must be found in the dataset to be used in calculating the background.
 #' @export
 #' @return A list containting eight vectors of N distances: pearson and euclidean distances for
 #' random, multiple comparison corrected random, random KO, highest scoring pair KO.
@@ -22,11 +23,16 @@
 # first remove rows with standard deviations of 0
 
 
-Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N, language = 'C'){
+Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, matrix_features, N, language = 'C', range){
 
+  if(missing(range)) {
+    range <- c(2,2*length(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin)))
+  } 
+  
   # build empty vectors for each Pearson Correlation and NRED
   random_pairwise_gene_pearson<- rep(NA, N)
   H_random_pairwise_gene_pearson<- rep(NA, N)
+  
   random_pairwise_gene_euclidean<- rep(NA, N)
   H_random_pairwise_gene_euclidean<- rep(NA, N)
 
@@ -37,8 +43,10 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
   H_KO_pairwise_gene_euclidean<- rep(NA, N)
 
   dim_matrix<- length(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))
-  All_KOs<- names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > 5)) [-1] #list of all KOs which appear greater than 5 times
-  Pairwise_Bin_Array_Presence<- matrix(0, dim_matrix, length(All_KOs))
+  # edited to as remove KOs with over 2 representatives
+  range_KOs <- names(which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > range[1])[which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) > range[1]) %in% which(table(RNAseq_Annotation_Matrix_no_sd_of_zero$KO) < range[2])])
+  #list of all KOs which appear greater than 5 times
+  Pairwise_Bin_Array_Presence<- matrix(0, dim_matrix, length(range_KOs))
   rownames(Pairwise_Bin_Array_Presence)<- names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))[
                                           order(as.numeric(names(table(RNAseq_Annotation_Matrix_no_sd_of_zero$Bin))))]
 
@@ -69,7 +77,7 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
     # m1
     # Same as m0, except now the comparison is done for random genes with the same KO term.
     # Sample_KO_Position_of_A is a single value from all possible positions shared between genome and KO match.
-    sample_KO_positions <- sample_KO(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B)
+    sample_KO_positions <- sample_KO(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B, range_KOs)
     KO_pairwise_gene_pearson[x]<- cor(as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_A,
                                                                                             matrix_features@SS : matrix_features@SE]),
                                       as.numeric(RNAseq_Annotation_Matrix_no_sd_of_zero[sample_KO_positions$sample_KO_position_of_B,
@@ -140,10 +148,10 @@ Individual_KOs_Background <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, ma
   return(newList)
 }
 
-sample_KO <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B){
-
-  shared_KO<- intersect(RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_A],
-                        RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_B])
+sample_KO <- function(RNAseq_Annotation_Matrix_no_sd_of_zero, position_of_genome_A, position_of_genome_B, range_KOs){
+  shared_KO<- intersect(intersect(RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_A],
+                        RNAseq_Annotation_Matrix_no_sd_of_zero$KO[position_of_genome_B]),
+                        range_KOs)
 
   shared_KO<- shared_KO[shared_KO != ""]
   random_KO<- shared_KO[sample(length(shared_KO), 1)]
