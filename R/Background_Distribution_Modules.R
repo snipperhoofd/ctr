@@ -38,7 +38,6 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
   # iterate Z times
   #for (i in 1:Z) {
   RandomDistList <- foreach(i= 1:Z, .combine = 'comb', .multicombine = TRUE,
-                            .options.multicore=list(set.seed=c(20,10)),
                            .init = list(list(), list())) %dopar% {
     library(ctr)
     Random_Zscore_Pearson_Distances<-rep(NA,N)
