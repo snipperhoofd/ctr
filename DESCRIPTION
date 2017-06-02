@@ -18,7 +18,6 @@ Imports: plyr,
     hexbin,
     RColorBrewer,
     arules,
-    arulesViz,
     doParallel,
     foreach
 BiocViews: RCy3
