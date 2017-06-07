@@ -13,8 +13,7 @@
 
 
 
-Presence_Absence_Matrix <- function(RNAseq_Annotated_Matrix, N) {
-  if (missing(N)) {N = 1}
+Presence_Absence_Matrix <- function(RNAseq_Annotated_Matrix, N = 1) {
   dim_matrix <-length(table(RNAseq_Annotated_Matrix$Bin))
   no_annotation <- which(names((table(RNAseq_Annotated_Matrix$KO))) == "")
   All_KOs <- names(which(table(RNAseq_Annotated_Matrix$KO) >= N))[-no_annotation] #list of all KOs which apear greater than 5 times **
@@ -22,6 +21,7 @@ Presence_Absence_Matrix <- function(RNAseq_Annotated_Matrix, N) {
                                            ncol =length(All_KOs))
 
   rownames(Pairwise_Bin_Array_Presence) <- names(table(RNAseq_Annotated_Matrix$Bin))[order(as.numeric(names(table(RNAseq_Annotated_Matrix$Bin))))]
+  colnames(Pairwise_Bin_Array_Presence) <- All_KOs
 
   for (y in 1 : dim(Pairwise_Bin_Array_Presence)[2]) {
     # Fill in presence

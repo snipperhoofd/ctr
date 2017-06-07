@@ -2,6 +2,8 @@
 #' @exportClass CTR
 CTR <- setRefClass("CTR",
                    fields = list(
+                     #These variables are available globally in a instance
+                     # of the CTR object.
                      RNAseq_Annotated_Matrix = "data.frame",
                      matrix_features = "General_features",
                      I_KOs_Background = "vector",
@@ -11,7 +13,10 @@ CTR <- setRefClass("CTR",
                      pairwise_KO_distances = 'array',
                      clustering_results_P_NRED = 'array'
                     ),
+
                     methods = list(
+                      #Run is the main wrapper function, this functions only calls
+                      # the other functions consecutively.
                       Run = function(iterations = 10000,
                                      random_module_sizes = c(6,7),
                                      parallel_cores = 2){
@@ -38,13 +43,16 @@ CTR <- setRefClass("CTR",
                         print("*Calculating background distribution for random individual KOs*")
                         I_KOs_Background <<- Individual_KOs_Background(RNAseq_Annotated_Matrix,
                                                                        matrix_features,iterations)
-
                         print("Calculating Z scores of individual KO background distributions")
                         Z_scores <<- calc_Z_scores(I_KOs_Background)
 
-
                         bg_distance_modules <<- list()
                         print("Calculating Background distributions for random modules")
+
+
+                        #As module size is a vector containing sizes (e.g. multiple sizes
+                        # Can be calculated) this part calculates a background dist.
+                        # for each of the module sizes
                         for(i in 1:length(random_module_sizes)){
                           m_size = random_module_sizes[i]
                           distance <-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
@@ -58,6 +66,9 @@ CTR <- setRefClass("CTR",
                           bg_distance_modules[[m_char]] <<- distance
                         }
                       },
+
+                      #Does all the cumputations for the association_matrix,
+                      #Including distance calculations clustering.
                       AssociationMatrix = function(KO_terms_in_module_list, module_list){
                         pairwise_KO_distances <<- P_NRED_Distance_Function(RNAseq_Annotated_Matrix,
                                                                           Z_scores,
@@ -136,5 +147,3 @@ CTR <- setRefClass("CTR",
                       }
                     )
                    )
-
-

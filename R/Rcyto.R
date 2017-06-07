@@ -24,12 +24,10 @@ getPathwayName <- function(KO_modules_table2) {
 }
 
 #' @export
-Draw_Network <-
-  function(rules_dataframe, KO_modules_table2, N = 100) {
+Draw_Network <- function(rules_dataframe, KO_modules_table2, N = 100) {
     expanded_rules <- Clean_Data(rules_dataframe)
-    expanded_rules <-
-      expanded_rules[order(expanded_rules[, 5]),][1:N, ]
-    #create network
+    expanded_rules <- expanded_rules[order(expanded_rules[, 3]),][1:N, ]
+    #create network and properties of nodes/edges
     g <- new ('graphNEL', edgemode = 'directed')
     g <- initNodeAttribute(
       graph = g,
@@ -63,10 +61,11 @@ Draw_Network <-
 
       #Create all lhs nodes if more than one all are added seperate
       for (i in 1:length(lhs)) {
+
         err = tryCatch({
           g <- graph::addNode(lhs, g)
-          nodeData (g, lhs[i], 'pathway_module') <-
-            name_per_module[[strsplit(lhs, "\\.")[[1]][1]]]
+          nodeData (g, lhs[i], 'pathway_module') <- name_per_module[[strsplit(
+                                                      lhs, "\\.")[[1]][1]]]
           nodeData (g, lhs[i], 'support') <- expanded_rules[i, 3]
           nodeData (g, lhs[i], 'lift') <- expanded_rules[i, 5]
         },
@@ -74,12 +73,13 @@ Draw_Network <-
           return(NA)
         })
 
-        #Create all rhs nodes if more than one all are added seperate
+        #Create all rhs nodes if more than one all are added seperately
         for (j in 1:length(rhs)) {
+
           err = tryCatch({
             g <- graph::addNode(rhs, g)
-            nodeData (g, rhs[j], 'pathway_module') <-
-              name_per_module[[strsplit(rhs, "\\.")[[1]][1]]]
+            nodeData (g, rhs[j], 'pathway_module') <- name_per_module[[strsplit(
+                                                        rhs, "\\.")[[1]][1]]]
             nodeData (g, rhs[j], 'support') <- expanded_rules[j, 3]
             nodeData (g, rhs[j], 'lift') <- expanded_rules[j, 5]
           },
