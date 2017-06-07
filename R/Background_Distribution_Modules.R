@@ -22,30 +22,36 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
 
 
 
-  Random_Jaccard_Distances<-rep(NA,Z)
-  Random_Composite_Distances<-rep(NA,Z)
-  All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO)>=5))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
+  Random_Jaccard_Distances <- rep(NA, Z)
+  Random_Composite_Distances <- rep(NA, Z)
+  All_KOs<-names(which(table(RNAseq_Annotated_Matrix$KO) >= 2))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
 
-
-  cl <-makeCluster(P)#change this in the future
+  #For paralellization
+  cl <-makeCluster(P)
   registerDoParallel(cl)
-
+  #Exporting existing functions to be available in the "worker" nodes
   functionNames <- c("GetFeatures","RandomDistances", "comparePairwise",
                      "matrix_features")
-  clusterExport(cl, varlist = functionNames, envir=environment())
+  clusterExport(cl, varlist = functionNames, envir = environment())
 
 
   # iterate Z times
-  #for (i in 1:Z) {
-  RandomDistList <- foreach(i= 1:Z, .combine = 'comb', .multicombine = TRUE,
+  RandomDistList <- foreach(i = 1:Z, .combine = 'comb', .multicombine = TRUE,
                            .init = list(list(), list())) %dopar% {
     library(ctr)
+    set.seed(3)
+    #Initializing empty vectors
     Random_Zscore_Pearson_Distances<-rep(NA,N)
     Random_Zscore_Euclidean_Distances<-rep(NA,N)
 
+    #Pick two random genomes
     random_genomes <- sample(length(matrix_features@high_quality_bins), 2)
-    random_module <- Generate_Random_Module(All_KOs, N)
-    All_position_KOs <- which(All_KOs %in% random_module)
+
+    KO_A<-unique(RNAseq_Annotated_Matrix$KO[which(RNAseq_Annotated_Matrix$Bin==random_genomes[1])])
+    KO_B<-unique(RNAseq_Annotated_Matrix$KO[which(RNAseq_Annotated_Matrix$Bin==random_genomes[2])])
+    intersection_AB<- intersect(KO_A,KO_B)
+    random_module <- Generate_Random_Module(intersection_AB, N)
+    All_position_KOs <- which(colnames(matrix_features@Pairwise_Bin_Array_Presence) %in% random_module)
 
     # Calculate Jaccard Distance
     PA_position_of_genome_A <- which(rownames(matrix_features@Pairwise_Bin_Array_Presence)==
@@ -53,38 +59,26 @@ Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix, matrix_feat
     PA_position_of_genome_B <- which(rownames(matrix_features@Pairwise_Bin_Array_Presence)==
                                      matrix_features@high_quality_bins[random_genomes[2]])
 
-
-
     # Next calculate Pearson and NRED
     for (j in 1:N) {
       Random_Pearson_Distances <- NA
       Random_Euclidean_Distances <- NA
 
-
-
       features <- GetFeatures(RNAseq_Annotated_Matrix, matrix_features,
                               random_genomes, random_module, j)
 
-      # check if both are zero by multiplication
-      if (!(features$l_position_of_kegg_enzyme_A * features$l_position_of_kegg_enzyme_B) == 0) { # may be
-
-
         # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances
-        pairwiseDistances <- comparePairwise(features$position_of_kegg_enzyme_A,
+      pairwiseDistances <- comparePairwise(features$position_of_kegg_enzyme_A,
                                              features$position_of_kegg_enzyme_B,
                                              RNAseq_Annotated_Matrix,
                                              matrix_features)
 
-        dist <- RandomDistances(pairwiseDistances, Z_scores)
-        Random_Pearson_Distances <- dist$Random_Pearson_Distances
-        Random_Euclidean_Distances <- dist$Random_Euclidean_Distances
-      }
+      dist <- RandomDistances(pairwiseDistances, Z_scores)
 
-      Random_Zscore_Pearson_Distances[j] <- ((Random_Pearson_Distances-Z_scores$mu[2]) /
-                                             Z_scores$sd[2]) # Need to input the Z_scores matrix
-      Random_Zscore_Euclidean_Distances[j] <- ((Random_Euclidean_Distances-Z_scores$mu[6]) /
-                                                 Z_scores$sd[6])
+      Random_Zscore_Pearson_Distances[j] <- dist$Zscore_Pearson
+      Random_Zscore_Euclidean_Distances[j] <- dist$Zscore_Euclidean
     }
+
     composite_exp <- mean((-Random_Zscore_Pearson_Distances) +
                                           Random_Zscore_Euclidean_Distances,
                                         na.rm=TRUE)[1]
@@ -137,20 +131,19 @@ RandomDistances <- function(pairwiseDistances, Z_scores){
   # Convert to Z scores
   Zscore_pairwise_gene_correlation <- (pairwiseDistances$pairwise_correlation-Z_scores$mu[2])/Z_scores$sd[2] # need to inverse PCC
   Zscore_pairwise_gene_euclidean <- (pairwiseDistances$pairwise_euclidean-Z_scores$mu[6])/Z_scores$sd[6]
+
+  #If there is a tie, the first minimum is taken
   best_scoring_pair<- which.min((1-Zscore_pairwise_gene_correlation)+(Zscore_pairwise_gene_euclidean))
 
 
-  if (length(best_scoring_pair) == 1) {
-    Random_Pearson_Distances <- pairwiseDistances$pairwise_correlation[best_scoring_pair]
-    Random_Euclidean_Distances <- pairwiseDistances$pairwise_euclidean[best_scoring_pair]
-  } else {
-    scoring_pair <- which.min(Zscore_pairwise_gene_euclidean)
-    Random_Pearson_Distances <- pairwiseDistances$pairwise_correlation[scoring_pair]
-    Random_Euclidean_Distances <- pairwiseDistances$pairwise_euclidean[scoring_pair]
-  }
+  Random_Pearson_Distances <- pairwiseDistances$pairwise_correlation[best_scoring_pair]
+  Random_Euclidean_Distances <- pairwiseDistances$pairwise_euclidean[best_scoring_pair]
+
 
   return(list("Random_Pearson_Distances" = Random_Pearson_Distances,
-              "Random_Euclidean_Distances" = Random_Euclidean_Distances))
+              "Random_Euclidean_Distances" = Random_Euclidean_Distances,
+              "Zscore_Pearson" = Zscore_pairwise_gene_correlation[best_scoring_pair],
+              "Zscore_Euclidean"= Zscore_pairwise_gene_euclidean[best_scoring_pair]))
 }
 
 
