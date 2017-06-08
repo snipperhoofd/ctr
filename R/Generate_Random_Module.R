@@ -8,7 +8,7 @@
 #' @return a vector containing N random annoated features (without replacement).
 #' @examples Generate_Random_Module(All_KOs,6)
 
-Generate_Random_Module <- function(All_KOs,N) {
-  Random_Module<-sample(All_KOs,N,replace=FALSE)
+Generate_Random_Module <- function(All_KOs, N) {
+  Random_Module<-sample(All_KOs, N,replace=FALSE)
   return(Random_Module)
 }
