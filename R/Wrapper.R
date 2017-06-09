@@ -46,10 +46,9 @@ CTR <- setRefClass("CTR",
                         print("Calculating Z scores of individual KO background distributions")
                         Z_scores <<- calc_Z_scores(I_KOs_Background)
 
-                        bg_distance_modules <<- list()
-                        print("Calculating Background distributions for random modules")
-
-
+                        
+                       # bg_distance_modules <<- list()
+                      #  print("Calculating Background distributions for random modules")
                         #As module size is a vector containing sizes (e.g. multiple sizes
                         # Can be calculated) this part calculates a background dist.
                         # for each of the module sizes
@@ -66,13 +65,13 @@ CTR <- setRefClass("CTR",
                         #   bg_distance_modules[[m_char]] <<- distance
                         # }
                         
-                        bg_distance_modules <<-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
-                                                                      matrix_features,
-                                                                      Z_scores,
-                                                                      3,
-                                                                      10,
-                                                                      4
-                                                                      )
+                        # bg_distance_modules <<-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
+                        #                                               matrix_features,
+                        #                                               Z_scores,
+                        #                                               3,
+                        #                                               10,
+                        #                                               4
+                        #                                               )
                       },
 
                       #Does all the cumputations for the association_matrix,

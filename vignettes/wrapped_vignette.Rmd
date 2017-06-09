@@ -140,13 +140,26 @@ On Mac:
 transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_Matrix_BR,
                                      matrix_features = matrix_features_BR)
 #Run all analyses
-transcriptional_responses$Run(iterations = 10000,
-                              random_module_sizes = c(4,5,6,7),
-                              parallel_cores = 4)
+transcriptional_responses$Run(iterations = 10000)
+
+transcriptional_responses$bg_distance_modules <- list()
+for(i in 2: 10){
+  transcriptional_responses$bg_distance_modules[[as.character(i)]] <-  Background_Distribution_Modules(transcriptional_responses$RNAseq_Annotated_Matrix,
+                                                         transcriptional_responses$matrix_features,
+                                                         transcriptional_responses$Z_scores,
+                                                         N = i,
+                                                         Z = 10000,
+                                                         P = 4
+                                                         )
+}
+
+
+
+
 transcriptional_responses$AssociationMatrix(list_of_all_modules_KOs, list_of_all_modules)
 
-
-
+transcriptional_responses$bg_distance_modules[[1]]
+transcriptional_responses$bg_distance_modules[[1]][which(transcriptional_responses$bg_distance_modules[[1]]!=0)]
 ```
 
 ### Random Background for individual KO terms
@@ -157,6 +170,25 @@ transcriptional_responses$plotIndividualBackgroundDist()
 ### Random Background for KO modules
 ```{r}
 transcriptional_responses$plotModuleBackgroundDist()
+
+
+colors <- c("red", "green", "yellow", "blue", "purple", "black", "orange", "grey", "pink", "cyan")
+bg_distance_names <- c("2", "3","4","5", "6","7", "8", "9","10")
+legend <- sapply(bg_distance_names, function(x) paste('N = ', x, sep=""))
+
+plot(density(transcriptional_responses$bg_distance_modules[[1]],na.rm=TRUE),ylim=c(0,1),xlim=c(-4,4),cex.main=.75, col = colors[1],
+     main = "Background distributions of module sizes 2 - 10")
+points(density(transcriptional_responses$bg_distance_modules[[2]],na.rm=TRUE), type="l", col = colors[2])
+points(density(transcriptional_responses$bg_distance_modules[[3]],na.rm=TRUE), type="l", col = colors[3])
+points(density(transcriptional_responses$bg_distance_modules[[4]],na.rm=TRUE), type="l", col = colors[4])
+points(density(transcriptional_responses$bg_distance_modules[[5]],na.rm=TRUE), type="l", col = colors[5])
+points(density(transcriptional_responses$bg_distance_modules[[6]],na.rm=TRUE), type="l", col = colors[6])
+points(density(transcriptional_responses$bg_distance_modules[[7]],na.rm=TRUE), type="l", col = colors[7])
+points(density(transcriptional_responses$bg_distance_modules[[8]],na.rm=TRUE), type="l", col = colors[8])
+points(density(transcriptional_responses$bg_distance_modules[[9]],na.rm=TRUE), type="l", col = colors[9])
+
+legend("topleft",legend = legend, col = colours, pch = 1)
+
 ```
 
 
@@ -164,9 +196,9 @@ transcriptional_responses$plotModuleBackgroundDist()
 In the previous steps the variable `All_association_matrix` was created.
 All_association_matrix contains information of what genomes/bins have a certain KO module activated and what transcriptional profile. This information is used to determine association rules.
 ```{r, eval=FALSE}
-association_rules <-  Apriori$new(dataset = transcriptional_responses$All_association_matrix)
-
-association_rules$run_apriori(supp = 0.25, conf = 1 )
+filtered_association_matrix <- transcriptional_responses$All_association_matrix[, as.numeric(which(unlist(lapply(list_of_all_modules, length))<11))]
+association_rules <-  Apriori$new(dataset = filtered_association_matrix)
+association_rules$run_apriori(supp = 0.22, conf = 1 )
 association_rules$get_topN(10)
 ```
 
@@ -176,5 +208,5 @@ This feature is currently experimental. It can only work with Cytoscape version 
 `KO_modules_table2` is declared at the beginning of this document and contains the corresponding KO module for each KO term.
 `N` is the amount of rules (sorted on support or lift) to plot.
 ```{r, eval=FALSE}
-Draw_Network(association_rules$rules_dataframe, KO_modules_table2, N = 200)
+Draw_Network(association_rules$rules_dataframe, KO_modules_table2, N = 400)
 ```
