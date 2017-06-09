@@ -66,13 +66,13 @@ CTR <- setRefClass("CTR",
                         #   bg_distance_modules[[m_char]] <<- distance
                         # }
                         
-                        distance <-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
-                                                                     matrix_features,
-                                                                     Z_scores,
-                                                                     random_module_sizes[1],
-                                                                     iterations,
-                                                                     parallel_cores
-                                                                     )
+                        bg_distance_modules <<-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
+                                                                      matrix_features,
+                                                                      Z_scores,
+                                                                      3,
+                                                                      10,
+                                                                      4
+                                                                      )
                       },
 
                       #Does all the cumputations for the association_matrix,
