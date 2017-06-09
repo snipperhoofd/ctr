@@ -16,89 +16,77 @@
 #' @return a list of vectors containing XXX & YYY
 #' @examples Background_Distribution_Modules(RNAseq_Annotated_Matrix,6,1000)
 
-Background_Distribution_Modules <-
-  function(RNAseq_Annotated_Matrix,
-           matrix_features,
-           Z_scores,
-           N,
-           Z,
-           P = 2) {
+Background_Distribution_Modules <- function(RNAseq_Annotated_Matrix,
+                                            matrix_features, Z_scores, N,
+                                            Z, P = 2, range) {
     library(doParallel)
 
+    if(missing(range)) {
+      range <- c(2,2*length(table(RNAseq_Annotated_Matrix$Bin)))
+    } 
 
 
     Random_Jaccard_Distances <- rep(NA, Z)
     Random_Composite_Distances <- rep(NA, Z)
-    All_KOs <-
-      names(which(table(RNAseq_Annotated_Matrix$KO) >= 2))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
+    
+    # This was originally a global variable but was moved so that it can change 
+    # depending on the annotation matrix used
+    range_KOs <- names(which(table(RNAseq_Annotated_Matrix$KO) > range[1])
+                       [which(table(RNAseq_Annotated_Matrix$KO) > range[1]) %in% 
+                           which(table(RNAseq_Annotated_Matrix$KO) < range[2])]) 
 
     #For paralellization
     cl <- makeCluster(P)
     registerDoParallel(cl)
     #Exporting existing functions to be available in the "worker" nodes
-    functionNames <-
-      c("GetFeatures",
-        "RandomDistances",
-        "comparePairwise",
-        "matrix_features")
+    functionNames <- c("GetFeatures", "RandomDistances", "comparePairwise",
+                       "matrix_features")
     clusterExport(cl, varlist = functionNames, envir = environment())
 
 
     # iterate Z times
-    RandomDistList <-
-      foreach(
-        i = 1:Z,
-        .combine = 'comb',
-        .multicombine = TRUE,
-        .init = list(list(), list())
-      ) %dopar% {
+    RandomDistList <- foreach(i = 1: Z, .combine = 'comb', .multicombine = TRUE,
+                              .init = list(list(), list())) %dopar% {
+        #set.seed(3)
         library(ctr)
 
+
+
+        #Pick two random genomes
+        random_genomes <- sample(matrix_features@high_quality_bins, 2)
+
+        KO_A <- unique(RNAseq_Annotated_Matrix$KO[which(
+          RNAseq_Annotated_Matrix$Bin == random_genomes[1])])
+        KO_B <- unique(RNAseq_Annotated_Matrix$KO[which(
+          RNAseq_Annotated_Matrix$Bin == random_genomes[2])])
+        
+        intersection_AB <- intersect(intersect(KO_A, KO_B), range_KOs)
+        random_module <- Generate_Random_Module(intersection_AB, N)
+        All_position_KOs <- which(colnames(matrix_features@Pairwise_Bin_Array_Presence) 
+                                  %in% random_module)
+
+        # Calculate Jaccard Distance
+        PA_position_of_genome_A <- which(
+            rownames(matrix_features@Pairwise_Bin_Array_Presence) == random_genomes[1])
+        PA_position_of_genome_B <- which(
+            rownames(matrix_features@Pairwise_Bin_Array_Presence) == random_genomes[2])
+
+        
         #Initializing empty vectors
         Random_Zscore_Pearson_Distances <- rep(NA, N)
         Random_Zscore_Euclidean_Distances <- rep(NA, N)
-
-        #Pick two random genomes
-        random_genomes <-
-          sample(matrix_features@high_quality_bins, 2)
-
-        KO_A <-
-          unique(RNAseq_Annotated_Matrix$KO[which(RNAseq_Annotated_Matrix$Bin == random_genomes[1])])
-        KO_B <-
-          unique(RNAseq_Annotated_Matrix$KO[which(RNAseq_Annotated_Matrix$Bin == random_genomes[2])])
-        intersection_AB <- intersect(KO_A, KO_B)
-        random_module <- Generate_Random_Module(intersection_AB, N)
-        All_position_KOs <-
-          which(colnames(matrix_features@Pairwise_Bin_Array_Presence) %in% random_module)
-
-        # Calculate Jaccard Distance
-        PA_position_of_genome_A <-
-          which(rownames(matrix_features@Pairwise_Bin_Array_Presence) ==
-                  random_genomes[1])
-        PA_position_of_genome_B <-
-          which(rownames(matrix_features@Pairwise_Bin_Array_Presence) ==
-                  random_genomes[2])
-
+        
         # Next calculate Pearson and NRED
         for (j in 1:N) {
-          Random_Pearson_Distances <- NA
-          Random_Euclidean_Distances <- NA
+          features <- GetFeatures(RNAseq_Annotated_Matrix, matrix_features,
+                                  random_genomes, random_module, j)
 
-          features <-
-            GetFeatures(RNAseq_Annotated_Matrix,
-                        matrix_features,
-                        random_genomes,
-                        random_module,
-                        j)
-
-          # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances
-          pairwiseDistances <-
-            comparePairwise(
-              features$position_of_kegg_enzyme_A,
-              features$position_of_kegg_enzyme_B,
-              RNAseq_Annotated_Matrix,
-              matrix_features
-            )
+          # Conduct all pairwise comparisons between Pearson Correlations and 
+          # Normalized Euclidean Distances
+          pairwiseDistances <- comparePairwise(features$position_of_kegg_enzyme_A,
+                                               features$position_of_kegg_enzyme_B,
+                                               RNAseq_Annotated_Matrix,
+                                               matrix_features)
 
           dist <- RandomDistances(pairwiseDistances, Z_scores)
 
@@ -108,15 +96,12 @@ Background_Distribution_Modules <-
 
         composite_exp <- mean((-Random_Zscore_Pearson_Distances) +
                                 Random_Zscore_Euclidean_Distances,
-                              na.rm = TRUE
-        )[1]
+                                na.rm = TRUE)[1]
 
-        jaccard_exp <-
-          Calc_Jaccard(
-            matrix_features@Pairwise_Bin_Array_Presence[PA_position_of_genome_A,
-                                                        All_position_KOs],
-            matrix_features@Pairwise_Bin_Array_Presence[PA_position_of_genome_B,
-                                                        All_position_KOs]
+        jaccard_exp <- Calc_Jaccard(matrix_features@Pairwise_Bin_Array_Presence[
+                                      PA_position_of_genome_A, All_position_KOs],
+                                    matrix_features@Pairwise_Bin_Array_Presence[
+                                      PA_position_of_genome_B, All_position_KOs]
           )
         list(jaccard_exp, composite_exp)
       }
@@ -132,104 +117,94 @@ Background_Distribution_Modules <-
     return(Random_Background_Module_Distances)
   }
 
-Background_Distribution_Modules2 <-
-  function(RNAseq_Annotated_Matrix,
-           matrix_features,
-           Z_scores,
-           N,
-           Z,
-           P = 2) {
-    library(doParallel)
+Background_Distribution_Modules2 <- function(RNAseq_Annotated_Matrix,
+                                           matrix_features, Z_scores, N,
+                                           Z, P = 2) {
+ 
+  Random_Jaccard_Distances <- rep(NA, Z)
+  Random_Composite_Distances <- rep(NA, Z)
+  All_KOs <- names(which(table(RNAseq_Annotated_Matrix$KO) >= 2))[-1] # This was originally a global variable but was moved so that it can change depending on the annotation matrix used
+  
 
-    Random_Jaccard_Distances <- rep(NA, Z)
-    Random_Composite_Distances <- rep(NA, Z)
-
-    # This was originally a global variable but was moved so that it can change
-    # depending on the annotation matrix used
-    All_KOs <- names(which(table(RNAseq_Annotated_Matrix$KO) >= 2))[-1]
-
-
-
-
-
-    # iterate Z times
-    for(i in 1: Z){
-
-        library(ctr)
-
-        #Initializing empty vectors
-        Random_Zscore_Pearson_Distances <- rep(NA, N)
-        Random_Zscore_Euclidean_Distances <- rep(NA, N)
-
-        #Pick two random genomes
-        random_genomes <- sample(matrix_features@high_quality_bins, 2)
-
-        KO_A <- unique(RNAseq_Annotated_Matrix$KO[which(RNAseq_Annotated_Matrix$Bin == random_genomes[1])])
-        KO_B <- unique(RNAseq_Annotated_Matrix$KO[which(RNAseq_Annotated_Matrix$Bin == random_genomes[2])])
-        intersection_AB <- intersect(KO_A, KO_B)
-        random_module <- Generate_Random_Module(intersection_AB, N)
-        All_position_KOs <- which(colnames(matrix_features@Pairwise_Bin_Array_Presence) %in% random_module)
-
-        # Calculate Jaccard Distance
-        PA_position_of_genome_A <- which(rownames(matrix_features@Pairwise_Bin_Array_Presence) ==
-                  random_genomes[1])
-        PA_position_of_genome_B <- which(rownames(matrix_features@Pairwise_Bin_Array_Presence) ==
-                  random_genomes[2])
-
-        # Next calculate Pearson and NRED
-        for (j in 1:N) {
-          Random_Pearson_Distances <- NA
-          Random_Euclidean_Distances <- NA
-
-          features <-
-            GetFeatures(RNAseq_Annotated_Matrix,
-                        matrix_features,
-                        random_genomes,
-                        random_module,
-                        j)
-
-          # Conduct all pairwise comparisons between Pearson Correlations and Normalized Euclidean Distances
-          pairwiseDistances <-
-            comparePairwise(
-              features$position_of_kegg_enzyme_A,
-              features$position_of_kegg_enzyme_B,
-              RNAseq_Annotated_Matrix,
-              matrix_features
-            )
-
-          dist <-
-            RandomDistances(pairwiseDistances, Z_scores)
-
-          Random_Zscore_Pearson_Distances[j] <-
-            dist$Zscore_Pearson
-          Random_Zscore_Euclidean_Distances[j] <-
-            dist$Zscore_Euclidean
-        }
-
-        composite_exp <-
-          mean((-Random_Zscore_Pearson_Distances) +
-                 Random_Zscore_Euclidean_Distances,
-               na.rm = TRUE
-          )[1]
-
-        jaccard_exp <-
-          Calc_Jaccard(
-            matrix_features@Pairwise_Bin_Array_Presence[PA_position_of_genome_A,
-                                                        All_position_KOs],
-            matrix_features@Pairwise_Bin_Array_Presence[PA_position_of_genome_B,
-                                                        All_position_KOs]
-          )
-        Random_Jaccard_Distances[i] <- jaccard_exp
-        Random_Composite_Distances[i] <-  composite_exp
-      }
-
-
-    Random_Background_Module_Distances <- Random_Composite_Distances *
-      (1 - Random_Jaccard_Distances)
-
-    return(Random_Background_Module_Distances)
+  
+  Random_Jaccard_Distances <- rep(NA, Z)
+  Random_Composite_Distances
+  # iterate Z times
+  for(i in 1: Z){
+    #set.seed(3)
+    library(ctr)
+    
+    
+    
+    #Pick two random genomes
+    random_genomes <- sample(matrix_features@high_quality_bins, 2)
+    
+    KO_A <- unique(RNAseq_Annotated_Matrix$KO[which(
+      RNAseq_Annotated_Matrix$Bin == random_genomes[1])])
+    KO_B <- unique(RNAseq_Annotated_Matrix$KO[which(
+      RNAseq_Annotated_Matrix$Bin == random_genomes[2])])
+    
+    intersection_AB <- intersect(KO_A, KO_B)
+    random_module <- Generate_Random_Module(intersection_AB, N)
+    All_position_KOs <- which(colnames(matrix_features@Pairwise_Bin_Array_Presence) 
+                              %in% random_module)
+    
+    # Calculate Jaccard Distance
+    PA_position_of_genome_A <-
+      which(rownames(matrix_features@Pairwise_Bin_Array_Presence) ==
+              random_genomes[1])
+    PA_position_of_genome_B <-
+      which(rownames(matrix_features@Pairwise_Bin_Array_Presence) ==
+              random_genomes[2])
+    
+    
+    #Initializing empty vectors
+    Random_Zscore_Pearson_Distances <- rep(NA, N)
+    Random_Zscore_Euclidean_Distances <- rep(NA, N)
+    
+    # Next calculate Pearson and NRED
+    for (j in 1:N) {
+      features <- GetFeatures(RNAseq_Annotated_Matrix, matrix_features,
+                              random_genomes, random_module, j)
+      
+      # Conduct all pairwise comparisons between Pearson Correlations and 
+      # Normalized Euclidean Distances
+      pairwiseDistances <- comparePairwise(features$position_of_kegg_enzyme_A,
+                                           features$position_of_kegg_enzyme_B,
+                                           RNAseq_Annotated_Matrix,
+                                           matrix_features)
+      
+      dist <- RandomDistances(pairwiseDistances, Z_scores)
+      
+      Random_Zscore_Pearson_Distances[j] <- dist$Zscore_Pearson
+      Random_Zscore_Euclidean_Distances[j] <- dist$Zscore_Euclidean
+    }
+    
+    composite_exp <- mean((-Random_Zscore_Pearson_Distances) +
+                            Random_Zscore_Euclidean_Distances,
+                          na.rm = TRUE)[1]
+    
+    jaccard_exp <- Calc_Jaccard(matrix_features@Pairwise_Bin_Array_Presence[
+                                  PA_position_of_genome_A, All_position_KOs],
+                                matrix_features@Pairwise_Bin_Array_Presence[
+                                  PA_position_of_genome_B, All_position_KOs]
+                                )
+    
+   # list(jaccard_exp, composite_exp)
+    Random_Jaccard_Distances[i] <- jaccard_exp
+    Random_Composite_Distances[i] <- composite_exp
   }
-
+  
+  #Random_Jaccard_Distances <- unlist(RandomDistList[[1]])
+  #Random_Composite_Distances <- unlist(RandomDistList[[2]])
+  
+  Random_Background_Module_Distances <- Random_Composite_Distances *
+    (1 - Random_Jaccard_Distances)
+  
+ # stopImplicitCluster()
+  #stopCluster(cl)
+  return(Random_Background_Module_Distances)
+}
 
 
 GetFeatures <- function(RNAseq_Annotated_Matrix,

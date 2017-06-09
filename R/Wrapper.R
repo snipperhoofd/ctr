@@ -53,18 +53,26 @@ CTR <- setRefClass("CTR",
                         #As module size is a vector containing sizes (e.g. multiple sizes
                         # Can be calculated) this part calculates a background dist.
                         # for each of the module sizes
-                        for(i in 1:length(random_module_sizes)){
-                          m_size = random_module_sizes[i]
-                          distance <-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
-                                                                       matrix_features,
-                                                                       Z_scores,
-                                                                       m_size,
-                                                                       iterations,
-                                                                       parallel_cores
-                                                                       )
-                          m_char = as.character(m_size)
-                          bg_distance_modules[[m_char]] <<- distance
-                        }
+                        # for(i in 1:length(random_module_sizes)){
+                        #   m_size = random_module_sizes[i]
+                        #   distance <-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
+                        #                                                matrix_features,
+                        #                                                Z_scores,
+                        #                                                m_size,
+                        #                                                iterations,
+                        #                                                parallel_cores
+                        #                                                )
+                        #   m_char = as.character(m_size)
+                        #   bg_distance_modules[[m_char]] <<- distance
+                        # }
+                        
+                        distance <-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
+                                                                     matrix_features,
+                                                                     Z_scores,
+                                                                     random_module_sizes[1],
+                                                                     iterations,
+                                                                     parallel_cores
+                                                                     )
                       },
 
                       #Does all the cumputations for the association_matrix,
