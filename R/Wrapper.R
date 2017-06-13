@@ -10,8 +10,8 @@ CTR <- setRefClass("CTR",
                      bg_distance_modules = "list",
                      Z_scores = "list",
                      All_association_matrix = 'matrix',
-                     pairwise_KO_distances = 'array',
-                     clustering_results_P_NRED = 'array'
+                     pairwise_KO_distances = 'list',
+                     clustering_results_P_NRED = 'list'
                     ),
 
                     methods = list(
@@ -46,7 +46,7 @@ CTR <- setRefClass("CTR",
                         print("Calculating Z scores of individual KO background distributions")
                         Z_scores <<- calc_Z_scores(I_KOs_Background)
 
-                        
+
                        # bg_distance_modules <<- list()
                       #  print("Calculating Background distributions for random modules")
                         #As module size is a vector containing sizes (e.g. multiple sizes
@@ -64,7 +64,7 @@ CTR <- setRefClass("CTR",
                         #   m_char = as.character(m_size)
                         #   bg_distance_modules[[m_char]] <<- distance
                         # }
-                        
+
                         # bg_distance_modules <<-  Background_Distribution_Modules(RNAseq_Annotated_Matrix,
                         #                                               matrix_features,
                         #                                               Z_scores,
@@ -82,7 +82,7 @@ CTR <- setRefClass("CTR",
                                                                           matrix_features,
                                                                           KO_terms_in_module_list)
 
-                        clustering_results_P_NRED <<- cluster_func(RNAseq_Annotated_Matrix_default_bin,
+                        clustering_results_P_NRED <<- cluster_func(RNAseq_Annotated_Matrix,
                                                                   pairwise_KO_distances,
                                                                   matrix_features,
                                                                   module_list
