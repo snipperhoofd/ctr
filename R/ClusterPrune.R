@@ -49,27 +49,11 @@ ClusterPrune <- function(clustering_results, Background_Module_Distances) {
 # 6) Bonus Round, if it is not significant, drop the lowest scoring genome from the comparison and re-test
 # (repeat until significant or <3 genomes)
 
-cluster_info <- function(cluster, membership, Z_scores_matrix,
-                         names){
-  cluster <- as.numeric(cluster)
-  participants <- which(membership %in% cluster)
-  bins <- names[participants]
-  combinations <- combn(bins, m = 2)
-
-  Z_scores <- rep(NA, dim(combinations)[2])
-  for(i in 1:dim(combinations)[2]){
-    a <- as.character(combinations[1,i])
-
-    b <- as.character(combinations[2,i])
-    Z_scores[i] <- Z_scores_matrix[a,b]
-  }
-  return(Z_scores)
-}
-
 SwagPrune <- function(clustering_results,
                       Background_Module_Distances,
                       module_names,
                       p_cutoff = 0.05){
+  cluster_out <- clustering_results
   #Vector of the module names
   m_names <- names(module_names)
 
@@ -82,6 +66,10 @@ SwagPrune <- function(clustering_results,
 
     clusters   <- levels(as.factor(m_clusters$cl$membership))
 
+    #create pruning columns
+    cluster_out[[m_idx]]$cl$pruned_membership <- cluster_out[[m_idx]]$cl$membership
+    cluster_out[[m_idx]]$cl$pruned_names <- cluster_out[[m_idx]]$cl$names
+
     for(cluster in clusters){
       cluster_Zscores <- cluster_info(cluster, m_clusters$cl$membership,
                                       m_clusters$ave_Z_score_matrix,
@@ -91,27 +79,28 @@ SwagPrune <- function(clustering_results,
                   transcriptional_responses$bg_distance_modules[[6]],
                   alternative = "less")$p.value
       if(pval > p_cutoff){
-        del_positions <- which(m_clusters$cl$membership == as.numeric(cluster))
+        print(paste("removed out", cluster))
+        print(cluster_out[[m_idx]]$cl$pruned_membership)
+        del_positions <- which(cluster_out[[m_idx]]$cl$pruned_membership == as.numeric(cluster))
         print(del_positions)
-      }else{
+        cluster_out[[m_idx]]$cl$pruned_membership <-
+          cluster_out[[m_idx]]$cl$pruned_membership[-del_positions]
+         cluster_out[[m_idx]]$cl$pruned_names <-
+           cluster_out[[m_idx]]$cl$pruned_names[-del_positions]
+      } else{
         print("sig")
       }
 
     }
   }
-
-  #If type is list we expect the Background_Module_Distances to contain
-  # A random distribution for different module sizes.
-  #if(typeof(Background_Module_Distances) == "list"){
-
-  #}
+  return(cluster_out)
 }
 
 #testing
-SwagPrune(transcriptional_responses$clustering_results_P_NRED,
-          transcriptional_responses$bg_distance_modules,
-          list_of_all_modules
-          )
+pruned_cluster <- SwagPrune(transcriptional_responses$clustering_results_P_NRED,
+                            transcriptional_responses$bg_distance_modules,
+                            list_of_all_modules
+                            )
 
 # t.test(cluster$ave_Z_score_matrix[cluster$cl$names[which(cluster$cl$membership==6)],
 #      cluster$cl$names[which(cluster$cl$membership==6)]],
