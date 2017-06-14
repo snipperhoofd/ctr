@@ -16,17 +16,20 @@ fill_association_matrix<-function(clustering_results,matrix_features,module_name
                              ncol = length(clustering_results),
                              dimnames = list(matrix_features@high_quality_bins,
                                              module_names))
-  
+
   for (i in 1:length(clustering_results)) {
-    
+
     if (length((clustering_results[[i]]$cl$membership))!=0) {
-      
+
       for (j in 1:length(clustering_results[[i]]$cl)) {
+
         for (k in 1:length(clustering_results[[i]]$cl[[j]])) {
-          bin<-as.numeric(clustering_results[[i]]$cl[[j]][k])
-          row<- which(matrix_features@high_quality_bins==bin)
+          bin <- as.numeric(clustering_results[[i]]$cl[[j]][k])
+          row <- which(matrix_features@high_quality_bins==bin)
+
           association_matrix[row,i]<-j
         }
+
       }
     }
   }
