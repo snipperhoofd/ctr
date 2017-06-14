@@ -90,10 +90,11 @@ SwagPrune <- function(clustering_results,
       pval <- t.test(cluster_Zscores,
                   transcriptional_responses$bg_distance_modules[[6]],
                   alternative = "less")$p.value
-      if(pval < p_cutoff){
-        print(paste("Significant cluster", cluster, sep = " "))
+      if(pval > p_cutoff){
+        del_positions <- which(m_clusters$cl$membership == as.numeric(cluster))
+        print(del_positions)
       }else{
-        print(paste("Insignificant cluster", cluster, sep = " "))
+        print("sig")
       }
 
     }
