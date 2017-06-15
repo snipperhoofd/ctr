@@ -49,6 +49,16 @@ ClusterPrune <- function(clustering_results, Background_Module_Distances) {
 # 6) Bonus Round, if it is not significant, drop the lowest scoring genome from the comparison and re-test
 # (repeat until significant or <3 genomes)
 
+
+cluster_info <- function(cluster, membership,
+                        ave_Z_score_matrix,
+                         names){
+  scores <- ave_Z_score_matrix[names[which(membership==cluster)],
+                            names[which(membership==cluster)]]
+  return(scores)
+
+}
+
 SwagPrune <- function(clustering_results,
                       Background_Module_Distances,
                       module_names,
@@ -57,7 +67,7 @@ SwagPrune <- function(clustering_results,
   #Vector of the module names
   m_names <- names(module_names)
 
-  for(m_idx in 6:6){#length(module_names)){
+  for(m_idx in 6:6){# length(module_names)){
     #1
     n_terms    <- length(module_names[[m_idx]])
     #2
@@ -79,10 +89,9 @@ SwagPrune <- function(clustering_results,
                   transcriptional_responses$bg_distance_modules[[6]],
                   alternative = "less")$p.value
       if(pval > p_cutoff){
-        print(paste("removed out", cluster))
-        print(cluster_out[[m_idx]]$cl$pruned_membership)
+
         del_positions <- which(cluster_out[[m_idx]]$cl$pruned_membership == as.numeric(cluster))
-        print(del_positions)
+
         cluster_out[[m_idx]]$cl$pruned_membership <-
           cluster_out[[m_idx]]$cl$pruned_membership[-del_positions]
          cluster_out[[m_idx]]$cl$pruned_names <-
@@ -96,11 +105,11 @@ SwagPrune <- function(clustering_results,
   return(cluster_out)
 }
 
-#testing
-pruned_cluster <- SwagPrune(transcriptional_responses$clustering_results_P_NRED,
-                            transcriptional_responses$bg_distance_modules,
-                            list_of_all_modules
-                            )
+# #testing
+ pruned_cluster <- SwagPrune(transcriptional_responses$clustering_results_P_NRED,
+                             transcriptional_responses$bg_distance_modules,
+                             list_of_all_modules
+                             )
 
 # t.test(cluster$ave_Z_score_matrix[cluster$cl$names[which(cluster$cl$membership==6)],
 #      cluster$cl$names[which(cluster$cl$membership==6)]],

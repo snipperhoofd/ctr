@@ -126,7 +126,7 @@ list_of_all_modules <- list_of_all_modules[-biased_idx]
 list_of_all_modules_KOs <- unique(unlist(list_of_all_modules, use.names=FALSE))
 
 sublist_of_all_modules <-  make_module_lists(KO_modules_table2)[1:2]
-sublist_of_all_modules_KOs <- unique(unlist(subset_of_all_modules, use.names=FALSE))
+sublist_of_all_modules_KOs <- unique(unlist(sublist_of_all_modules, use.names=FALSE))
 plot(table(lengths(list_of_all_modules)))
 ```
 
@@ -147,7 +147,7 @@ On Mac:
 transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_Matrix_BR,
                                      matrix_features = matrix_features_BR)
 #Run all analyses
-transcriptional_responses$Run(iterations = 1000)
+transcriptional_responses$Run(iterations = 10000)
 
 transcriptional_responses$bg_distance_modules <- list()
 for(i in 2: 10){
@@ -163,11 +163,11 @@ for(i in 2: 10){
 
 
 
-transcriptional_responses$AssociationMatrix(sublist_of_all_modules_KOs, sublist_of_all_modules)
+transcriptional_responses$AssociationMatrix(list_of_all_modules_KOs, list_of_all_modules)
 
-transcriptional_responses$bg_distance_modules[[1]]
-transcriptional_responses$bg_distance_modules[[1]][which(
-                      transcriptional_responses$bg_distance_modules[[1]]!=0)]
+#transcriptional_responses$bg_distance_modules[[1]]
+#transcriptional_responses$bg_distance_modules[[1]][which(
+ #                     transcriptional_responses$bg_distance_modules[[1]]!=0)]
 ```
 
 ### Random Background for individual KO terms
