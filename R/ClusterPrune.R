@@ -80,30 +80,37 @@ SwagPrune <- function(clustering_results,
     cluster_out[[m_idx]]$cl$pruned_membership <- cluster_out[[m_idx]]$cl$membership
     cluster_out[[m_idx]]$cl$pruned_names <- cluster_out[[m_idx]]$cl$names
 
-    for(cluster in clusters){
-      cluster_Zscores <- cluster_info(cluster, m_clusters$cl$membership,
-                                      m_clusters$ave_Z_score_matrix,
-                                      m_clusters$cl$names)
+    result = tryCatch({
+      for(cluster in clusters){
+        cluster_Zscores <- cluster_info(cluster, m_clusters$cl$membership,
+                                        m_clusters$ave_Z_score_matrix,
+                                        m_clusters$cl$names)
 
-      pval <- t.test(cluster_Zscores,
-                  transcriptional_responses$bg_distance_modules[[6]],
-                  alternative = "less")$p.value
-      if(pval > p_cutoff){
+        pval <- t.test(cluster_Zscores,
+                    transcriptional_responses$bg_distance_modules[[m_idx]],
+                    alternative = "less")$p.value
+        if(pval > p_cutoff){
 
-        del_positions <- which(cluster_out[[m_idx]]$cl$pruned_membership == as.numeric(cluster))
+          del_positions <- which(cluster_out[[m_idx]]$cl$pruned_membership == as.numeric(cluster))
 
-        cluster_out[[m_idx]]$cl$pruned_membership <-
-          cluster_out[[m_idx]]$cl$pruned_membership[-del_positions]
-         cluster_out[[m_idx]]$cl$pruned_names <-
-           cluster_out[[m_idx]]$cl$pruned_names[-del_positions]
-      } else{
-        print("sig")
+          cluster_out[[m_idx]]$cl$pruned_membership <-
+            cluster_out[[m_idx]]$cl$pruned_membership[-del_positions]
+           cluster_out[[m_idx]]$cl$pruned_names <-
+             cluster_out[[m_idx]]$cl$pruned_names[-del_positions]
+        } else{
+
+        }
+
       }
-
-    }
+    }, warning = function(w){
+        return(w)
+    }, error = function(e){
+        return(e)
+    })
   }
   return(cluster_out)
-}
+  }
+
 
 # #testing
  pruned_cluster <- SwagPrune(transcriptional_responses$clustering_results_P_NRED,
