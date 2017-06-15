@@ -1,44 +1,3 @@
-#' ClusterPrune
-#'
-#' This function calculates p-values for each cluster and returns the pairwise distances in a cluster.
-#' In the future this function will prune the clusters to remove.
-#'
-#' @param clustering_results The results from clustering.
-#' @param Background_Module_Distances The background distribution for a module of the same size.
-
-#' @export
-#' @examples PHA_pvalues_BR<-ClusterPrune(PHA_clustering_results_P_NRED_BR,Random_Background_Module_Distances_6_BR)
-
-
-
-
-ClusterPrune <- function(clustering_results, Background_Module_Distances) {
-
-  pvalues   <- rep(NA, length(clustering_results$cl))
-  distances <- list(NA)
-
-  for (i in 1: length(clustering_results$cl)) {
-
-    bin_names      <- colnames(clustering_results$JPE_distance)
-    bin_membership <- clustering_results$cl$names[which(
-                      clustering_results$cl$membership==i)]
-
-    bin_in_cluster <- which(bin_names %in% bin_membership)
-    clusterX       <- (clustering_results$JPE_distance[bin_in_cluster,
-                                                       bin_in_cluster])
-
-    pvalues[i]     <- t.test(clusterX, Background_Module_Distances)$p.value
-    distances[[i]] <- clusterX
-
-  }
-  return(
-    list("pvalues"   = pvalues,
-         "distances" = distances)
-    )
-}
-
-
-
 # Psuedo code for how this function should work
 # 1) identify the N in the module being tested and get the correct background distribution for that 'N'
 # 2) identify the bins in a cluster (so each module will have multiple clusters)
@@ -50,19 +9,23 @@ ClusterPrune <- function(clustering_results, Background_Module_Distances) {
 # (repeat until significant or <3 genomes)
 
 
-cluster_info <- function(cluster, membership,
-                        ave_Z_score_matrix,
-                         names){
-  scores <- ave_Z_score_matrix[names[which(membership==cluster)],
-                            names[which(membership==cluster)]]
-  return(scores)
 
-}
+#' ClusterPrune
+#'
+#' This function calculates p-values for each cluster and returns the pairwise distances in a cluster.
+#' In the future this function will prune the clusters to remove.
+#'
+#' @param clustering_results The results from clustering.
+#' @param Background_Module_Distances The background distribution for a module of the same size.
+#' @param module_names A list containing all module names as index names
+#' @param p_cutoff A pvalue cutoff for cluster significance (Default = 0.05)
 
-SwagPrune <- function(clustering_results,
-                      Background_Module_Distances,
-                      module_names,
-                      p_cutoff = 0.05){
+#' @export
+#' @examples PHA_pvalues_BR <- ClusterPrune(PHA_clustering_results_P_NRED_BR, Random_Background_Module_Distances_6_BR)
+ClusterPrune <- function(clustering_results,
+                         Background_Module_Distances,
+                         module_names,
+                         p_cutoff = 0.05){
   cluster_out <- clustering_results
   #Vector of the module names
   m_names <- names(module_names)
@@ -77,8 +40,13 @@ SwagPrune <- function(clustering_results,
     clusters   <- levels(as.factor(m_clusters$cl$membership))
 
     #create pruning columns
-    cluster_out[[m_idx]]$cl$pruned_membership <- cluster_out[[m_idx]]$cl$membership
-    cluster_out[[m_idx]]$cl$pruned_names <- cluster_out[[m_idx]]$cl$names
+    pruned_membername <- paste('pruned_membership_P',
+                               as.character(p_cutoff), sep = "")
+    pruned_names <- paste("pruned_names_P",
+                          as.character(p_cutoff), sep = "")
+
+    cluster_out[[m_idx]]$cl[[pruned_membername]] <- cluster_out[[m_idx]]$cl$membership
+    cluster_out[[m_idx]]$cl[[pruned_names]] <- cluster_out[[m_idx]]$cl$names
 
     result = tryCatch({
       for(cluster in clusters){
@@ -87,33 +55,45 @@ SwagPrune <- function(clustering_results,
                                         m_clusters$cl$names)
 
         pval <- t.test(cluster_Zscores,
-                    transcriptional_responses$bg_distance_modules[[m_idx]],
-                    alternative = "less")$p.value
+                       transcriptional_responses$bg_distance_modules[[m_idx]],
+                       alternative = "less")$p.value
         if(pval > p_cutoff){
 
           del_positions <- which(cluster_out[[m_idx]]$cl$pruned_membership == as.numeric(cluster))
 
           cluster_out[[m_idx]]$cl$pruned_membership <-
             cluster_out[[m_idx]]$cl$pruned_membership[-del_positions]
-           cluster_out[[m_idx]]$cl$pruned_names <-
-             cluster_out[[m_idx]]$cl$pruned_names[-del_positions]
+          cluster_out[[m_idx]]$cl$pruned_names <-
+            cluster_out[[m_idx]]$cl$pruned_names[-del_positions]
         } else{
 
         }
 
       }
     }, warning = function(w){
-        return(w)
+      return(w)
     }, error = function(e){
-        return(e)
+      return(e)
     })
   }
   return(cluster_out)
-  }
+}
+
+
+
+cluster_info <- function(cluster, membership,
+                        ave_Z_score_matrix,
+                         names){
+  scores <- ave_Z_score_matrix[names[which(membership==cluster)],
+                            names[which(membership==cluster)]]
+  return(scores)
+
+}
+
 
 
 # #testing
- pruned_cluster <- SwagPrune(transcriptional_responses$clustering_results_P_NRED,
+ pruned_cluster <- ClusterPrune(transcriptional_responses$clustering_results_P_NRED,
                              transcriptional_responses$bg_distance_modules,
                              list_of_all_modules
                              )
