@@ -30,51 +30,44 @@ ClusterPrune <- function(clustering_results,
   #Vector of the module names
   m_names <- names(module_names)
 
-  for(m_idx in 6:6){# length(module_names)){
-    #1
-    n_terms    <- length(module_names[[m_idx]])
-    #2
-    m_clusters <- clustering_results[[m_idx]]
-    bin_names  <- colnames(m_clusters$JPE_distance)
+  for(m_idx in 1: length(module_names)){
+    tryCatch({
+      #1
+      n_terms    <- length(module_names[[m_idx]])
+      #2
+      m_clusters <- clustering_results[[m_idx]]
+      bin_names  <- colnames(m_clusters$JPE_distance)
 
-    clusters   <- levels(as.factor(m_clusters$cl$membership))
+      clusters   <- levels(as.factor(m_clusters$cl$membership))
 
-    #create pruning columns
-    pruned_membername <- paste('pruned_membership_P',
-                               as.character(p_cutoff), sep = "")
-    pruned_names <- paste("pruned_names_P",
-                          as.character(p_cutoff), sep = "")
+      result = tryCatch({
+        for(cluster in clusters){
+          cluster_Zscores <- cluster_info(cluster, m_clusters$cl$membership,
+                                          m_clusters$ave_Z_score_matrix,
+                                          m_clusters$cl$names)
 
-    cluster_out[[m_idx]]$cl[[pruned_membername]] <- cluster_out[[m_idx]]$cl$membership
-    cluster_out[[m_idx]]$cl[[pruned_names]] <- cluster_out[[m_idx]]$cl$names
+          pval <- t.test(cluster_Zscores,
+                         Background_Module_Distances[[as.character(m_idx)]],
+                         alternative = "less")$p.value
+          if(pval > p_cutoff){
+            del_positions <- which(cluster_out[[m_idx]]$cl$membership == as.numeric(cluster))
 
-    result = tryCatch({
-      for(cluster in clusters){
-        cluster_Zscores <- cluster_info(cluster, m_clusters$cl$membership,
-                                        m_clusters$ave_Z_score_matrix,
-                                        m_clusters$cl$names)
+            cluster_out[[m_idx]]$cl$membership <- cluster_out[[m_idx]]$cl$membership[-del_positions]
+            cluster_out[[m_idx]]$cl$names <- cluster_out[[m_idx]]$cl$names[-del_positions]
+          } else{
 
-        pval <- t.test(cluster_Zscores,
-                       transcriptional_responses$bg_distance_modules[[m_idx]],
-                       alternative = "less")$p.value
-        if(pval > p_cutoff){
-
-          del_positions <- which(cluster_out[[m_idx]]$cl$pruned_membership == as.numeric(cluster))
-
-          cluster_out[[m_idx]]$cl$pruned_membership <-
-            cluster_out[[m_idx]]$cl$pruned_membership[-del_positions]
-          cluster_out[[m_idx]]$cl$pruned_names <-
-            cluster_out[[m_idx]]$cl$pruned_names[-del_positions]
-        } else{
+          }
 
         }
-
-      }
-    }, warning = function(w){
-      return(w)
-    }, error = function(e){
-      return(e)
-    })
+      }, warning = function(w){
+          return(w)
+      }, error = function(e){
+          # Expecting this to happen if there is no bg_distance_module calculated
+          #  for the module size
+      })
+  }, warn = function(w)return(w)
+   , err = function(e) return(w)
+  )
   }
   return(cluster_out)
 }
@@ -97,8 +90,3 @@ cluster_info <- function(cluster, membership,
                              transcriptional_responses$bg_distance_modules,
                              list_of_all_modules
                              )
-
-# t.test(cluster$ave_Z_score_matrix[cluster$cl$names[which(cluster$cl$membership==6)],
-#      cluster$cl$names[which(cluster$cl$membership==6)]],
-#      transcriptional_responses$bg_distance_modules[[6]],
-#      alternative = "less")
