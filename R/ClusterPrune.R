@@ -86,7 +86,7 @@ cluster_info <- function(cluster, membership,
 
 
 # #testing
- pruned_cluster <- ClusterPrune(transcriptional_responses$clustering_results_P_NRED,
-                             transcriptional_responses$bg_distance_modules,
-                             list_of_all_modules
-                             )
+# pruned_cluster <- ClusterPrune(transcriptional_responses$clustering_results_P_NRED,
+ #                            transcriptional_responses$bg_distance_modules,
+  #                           list_of_all_modules
+   #                          )
