@@ -150,8 +150,9 @@ transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_
 transcriptional_responses$Run(iterations = 10000)
 
 transcriptional_responses$bg_distance_modules <- list()
-for(i in 6: 6){
-  transcriptional_responses$bg_distance_modules[[as.character(i)]] <-  Background_Distribution_Modules(transcriptional_responses$RNAseq_Annotated_Matrix,
+for(i in 1: 6){
+  transcriptional_responses$bg_distance_modules[[as.character(i)]] <- 
+    Background_Distribution_Modules(transcriptional_responses$RNAseq_Annotated_Matrix,
                                                          transcriptional_responses$matrix_features,
                                                          transcriptional_responses$Z_scores,
                                                          N = i,
@@ -162,10 +163,9 @@ for(i in 6: 6){
 
 
 
-
 transcriptional_responses$AssociationMatrix(sublist_of_all_modules_KOs, sublist_of_all_modules)
 
-pruned <- ctr::ClusterPrune(transcriptional_responses$clustering_results_P_NRED,
+pruned <- ClusterPrune(transcriptional_responses$clustering_results_P_NRED,
                             transcriptional_responses$bg_distance_modules,
                             sublist_of_all_modules)
 
