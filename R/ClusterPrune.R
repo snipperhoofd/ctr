@@ -74,11 +74,9 @@ ClusterPrune <- function(clustering_results,
 
 
 
-cluster_info <- function(cluster, membership,
-                        ave_Z_score_matrix,
-                         names){
+cluster_info <- function(cluster, membership,ave_Z_score_matrix, names){
   scores <- ave_Z_score_matrix[names[which(membership==cluster)],
-                            names[which(membership==cluster)]]
+                               names[which(membership==cluster)]]
   return(scores)
 
 }
