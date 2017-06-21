@@ -28,7 +28,7 @@ ClusterPrune <- function(clustering_results,
   cluster_out <- clustering_results
   #Vector of the module names
   m_names <- names(module_names)
-
+  p_values <- rep(NA, length(module_names))
   for(m_idx in 1: length(module_names)){
     tryCatch({
       #1
@@ -48,6 +48,8 @@ ClusterPrune <- function(clustering_results,
           pval <- t.test(cluster_Zscores,
                          Background_Module_Distances[[as.character(m_idx)]],
                          alternative = "less")$p.value
+          p_values[m_idx] <- pval
+
           if(pval > p_cutoff){
             del_positions <- which(cluster_out[[m_idx]]$cl$membership == as.numeric(cluster))
 
@@ -68,7 +70,7 @@ ClusterPrune <- function(clustering_results,
    , err = function(e) return(w)
   )
   }
-  return(cluster_out)
+  return(list("clusters" = cluster_out, 'pvalues' = p_values))
 }
 
 
