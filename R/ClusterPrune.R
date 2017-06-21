@@ -5,8 +5,7 @@
 # 4) t.test (one-sided) to determine if the Z-scores in the cluster is significanlty
 #     less than expected based on the background distribution
 # 5) if it is significant, keep it
-# 6) Bonus Round, if it is not significant, drop the lowest scoring genome from the comparison and re-test
-# (repeat until significant or <3 genomes)
+
 
 
 
@@ -81,10 +80,3 @@ cluster_info <- function(cluster, membership,ave_Z_score_matrix, names){
 
 }
 
-
-
-# #testing
-# pruned_cluster <- ClusterPrune(transcriptional_responses$clustering_results_P_NRED,
- #                            transcriptional_responses$bg_distance_modules,
-  #                           list_of_all_modules
-   #                          )
