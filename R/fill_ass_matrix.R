@@ -8,42 +8,35 @@
 #' @export
 #' @return A matrix of clustering results. bins are rows and modules are the columns. Values represent the cluster for ecah module
 #' @examples M_I_association_matrix<-fill_association_matrix(M_I_clustering_results_P_NRED,matrix_features_BR,names(M_I_module_list))
-
-
-fill_association_matrix <- function(clustering_results, matrix_features,
-                                    module_names) {
+fill_association_matrix <- function(clustering_results, matrix_features, module_names){
 
   association_matrix <- matrix(data = NA,
-                             nrow = length(matrix_features@high_quality_bins),
-                             ncol = length(clustering_results),
-                             dimnames = list(matrix_features@high_quality_bins,
-                                             names(module_names)))
+                               nrow = length(matrix_features@high_quality_bins),
+                               ncol = length(clustering_results),
+                               dimnames = list(matrix_features@high_quality_bins,
+                                               names(module_names)))
 
 
-  for (i in 1: length(clustering_results)) {
+  for(m_idx in 1: length(module_names)){
+    cluster      <- clustering_results[[m_idx]]$cl
+    present_bins <- cluster$names
+    memberships  <- cluster$membership
+    bin_indices <- which(matrix_features@high_quality_bins %in% present_bins)
 
-    current_cluster <- clustering_results[[i]]$cl
+    for(i in 1:length(bin_indices)){
+      bin_idx <- bin_indices[i]
+      member <- memberships[i]
 
-    unique_members <- unique(current_cluster$membership)
-    if (length(unique_members) != 0) {
 
-      for (j in 1: length(unique_members)) {
-          #Best variable name incoming
-          cluster_cluster <-  current_cluster[[j]]
-
-          for (k in 1: length(current_cluster[[j]])) {
-            bin <- as.numeric(current_cluster[[j]][k])
-            row <- which(matrix_features@high_quality_bins == bin)
-
-            association_matrix[row,i] <- j
-          }
-
+      if(length(member) != 0){
+        if(! is.na(member)){
+          association_matrix[bin_idx, m_idx] <- member
+        }
       }
 
     }
 
-    }
+  }
+
   return(association_matrix)
 }
-
-
