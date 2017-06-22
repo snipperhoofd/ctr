@@ -12,31 +12,27 @@ fill_association_matrix <- function(clustering_results, matrix_features, module_
 
   association_matrix <- matrix(data = NA,
                                nrow = length(matrix_features@high_quality_bins),
-                               ncol = length(clustering_results),
+                               ncol = length(clustering_results$clusters),
                                dimnames = list(matrix_features@high_quality_bins,
                                                names(module_names)))
 
 
-  for(m_idx in 1: length(module_names)){
-    cluster      <- clustering_results[[m_idx]]$cl
+  for(m_idx in 1: length(module_names)) {
+    cluster      <- clustering_results$clusters[[m_idx]]$cl
     present_bins <- cluster$names
     memberships  <- cluster$membership
-    bin_indices <- which(matrix_features@high_quality_bins %in% present_bins)
+    bin_indices  <- which(matrix_features@high_quality_bins %in% present_bins)
 
-    for(i in 1:length(bin_indices)){
+    for ( i in 1: length(bin_indices) ) {
       bin_idx <- bin_indices[i]
-      member <- memberships[i]
+      member  <- memberships[i]
 
-
-      if(length(member) != 0){
-        if(! is.na(member)){
+      if (length(member) != 0) {
+        if (! is.na(member) ) {
           association_matrix[bin_idx, m_idx] <- member
         }
       }
-
     }
-
   }
-
   return(association_matrix)
 }
