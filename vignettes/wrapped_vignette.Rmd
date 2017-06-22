@@ -81,8 +81,9 @@ RNAseq_Annotated_Matrix_BR$Bin[grep("CAP2UW1*",
                                     RNAseq_Annotated_Matrix_BR$Bin)] <- 39
 
 # These are genomes that are  >80% complete <5% contaminated, define a subset matrix with only these genomes
-high_quality_bins <- c(8,28,25,7,46,39,22,38,54,53,48,45,31,42,16,33,26,40,36,21,
-                       27,17,19,32,14,11,30,43,35,29,23,58,41,20,15,37,49,50)
+high_quality_bins <- c(8, 28, 25, 7, 46, 39, 22, 38, 54, 53, 48, 45, 31, 42, 16, 
+                       33, 26, 40, 36, 21, 27, 17, 19, 32, 14, 11, 30, 43, 35, 
+                       29, 23, 58, 41, 20, 15, 37, 49, 50)
 
 # Keep only high-quality bins
 RNAseq_Annotated_Matrix_BR <- RNAseq_Annotated_Matrix_BR[which(
@@ -147,22 +148,9 @@ On Mac:
 transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_Matrix_BR,
                                      matrix_features = matrix_features_BR)
 #Run all analyses
-transcriptional_responses$Run(iterations = 10000,
+transcriptional_responses$Run(iterations = 100,
                               random_module_sizes = 1:10,
                               parallel_cores = 4)
-
-transcriptional_responses$bg_distance_modules <- list()
-for(i in 1: 6){
-  transcriptional_responses$bg_distance_modules[[as.character(i)]] <- 
-    Background_Distribution_Modules(transcriptional_responses$RNAseq_Annotated_Matrix,
-                                                         transcriptional_responses$matrix_features,
-                                                         transcriptional_responses$Z_scores,
-                                                         N = i,
-                                                         Z = 10000,
-                                                         P = 4
-                                                         )
-}
-
 
 transcriptional_responses$AssociationMatrix(sublist_of_all_modules_KOs, sublist_of_all_modules)
 
