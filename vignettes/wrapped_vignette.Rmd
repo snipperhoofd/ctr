@@ -130,8 +130,6 @@ sublist_of_all_modules <-  make_module_lists(KO_modules_table2)[1:10]
 sublist_of_all_modules_KOs <- unique(unlist(sublist_of_all_modules, use.names=FALSE))
 plot(table(lengths(list_of_all_modules)))
 
-
-polymers_KOs <- unique(unlist(polymers, use.names=FALSE))
 ```
 
 ### Minimal Usage
@@ -151,11 +149,11 @@ On Mac:
 transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_Matrix_BR,
                                      matrix_features = matrix_features_BR)
 #Run all analyses
-transcriptional_responses$Run(iterations = 10000,
-                              random_module_sizes = 1:20,
-                              parallel_cores = 3)
+transcriptional_responses$Run(iterations = 1000, # more would be better e.g. 10k
+                              random_module_sizes = 1:10,# more would be better e.g. 1:20
+                              parallel_cores = 3) # more is better, depending on the pc's hardware
 
-transcriptional_responses$AssociationMatrix(polymers_KOs, polymers)
+transcriptional_responses$AssociationMatrix(sublist_of_all_modules_KOs, sublist_of_all_modules)
 
 ```
 
