@@ -34,5 +34,6 @@ fill_association_matrix <- function(clustering_results, matrix_features, module_
       }
     }
   }
+  colnames(association_matrix) <- names(module_names)
   return(association_matrix)
 }

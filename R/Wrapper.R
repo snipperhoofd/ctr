@@ -82,11 +82,11 @@ CTR <- setRefClass("CTR",
       All_association_matrix    <<- fill_association_matrix(pruned_clusters,
                                                             matrix_features,
                                                             names(module_list))
-
+      colnames(All_association_matrix) <<- names(module_list)
       # identify modules that are not represented in the dataset
-      missing_modules           <- which(colSums(All_association_matrix, na.rm = TRUE) == 0)
+     # missing_modules           <- which(colSums(All_association_matrix, na.rm = TRUE) == 0)
       # remove them from downstreamstream analysis
-      All_association_matrix    <<- All_association_matrix[, -as.numeric(missing_modules)]
+      #All_association_matrix    <<- All_association_matrix[, -as.numeric(missing_modules)]
     },
     plotIndividualBackgroundDist = function(){
       library("hexbin")
