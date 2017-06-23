@@ -21,6 +21,7 @@ Imports: plyr,
     doParallel,
     foreach
 BiocViews: RCy3
-Suggests: rmarkdown
+Suggests: knitr, rmarkdown
+VignetteBuilder: knitr
 RoxygenNote: 6.0.1
 LinkingTo: Rcpp

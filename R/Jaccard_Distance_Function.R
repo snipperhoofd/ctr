@@ -9,17 +9,17 @@
 
 Jaccard_Distance_Function <- function(RNAseq_Annotated_Matrix, matrix_features, Module) {
 #  Pairwise_Bin_Array_Presence	<- Presence_Absence_Matrix(RNAseq_Annotated_Matrix)
-  Jaccard_Module_Distance <- matrix(data = NA, 
-                                    nrow = length(high_quality_bins),
-                                    ncol = length(high_quality_bins),
-                                    dimnames = list(sort(matrix_features_BR@high_quality_bins),
-                                                    sort(matrix_features_BR@high_quality_bins)))
-  
-  for (x in 1:37) { #iterate over lower part of matrix
-    for (y in (x+1):38) {
-      Jaccard_Module_Distance[x,y]<-Calc_Jaccard(matrix_features@Pairwise_Bin_Array_Presence[x, 
+  Jaccard_Module_Distance <- matrix(data = NA,
+                                    nrow = length(matrix_features@high_quality_bins),
+                                    ncol = length(matrix_features@high_quality_bins),
+                                    dimnames = list(sort(matrix_features@high_quality_bins),
+                                                    sort(matrix_features@high_quality_bins)))
+
+  for (x in 1:(length(matrix_features@high_quality_bins)-1)) { #iterate over lower part of matrix
+    for (y in (x+1):length(matrix_features@high_quality_bins)) {
+      Jaccard_Module_Distance[x,y]<-Calc_Jaccard(matrix_features@Pairwise_Bin_Array_Presence[x,
                                                                              which(matrix_features@All_KOs%in%Module)],
-                                                 matrix_features@Pairwise_Bin_Array_Presence[y, 
+                                                 matrix_features@Pairwise_Bin_Array_Presence[y,
                                                                             which(matrix_features@All_KOs%in%Module)])
     }
   }

@@ -2,10 +2,11 @@
 title: "Congruent Transcriptional Responses"
 author: "Ben Oyserman, Joris van Steenbrugge, Victoria Pascal Andreu"
 date: "2/15/2017"
-output:
-  html_document: default
-  css: custom.css
-  toc: true
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{Congruent Transcriptional Responses}
+  %\VignetteEngine{knitr::rmarkdown}
+  \usepackage[utf8]{inputenc}
 ---
 
 ```{r setup, include=FALSE}
@@ -150,10 +151,10 @@ transcriptional_responses <- CTR$new(RNAseq_Annotated_Matrix = RNAseq_Annotated_
                                      matrix_features = matrix_features_BR)
 #Run all analyses
 transcriptional_responses$Run(iterations = 1000, # more would be better e.g. 10k
-                              random_module_sizes = 1:10,# more would be better e.g. 1:20
-                              parallel_cores = 3) # more is better, depending on the pc's hardware
+                              random_module_sizes = 2:5,# more would be better e.g. 1:20
+                              parallel_cores = 3) # more is in general better, depending on the pc's hardware
 
-transcriptional_responses$AssociationMatrix(sublist_of_all_modules_KOs, sublist_of_all_modules)
+transcriptional_responses$AssociationMatrix(list_of_all_modules_KOs, list_of_all_modules)
 
 ```
 
@@ -163,7 +164,7 @@ transcriptional_responses$plotIndividualBackgroundDist()
 ``` 
 
 ### Random Background for KO modules
-```{r}
+```{r, eval = FALSE}
 transcriptional_responses$plotModuleBackgroundDist()
 
 
@@ -202,7 +203,7 @@ All_association_matrix contains information of what genomes/bins have a certain 
 ```{r, eval=FALSE}
 #filtered_association_matrix <- transcriptional_responses$All_association_matrix[, as.numeric(which(unlist(lapply(list_of_all_modules, length))<11))]
 association_rules <-  Apriori$new(dataset = transcriptional_responses$All_association_matrix)
-association_rules$run_apriori(supp = 0.4, conf = 0.9 )
+association_rules$run_apriori(supp = 0.3, conf = 0.9 )
 
 ```
 
@@ -212,5 +213,5 @@ This feature is currently experimental. It can only work with Cytoscape version 
 `KO_modules_table2` is declared at the beginning of this document and contains the corresponding KO module for each KO term.
 `N` is the amount of rules (sorted on support or lift) to plot.
 ```{r, eval=FALSE}
-Draw_Network(association_rules$rules_dataframe, KO_modules_table2, N = 400)
+Draw_Network(association_rules$rules_dataframe, KO_modules_table2, N = 75)
 ```

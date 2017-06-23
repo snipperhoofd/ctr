@@ -19,18 +19,21 @@
 
 cluster_func<-function(RNAseq_Annotated_Matrix, pairwise_KO_distances, matrix_features, module_list) {
 
-  if (is.list(module_list)) {
+  #if (is.list(module_list)) {
     newList <- list()
     All_KOs<-unique(unlist(module_list, use.names=FALSE))
 
     for (i in 1:length(module_list)) {
-      Jaccard_Distance <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix,
-                                                    matrix_features,
-                                                    module_list[[i]])
+
       if (sum(All_KOs%in%module_list[[i]])<=1) {
+        print('next')
         next
       } else {
+        Jaccard_Distance <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix,
+                                                      matrix_features,
+                                                      module_list[[i]])
         ave_Z_score_matrix <- ave_Z_score_Func(pairwise_KO_distances$combined[, , which(All_KOs%in%module_list[[i]])])
+        pairwise_distances<-(1-Jaccard_Distance)
         JPE_distance<-ave_Z_score_matrix*(1-Jaccard_Distance)
         rownames(JPE_distance)<-colnames(JPE_distance)
         JPE_distance_Table <- subset(melt(JPE_distance), value!=0)
@@ -43,32 +46,34 @@ cluster_func<-function(RNAseq_Annotated_Matrix, pairwise_KO_distances, matrix_fe
 
         minilist <- list("ave_Z_score_matrix" = ave_Z_score_matrix,
                            "JPE_distance"= JPE_distance,
+                         "pairwise_distances"= pairwise_distances,
                            "JPE_distance_Table" = JPE_distance_Table,
                            "cl" = cl)
         newList[[i]] <- minilist
       }
     }
 
-      } else {
-      Jaccard_Distance <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix,
-                                                    matrix_features,
-                                                    module_list)
-      ave_Z_score_matrix <- ave_Z_score_Func(pairwise_KO_distances$combined[,,which(matrix_features@All_KOs%in%module_list)])
-      JPE_distance<-ave_Z_score_matrix*(1-Jaccard_Distance)
-      rownames(JPE_distance)<-colnames(JPE_distance)
-      JPE_distance_Table <- subset(melt(JPE_distance), value!=0)
-      edge_frame<-as.data.frame(JPE_distance_Table)
-      colnames(edge_frame)<-c("genome_1","genome_2","Score")
-      edge_frame_reduced<-edge_frame[which(edge_frame[,3]<0),] # remove negative numbers as these cannot be used in clustering algorithm
-      edge_frame_reduced[,3]<-(-edge_frame_reduced[,3])
-      graph<-graph_from_data_frame(edge_frame_reduced,directed=FALSE)
-      cl<-cluster_louvain(graph,weights=E(graph)$Score)
-
-      newList <- list("ave_Z_score_matrix" = ave_Z_score_matrix,
-                      "JPE_distance" = JPE_distance,
-                      "JPE_distance_Table" = JPE_distance_Table,
-                      "cl" = cl)
-      }
+  #}
+  # else {
+  # Jaccard_Distance <- Jaccard_Distance_Function(RNAseq_Annotated_Matrix,
+  #                                               matrix_features,
+  #                                               module_list)
+  # ave_Z_score_matrix <- ave_Z_score_Func(pairwise_KO_distances$combined[,,which(matrix_features@All_KOs%in%module_list)])
+  # JPE_distance<-ave_Z_score_matrix*(1-Jaccard_Distance)
+  # rownames(JPE_distance)<-colnames(JPE_distance)
+  # JPE_distance_Table <- subset(melt(JPE_distance), value!=0)
+  # edge_frame<-as.data.frame(JPE_distance_Table)
+  # colnames(edge_frame)<-c("genome_1","genome_2","Score")
+  # edge_frame_reduced<-edge_frame[which(edge_frame[,3]<0),] # remove negative numbers as these cannot be used in clustering algorithm
+  # edge_frame_reduced[,3]<-(-edge_frame_reduced[,3])
+  # graph<-graph_from_data_frame(edge_frame_reduced,directed=FALSE)
+  # cl<-cluster_louvain(graph,weights=E(graph)$Score)
+  #
+  # newList <- list("ave_Z_score_matrix" = ave_Z_score_matrix,
+  #                 "JPE_distance" = JPE_distance,
+  #                 "JPE_distance_Table" = JPE_distance_Table,
+  #                 "cl" = cl)
+  # }
 
   return(newList)
   }
